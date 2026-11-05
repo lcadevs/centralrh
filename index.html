@@ -714,6 +714,7 @@ async function vistaInicio() {
       if (md) avisos += `<div class="alert a-warn">${I.warn}<div>Hay <b>${r.sin_responsable}</b> departamento(s) sin responsable para aprobar excepciones. Si alguien de esos departamentos pide una excepción, no podrá enviarla. <a href="#/modulo/${esc(md.codigo)}/responsables">Asignar responsables</a></div></div>`; }
   }
   if (esRH()) S.modulos.filter(m => m.activo && !m.politica).forEach(m => { avisos += `<div class="alert a-warn">${I.book}<div><b>${esc(m.nombre)}:</b> no hay política vigente publicada. Los colaboradores no podrán abrirla antes de aceptar la declaración. <a href="#/modulo/${esc(m.codigo)}/politica">Publicar política</a></div></div>`; });
+  if (esAdmin() && r.prueba) avisos += `<div class="alert a-info">${I.info}<div>Hay <b>${r.prueba} solicitudes de prueba</b> cargadas (folios PRUEBA-xx); también cuentan en los reportes. <a href="#/admin/config">Borrarlas en Configuración general</a></div></div>`;
   const tiles = [
     `<a class="tile t-acero" href="#/aprobar"><div class="n">${r.por_aprobar || 0}</div><div class="t">Pendientes de mi aprobación</div></a>`,
     `<a class="tile t-pri" href="#/mis"><div class="n">${r.mis_abiertas || 0}</div><div class="t">Mis solicitudes en curso</div></a>`,
@@ -1002,7 +1003,7 @@ function tablaSolicitudes(rows, opts = {}) {
   if (!rows.length) return `<div class="empty">${I.inbox}<div>${esc(opts.vacio || 'No hay solicitudes.')}</div></div>`;
   return `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Folio</th>${opts.solicitante ? '<th>Solicitante</th>' : '<th>Trámite</th>'}<th>Enviada</th><th>Estado</th><th>${opts.extra || 'Paso actual'}</th></tr></thead><tbody>
     ${rows.map(s => `<tr class="click" data-id="${s.id}">
-      <td><b>${esc(s.folio)}</b>${s.version > 1 ? ` <span class="tag">v${s.version}</span>` : ''}${s.excepcion ? ' <span class="tag exc">Excepción</span>' : ''}</td>
+      <td><b>${esc(s.folio)}</b>${s.es_prueba ? ' <span class="tag exc">Prueba</span>' : ''}${s.version > 1 ? ` <span class="tag">v${s.version}</span>` : ''}${s.excepcion ? ' <span class="tag exc">Excepción</span>' : ''}</td>
       ${opts.solicitante ? `<td>${esc(s.solicitante_nombre)}<div class="xs muted">${esc(s.departamento || '')}</div></td>` : `<td>${esc(s.modulo_nombre)}</td>`}
       <td class="small">${fmt(s.creado_en)}</td>
       <td>${badge(s.estado)}<div class="mini-steps">${(s.pasos || []).map(p => `<i class="${p.estado}" title="${esc(p.paso)}: ${esc(ESTADOS[p.estado])}"></i>`).join('')}</div></td>
@@ -1143,7 +1144,8 @@ async function vistaReportes(tab) {
       <div><button class="btn pri" id="xls">${I.pdf} Descargar Excel</button> <span class="xs muted">No incluye firmas (imágenes).</span></div>
     </div></div>`;
   }
-  shell('reportes', `<div class="page-head"><div><h1>Reportes y KPIs</h1><p>Indicadores de solicitudes y tiempos de aprobación.</p></div></div>${filtros}${tabs}${cuerpo}`);
+  const avisoPrueba = T.prueba ? `<div class="alert a-info">${I.info}<div class="small">Este periodo incluye <b>${T.prueba} solicitudes de prueba</b> (PRUEBA-xx). Se pueden borrar en <a href="#/admin/config">Configuración general</a>.</div></div>` : '';
+  shell('reportes', `<div class="page-head"><div><h1>Reportes y KPIs</h1><p>Indicadores de solicitudes y tiempos de aprobación.</p></div></div>${filtros}${avisoPrueba}${tabs}${cuerpo}`);
   const guardarF = f => { store.set('rep', JSON.stringify(f)); vistaReportes(tab); };
   $('#raplicar').onclick = () => guardarF({ modulo: $('#rmod').value, desde: $('#rdesde').value, hasta: $('#rhasta').value });
   $$('[data-rango]').forEach(b => b.onclick = () => { const hs = hoy(), r = b.dataset.rango;
@@ -1168,7 +1170,7 @@ async function descargarExcel(F, R) {
   const campos = [];
   E.solicitudes.forEach(s => (s.formulario || []).forEach(f => { if (!campos.some(c => c.key === f.key)) campos.push(f); }));
   const hojaSol = E.solicitudes.map(s => {
-    const fila = { 'Folio': s.folio, 'Trámite': s.modulo_nombre, 'Estado': ESTADOS[s.estado] || s.estado, 'Versión': s.version,
+    const fila = { 'Folio': s.folio, 'Dato de prueba': s.es_prueba ? 'Sí' : 'No', 'Trámite': s.modulo_nombre, 'Estado': ESTADOS[s.estado] || s.estado, 'Versión': s.version,
       'Enviada': D(s.creado_en), 'Finalizada': D(s.finalizado_en), 'Horas hasta resolver': horas(s.creado_en, s.finalizado_en),
       'Solicitante': s.solicitante_nombre, 'Correo solicitante': s.solicitante_email };
     campos.forEach(f => { const fs = (s.formulario || []).find(x => x.key === f.key) || f; fila[f.label] = s.datos[f.key] == null ? '' : valorTexto(fs, s.datos); });
@@ -1268,7 +1270,7 @@ async function vistaDetalle(id) {
   shell(activo, `
     <div class="page-head"><div><a href="javascript:history.back()" class="small" style="text-decoration:none">← Volver</a>
       <h1 style="margin-top:6px">${esc(s.folio)} · ${esc(D.modulo_nombre)}</h1>
-      <p class="row wrap" style="gap:8px">${badge(s.estado)}${s.version > 1 ? `<span class="tag">Versión ${s.version}</span>` : ''}${s.excepcion ? '<span class="tag exc">Con excepción</span>' : ''}<span class="small muted">Enviada ${fmt(s.creado_en)}${s.finalizado_en ? ' · Finalizada ' + fmt(s.finalizado_en) : ''}</span></p></div>
+      <p class="row wrap" style="gap:8px">${badge(s.estado)}${s.es_prueba ? '<span class="tag exc">Dato de prueba</span>' : ''}${s.version > 1 ? `<span class="tag">Versión ${s.version}</span>` : ''}${s.excepcion ? '<span class="tag exc">Con excepción</span>' : ''}<span class="small muted">Enviada ${fmt(s.creado_en)}${s.finalizado_en ? ' · Finalizada ' + fmt(s.finalizado_en) : ''}</span></p></div>
       <div class="row wrap">
         ${P.pdf ? `<button class="btn" id="dl">${I.pdf} Descargar PDF</button>` : ''}
         ${P.reenviar ? `<button class="btn pri" id="reenv">${I.send} ${s.pdf_enviado_en ? 'Reenviar PDF' : 'Enviar PDF'}</button>` : ''}
@@ -1815,7 +1817,7 @@ function edGeneral() {
    ===================================================================== */
 async function adminConfig() {
   cargando('config');
-  const c = await api('rh_admin_config');
+  const [c, dp] = await Promise.all([api('rh_admin_config'), api('rh_admin_datos_prueba', { p_accion: 'estado' })]);
   const v = k => esc(c[k] ?? '');
   const dom = Array.isArray(c.dominios_permitidos) ? c.dominios_permitidos.join(', ') : '';
   const urlApp = location.href.split('#')[0];
@@ -1838,7 +1840,15 @@ async function adminConfig() {
       <div class="field"><label>Dominios permitidos</label><input class="inp" id="dom" value="${esc(dom)}"><span class="help">Separados por coma. Vacío = cualquier correo.</span></div>
       <div class="field"><label>Vigencia del código (minutos)</label><input class="inp" type="number" min="5" max="1440" data-c="minutos_codigo" value="${v('minutos_codigo')}"></div>
       <div class="field"><label>Duración de la sesión (horas)</label><input class="inp" type="number" min="1" max="168" data-c="horas_sesion" value="${v('horas_sesion')}"></div>
-    </div></div></div>`);
+    </div></div>
+    <div class="card"><div class="card-h"><h2>Datos de prueba</h2><span class="small" id="dpest">${dp.solicitudes ? `<span class="tag exc">${dp.solicitudes} solicitudes de prueba cargadas</span>` : '<span class="muted">No hay datos de prueba</span>'}</span></div>
+      <div class="card-b stack">
+        <p class="small" style="margin:0">Carga <b>10 solicitudes de ejemplo</b> del trámite de Teletrabajo para conocer la app y ver los reportes: aprobadas, una rechazada, varias en aprobación (una ya apta para recordatorio), excepciones, una modificada (versión 2), una cancelada y recordatorios. Usan folios <span class="kbd">PRUEBA-01…10</span> (no gastan la numeración real), personas ficticias <span class="kbd">prueba.…@legrand.com</span> y <b>no envían correos</b> al cargarse.</p>
+        <div class="alert a-info" style="margin:0">${I.info}<div class="small">Si desde las solicitudes de prueba pulsa <b>Recordar</b>, se intenta enviar un correo a esas direcciones ficticias. Para practicar aprobaciones sin molestar a nadie, active el <b>Modo prueba</b> (arriba): los códigos de <span class="kbd">prueba.…</span> le llegarán a usted.</div></div>
+        <div class="row wrap"><button class="btn" id="dpcargar" ${dp.solicitudes ? 'disabled' : ''}>${I.plus} Cargar datos de prueba</button>
+          <button class="btn dan" id="dpborrar" ${dp.solicitudes || dp.usuarios ? '' : 'disabled'}>${I.trash} Borrar datos de prueba</button></div>
+        <p class="xs muted" style="margin:0">"Borrar" elimina solo lo marcado como prueba (solicitudes PRUEBA-xx con sus aprobaciones, bitácora, tiempos y recordatorios, y las personas ficticias). No toca solicitudes ni usuarios reales.</p>
+      </div></div></div>`);
   $('#cpy').onclick = () => { navigator.clipboard?.writeText($('[data-c=pa_secreto]').value); toast('Secreto copiado.', 'ok'); };
   $('#gen').onclick = () => { const a = new Uint8Array(18); crypto.getRandomValues(a); $('[data-c=pa_secreto]').value = [...a].map(x => x.toString(16).padStart(2, '0')).join(''); toast('Secreto nuevo generado: guarde y actualícelo en Power Automate.'); };
   $('#usar').onclick = () => $('[data-c=app_url]').value = urlApp;
@@ -1849,6 +1859,15 @@ async function adminConfig() {
     await api('rh_admin_guardar_config', { p_cfg: cfg });
   };
   $('#gc').onclick = e => ocupado(e.currentTarget, async () => { try { await guardar(); toast('Configuración guardada.', 'ok'); adminConfig(); } catch (err) { toast(err.message, 'err'); } });
+  $('#dpcargar').onclick = e => ocupado(e.currentTarget, async () => {
+    try { const r = await api('rh_admin_datos_prueba', { p_accion: 'cargar' }); toast(`Se cargaron ${r.solicitudes} solicitudes de prueba. Véalas en Todas las solicitudes y en Reportes.`, 'ok'); await cargarBase(); adminConfig(); }
+    catch (err) { toast(err.message, 'err'); } });
+  $('#dpborrar').onclick = async e => {
+    if (!await confirmar('Borrar datos de prueba', 'Se eliminarán las solicitudes <b>PRUEBA-xx</b> (con sus aprobaciones, bitácora, tiempos y recordatorios) y las personas ficticias <b>prueba.…@legrand.com</b>. Las solicitudes y usuarios reales no se tocan.', 'Borrar', 'dan')) return;
+    ocupado(e.target.closest('button'), async () => {
+      try { const r = await api('rh_admin_datos_prueba', { p_accion: 'borrar' }); toast(`Datos de prueba borrados: ${r.solicitudes} solicitudes y ${r.usuarios} personas.`, 'ok'); adminConfig(); }
+      catch (err) { toast(err.message, 'err'); } });
+  };
   $('#test').onclick = e => ocupado(e.currentTarget, async () => {
     try { await guardar(); const r = await api('rh_admin_probar_correo', { p_para: $('#tp').value });
       toast(r.configurado ? 'Correo de prueba enviado a Power Automate. Revise la bitácora en unos segundos.' : 'Falta la URL de Power Automate.', r.configurado ? 'ok' : 'err'); }
