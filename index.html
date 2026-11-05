@@ -1,0 +1,1482 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Central de Solicitudes RH</title>
+<script>
+/* =====================================================================
+   CONFIGURACIÓN  ✏️  (lo único que hay que tocar para publicar)
+   ===================================================================== */
+const CONFIG = {
+  SUPABASE_URL: 'https://iecfgpqnnsxmnmbxnfcp.supabase.co',
+  SUPABASE_KEY: 'sb_publishable_Mt2sdPIzEcfbKv15x4-JTQ_Tf6csjiH',
+  VERSION: '1.1'
+};
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root{
+  --green:#14564A; --green-600:#1B6B5D; --green-700:#0F443A; --green-50:#E6F0ED; --green-100:#CFE3DD;
+  --slate:#45616C; --slate-50:#EBF0F2;
+  --brick:#B33A2B; --brick-50:#F7E7E4;
+  --olive:#8A7B1F; --olive-50:#F3F0DE;
+  --bg:#F3F5F4; --surface:#FFFFFF; --surface-2:#F8FAF9; --line:#E1E7E5; --line-2:#CFD8D5;
+  --ink:#16211F; --ink-2:#4A5A57; --ink-3:#7C8B88;
+  --shadow:0 1px 2px rgba(20,40,36,.06),0 4px 16px rgba(20,40,36,.06);
+  --shadow-lg:0 12px 48px rgba(10,30,26,.22);
+  --r:16px; --r-sm:10px;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:var(--green)}
+.hidden{display:none!important}
+.muted{color:var(--ink-3)} .small{font-size:13px} .xs{font-size:12px} .b{font-weight:700}
+.row{display:flex;align-items:center;gap:10px} .wrap{flex-wrap:wrap} .grow{flex:1;min-width:0} .between{justify-content:space-between}
+.stack>*+*{margin-top:12px}
+h1,h2,h3{margin:0;line-height:1.25} h1{font-size:24px;font-weight:800;letter-spacing:-.01em} h2{font-size:18px;font-weight:700} h3{font-size:15px;font-weight:700}
+
+/* Botones */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid transparent;border-radius:10px;padding:10px 16px;font-weight:600;font-size:14px;background:var(--surface);color:var(--ink);border-color:var(--line-2);transition:background .15s,border-color .15s,transform .05s;white-space:nowrap;text-decoration:none}
+.btn:hover{background:var(--surface-2)} .btn:active{transform:translateY(1px)}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.btn.pri{background:var(--green);border-color:var(--green);color:#fff} .btn.pri:hover{background:var(--green-600)}
+.btn.dan{background:var(--brick);border-color:var(--brick);color:#fff} .btn.dan:hover{filter:brightness(1.07)}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--ink-2)} .btn.ghost:hover{background:var(--slate-50)}
+.btn.sm{padding:6px 11px;font-size:13px;border-radius:8px}
+.btn.icon{padding:7px;border-radius:8px}
+.btn svg{width:17px;height:17px;flex:none}
+.spin{width:16px;height:16px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:sp .7s linear infinite;display:inline-block}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* Campos */
+.field{display:flex;flex-direction:column;gap:6px}
+.field>label,.lbl{font-weight:600;font-size:13.5px;color:var(--ink)}
+.req::after{content:" *";color:var(--brick)}
+.help{font-size:12.5px;color:var(--ink-3)}
+.inp,select.inp,textarea.inp{width:100%;border:1px solid var(--line-2);border-radius:10px;padding:10px 12px;background:#fff;outline:none;transition:border-color .15s,box-shadow .15s}
+textarea.inp{min-height:84px;resize:vertical}
+.inp:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(20,86,74,.14)}
+.inp:disabled,.inp[readonly]{background:var(--surface-2);color:var(--ink-2)}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.span2{grid-column:1/-1}
+@media (max-width:720px){.grid2,.grid3{grid-template-columns:1fr}}
+.chk{display:flex;gap:10px;align-items:flex-start;cursor:pointer;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fff}
+.chk input{width:18px;height:18px;margin:2px 0 0;accent-color:var(--green);flex:none}
+.chk:has(input:checked){border-color:var(--green);background:var(--green-50)}
+.chk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}
+.days{display:flex;flex-wrap:wrap;gap:8px}
+.day{border:1.5px solid var(--line-2);background:#fff;border-radius:999px;padding:8px 16px;font-weight:600;font-size:14px;color:var(--ink-2);user-select:none}
+.day.on{background:var(--green);border-color:var(--green);color:#fff}
+.exc{border:1px solid #E7D9A6;background:var(--olive-50);border-radius:12px;padding:14px}
+
+/* Layout */
+.topbar{position:sticky;top:0;z-index:30;background:var(--green);color:#fff;height:58px;display:flex;align-items:center;padding:0 18px;gap:14px;box-shadow:0 1px 0 rgba(0,0,0,.08)}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:-.01em}
+.brand-mark{width:30px;height:30px;border-radius:8px;background:#fff;color:var(--green);display:grid;place-items:center;font-weight:800;font-size:13px}
+.brand small{display:block;font-weight:500;font-size:11.5px;opacity:.8;letter-spacing:.03em;text-transform:uppercase}
+.user-chip{display:flex;align-items:center;gap:10px;color:#fff;background:rgba(255,255,255,.12);border:0;border-radius:999px;padding:4px 12px 4px 4px}
+.avatar{width:30px;height:30px;border-radius:50%;background:#fff;color:var(--green);display:grid;place-items:center;font-weight:800;font-size:12px}
+.layout{display:grid;grid-template-columns:232px minmax(0,1fr);min-height:calc(100vh - 58px)}
+.side{border-right:1px solid var(--line);background:var(--surface);padding:16px 10px;position:sticky;top:58px;height:calc(100vh - 58px);overflow:auto}
+.nav a{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;color:var(--ink-2);text-decoration:none;font-weight:600;font-size:14px;margin-bottom:2px}
+.nav a:hover{background:var(--surface-2);color:var(--ink)}
+.nav a.on{background:var(--green-50);color:var(--green)}
+.nav a svg{width:19px;height:19px;flex:none}
+.nav .sep{height:1px;background:var(--line);margin:10px 8px}
+.nav .cap{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);padding:8px 12px 4px;font-weight:700}
+.pill{margin-left:auto;background:var(--brick);color:#fff;border-radius:999px;font-size:11.5px;padding:1px 8px;font-weight:700}
+.main{padding:26px clamp(16px,3vw,36px) 60px;max-width:1180px;width:100%}
+@media (max-width:900px){
+  .layout{grid-template-columns:1fr}
+  .side{position:sticky;top:58px;z-index:20;height:auto;padding:8px 10px;border-right:0;border-bottom:1px solid var(--line);overflow-x:auto}
+  .nav{display:flex;gap:4px;white-space:nowrap}
+  .nav a{margin:0;padding:8px 12px}
+  .nav .sep,.nav .cap{display:none}
+  .user-chip span{display:none}
+  .main{padding:18px 16px 60px}
+}
+.page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:20px}
+.page-head p{margin:4px 0 0;color:var(--ink-2)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+.card-b{padding:20px}
+.card-h{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.sec-title{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);font-weight:700;margin:0 0 10px}
+
+/* Tiles */
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:22px}
+.tile{border-radius:var(--r);padding:16px 18px;color:#fff;text-decoration:none;display:block;box-shadow:var(--shadow);transition:transform .12s}
+.tile:hover{transform:translateY(-2px)}
+.tile .n{font-size:30px;font-weight:800;line-height:1.1;font-variant-numeric:tabular-nums}
+.tile .t{font-size:13px;opacity:.9;font-weight:600}
+.t-green{background:var(--green)} .t-slate{background:var(--slate)} .t-brick{background:var(--brick)} .t-olive{background:var(--olive)}
+.mods{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.mod{display:flex;flex-direction:column;gap:12px;padding:20px;text-decoration:none;color:inherit}
+.mod-ic{width:44px;height:44px;border-radius:12px;background:var(--green-50);color:var(--green);display:grid;place-items:center}
+.mod-ic svg{width:24px;height:24px}
+.mod.soon{opacity:.6;border-style:dashed;box-shadow:none}
+.alert{border-radius:12px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start;font-size:14px;margin-bottom:16px}
+.alert svg{width:18px;height:18px;flex:none;margin-top:2px}
+.a-warn{background:var(--olive-50);color:#5c5214;border:1px solid #E7D9A6}
+.a-info{background:var(--slate-50);color:#2c4148;border:1px solid #D3DEE2}
+.a-ok{background:var(--green-50);color:var(--green-700);border:1px solid var(--green-100)}
+.a-err{background:var(--brick-50);color:#7c2419;border:1px solid #EBC5BE}
+
+/* Tablas */
+.tbl-wrap{overflow-x:auto}
+table.tbl{width:100%;border-collapse:collapse;font-size:14px}
+.tbl th{text-align:left;font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3);font-weight:700;padding:10px 14px;border-bottom:1px solid var(--line);background:var(--surface-2);white-space:nowrap}
+.tbl td{padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:0}
+.tbl tr.click{cursor:pointer} .tbl tr.click:hover td{background:var(--surface-2)}
+.badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:3px 10px;font-size:12px;font-weight:700;white-space:nowrap}
+.badge::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.s-en_aprobacion,.s-pendiente{background:var(--olive-50);color:#6b5f11}
+.s-aprobada,.s-aprobado{background:var(--green-50);color:var(--green)}
+.s-rechazada,.s-rechazado{background:var(--brick-50);color:var(--brick)}
+.s-cancelada,.s-omitido,.s-en_espera{background:var(--slate-50);color:var(--slate)}
+.tag{display:inline-block;border-radius:6px;padding:2px 8px;font-size:12px;font-weight:600;background:var(--slate-50);color:var(--slate)}
+.tag.adm{background:var(--green-50);color:var(--green)} .tag.rh{background:var(--olive-50);color:#6b5f11} .tag.exc{background:var(--olive-50);color:#6b5f11}
+.empty{padding:40px 20px;text-align:center;color:var(--ink-3)}
+.empty svg{width:40px;height:40px;opacity:.5;margin-bottom:8px}
+.mini-steps{display:flex;gap:3px;margin-top:6px}
+.mini-steps i{height:5px;width:22px;border-radius:3px;background:var(--line-2)}
+.mini-steps i.aprobado{background:var(--green)} .mini-steps i.pendiente{background:var(--olive)} .mini-steps i.rechazado{background:var(--brick)}
+
+/* Detalle */
+.det{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:20px;align-items:start}
+@media (max-width:1000px){.det{grid-template-columns:1fr}}
+dl.kv{display:grid;grid-template-columns:minmax(140px,36%) 1fr;margin:0}
+dl.kv dt{color:var(--ink-2);font-size:13.5px;padding:10px 0;border-bottom:1px solid var(--line)}
+dl.kv dd{margin:0;padding:10px 0 10px 12px;border-bottom:1px solid var(--line);font-weight:600;white-space:pre-wrap;word-break:break-word}
+@media (max-width:600px){dl.kv{grid-template-columns:1fr} dl.kv dt{border:0;padding-bottom:0} dl.kv dd{padding-left:0}}
+.sig-img{height:70px;max-width:240px;object-fit:contain;border-bottom:1.5px solid var(--ink-2);display:block;background:#fff}
+.tl{list-style:none;margin:0;padding:0}
+.tl li{position:relative;padding:0 0 18px 34px}
+.tl li::before{content:"";position:absolute;left:11px;top:26px;bottom:0;width:2px;background:var(--line)}
+.tl li:last-child::before{display:none}
+.tl .dot{position:absolute;left:0;top:2px;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:var(--slate-50);color:var(--slate);font-size:12px;font-weight:800}
+.tl .dot.aprobado{background:var(--green);color:#fff} .tl .dot.rechazado{background:var(--brick);color:#fff} .tl .dot.pendiente{background:var(--olive);color:#fff}
+.tl .dot svg{width:14px;height:14px}
+.quote{background:var(--surface-2);border-left:3px solid var(--line-2);padding:8px 12px;border-radius:6px;font-size:13.5px;margin-top:6px;white-space:pre-wrap}
+
+/* Firma */
+.sigpad{border:1.5px dashed var(--line-2);border-radius:12px;background:#fff;position:relative;overflow:hidden}
+.sigpad canvas{display:block;width:100%;height:170px;touch-action:none;cursor:crosshair}
+.sigpad .ph{position:absolute;inset:0;display:grid;place-items:center;color:var(--ink-3);pointer-events:none;font-size:14px}
+.sigpad .line{position:absolute;left:24px;right:24px;bottom:38px;border-bottom:1px solid var(--line-2);pointer-events:none}
+.sigpad.has .ph{display:none}
+.sig-tools{display:flex;justify-content:space-between;align-items:center;margin-top:6px}
+
+/* Login */
+.login{min-height:100vh;display:grid;grid-template-columns:1.05fr 1fr}
+.login-art{background:var(--green);color:#fff;padding:48px clamp(28px,5vw,72px);display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden}
+.login-art::after{content:"";position:absolute;right:-120px;bottom:-120px;width:420px;height:420px;border-radius:50%;border:60px solid rgba(255,255,255,.06)}
+.login-art h1{font-size:clamp(28px,3.4vw,40px);line-height:1.12;max-width:15ch;margin:18px 0 14px}
+.login-art p{opacity:.85;max-width:44ch}
+.login-art ul{list-style:none;padding:0;margin:22px 0 0;display:grid;gap:10px}
+.login-art li{display:flex;gap:10px;align-items:center;opacity:.92;font-size:14px}
+.login-art li svg{width:18px;height:18px;flex:none}
+.login-form{display:grid;place-items:center;padding:32px 20px}
+.login-card{width:100%;max-width:420px}
+.otp{display:flex;gap:8px;justify-content:space-between}
+.otp input{width:100%;max-width:52px;height:58px;text-align:center;font-size:24px;font-weight:800;border:1.5px solid var(--line-2);border-radius:12px;outline:none;background:#fff}
+.otp input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(20,86,74,.14)}
+@media (max-width:860px){.login{grid-template-columns:1fr}.login-art{padding:28px 20px}.login-art ul,.login-art::after{display:none}.login-art h1{margin:12px 0 6px}}
+
+/* Modal / toast */
+.modal-bg{position:fixed;inset:0;background:rgba(14,24,22,.48);z-index:100;display:flex;align-items:flex-start;justify-content:center;padding:5vh 16px;overflow:auto;animation:fi .15s}
+.modal{background:#fff;border-radius:18px;box-shadow:var(--shadow-lg);width:100%;max-width:560px;animation:up .18s}
+.modal.lg{max-width:860px}
+.modal-h{padding:18px 22px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:10px}
+.modal-b{padding:20px 22px}
+.modal-f{padding:14px 22px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap;background:var(--surface-2);border-radius:0 0 18px 18px}
+@keyframes fi{from{opacity:0}} @keyframes up{from{transform:translateY(12px);opacity:0}}
+#toasts{position:fixed;right:16px;bottom:16px;z-index:200;display:flex;flex-direction:column;gap:8px;max-width:calc(100vw - 32px)}
+.toast{background:var(--ink);color:#fff;border-radius:12px;padding:12px 16px;box-shadow:var(--shadow-lg);font-size:14px;max-width:420px;animation:up .2s;display:flex;gap:10px;align-items:flex-start}
+.toast.err{background:var(--brick)} .toast.ok{background:var(--green)}
+
+/* Editores admin */
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:18px;overflow-x:auto}
+.tabs button{border:0;background:none;padding:10px 14px;font-weight:600;color:var(--ink-2);border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.tabs button.on{color:var(--green);border-bottom-color:var(--green)}
+.fcard{border:1px solid var(--line);border-radius:12px;padding:14px;background:#fff;display:grid;gap:12px}
+.fcard.sys{border-color:var(--green-100);background:linear-gradient(0deg,#fff,#fff),var(--green-50)}
+.fcard-h{display:flex;align-items:center;gap:8px}
+.fcard-h .num{width:26px;height:26px;border-radius:7px;background:var(--slate-50);color:var(--slate);display:grid;place-items:center;font-weight:800;font-size:12px;flex:none}
+.flow{display:grid;gap:0}
+.flow .step{position:relative}
+.flow .arrow{height:26px;display:grid;place-items:center;color:var(--ink-3)}
+.flow .arrow svg{width:18px;height:18px}
+.step-start,.step-end{border-radius:999px;padding:8px 16px;font-weight:700;font-size:13px;justify-self:start}
+.step-start{background:var(--slate-50);color:var(--slate)} .step-end{background:var(--green);color:#fff}
+.cond-exc{border-left:4px solid var(--olive)}
+.kbd{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:1px 6px}
+.copy-box{display:flex;gap:8px}
+.copy-box .inp{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+.pol{display:flex;gap:14px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:var(--surface-2)}
+.pol .ic{width:40px;height:40px;border-radius:10px;background:var(--green);color:#fff;display:grid;place-items:center;flex:none}
+.pol .ic svg{width:20px;height:20px}
+.pol.ok{border-color:var(--green-100);background:var(--green-50)}
+.chk.off{opacity:.55;cursor:not-allowed}
+.ver{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-top:10px}
+.diff{background:var(--olive-50);color:#5c5214;border-radius:6px;padding:1px 7px;font-size:12px;font-weight:600;display:inline-block;margin:2px 4px 2px 0}
+.pdfview{width:100%;height:68vh;border:1px solid var(--line);border-radius:10px;background:#525659}
+.dot-st{width:9px;height:9px;border-radius:50%;display:inline-block}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="toasts"></div>
+<div id="modal-root"></div>
+
+<script>
+/* =====================================================================
+   UTILIDADES
+   ===================================================================== */
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const TZ = 'America/Costa_Rica';
+const fmt = d => d ? new Date(d).toLocaleString('es-CR', {timeZone: TZ, day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit', hour12:false}) : '—';
+const fmtD = d => d ? new Date(d).toLocaleDateString('es-CR', {timeZone: TZ, day:'2-digit', month:'2-digit', year:'numeric'}) : '—';
+const fmtISO = s => { if (!s) return '—'; const m = String(s).match(/^(\d{4})-(\d{2})-(\d{2})$/); return m ? `${m[3]}/${m[2]}/${m[1]}` : s; };
+const hoy = () => new Date().toLocaleDateString('en-CA', {timeZone: TZ});
+const DIAS = {lun:'Lunes', mar:'Martes', mie:'Miércoles', jue:'Jueves', vie:'Viernes', sab:'Sábado', dom:'Domingo'};
+const DIAS_ORD = ['lun','mar','mie','jue','vie','sab','dom'];
+const ESTADOS = {en_aprobacion:'En aprobación', aprobada:'Aprobada', rechazada:'Rechazada', cancelada:'Cancelada',
+                 pendiente:'Pendiente', aprobado:'Aprobado', rechazado:'Rechazado', omitido:'Omitido', en_espera:'En espera'};
+const ROLES = {admin:'Administrador', rh:'Recursos Humanos', usuario:'Colaborador'};
+const TIPOS_CAMPO = {texto:'Texto corto', parrafo:'Párrafo', correo:'Correo', fecha:'Fecha', numero:'Número', lista:'Lista desplegable',
+                     opcion:'Opción única', casillas:'Casillas (varias)', si_no:'Casilla Sí/No', departamento:'Departamento (catálogo)', dias:'Días de la semana'};
+const TIPOS_APROB = {jefatura:'Jefatura inmediata (correo del formulario)', director_departamento:'Director del departamento (catálogo)', correo:'Correo(s) específico(s)'};
+const badge = e => `<span class="badge s-${esc(e)}">${esc(ESTADOS[e] || e)}</span>`;
+const iniciales = n => (n || '?').split(/\s+/).filter(Boolean).slice(0, 2).map(x => x[0]).join('').toUpperCase();
+const store = {
+  get(k) { try { return localStorage.getItem('crh_' + k); } catch { return null; } },
+  set(k, v) { try { v == null ? localStorage.removeItem('crh_' + k) : localStorage.setItem('crh_' + k, v); } catch {} }
+};
+const slug = s => { let k = String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 40); if (!/^[a-z]/.test(k)) k = 'c_' + k; return k; };
+const consecutivos = arr => { const ix = (arr || []).map(d => DIAS_ORD.indexOf(d)).sort((a, b) => a - b); return ix.some((v, i) => i > 0 && v - ix[i - 1] === 1); };
+
+const I = { // íconos (trazo)
+  home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>',
+  casa:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9v11h14V9"/><rect x="9" y="12" width="6" height="5" rx="1"/></svg>',
+  doc:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>',
+  inbox:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.5 5h13L22 12v6a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-6z"/></svg>',
+  check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+  x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>',
+  list:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>',
+  users:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+  key:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="4.5"/><path d="m10.7 12.3 9.8-9.8M17 6l3 3M14.5 8.5l2 2"/></svg>',
+  build:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h1M14 9h1M9 13h1M14 13h1M9 17h1M14 17h1"/></svg>',
+  flow:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="6" rx="1.5"/><rect x="14" y="15" width="7" height="6" rx="1.5"/><path d="M6.5 9v3a3 3 0 0 0 3 3h4.5"/></svg>',
+  gear:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
+  mail:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/></svg>',
+  plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>',
+  up:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>',
+  down:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>',
+  trash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>',
+  edit:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>',
+  pdf:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>',
+  send:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4z"/></svg>',
+  out:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>',
+  warn:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg>',
+  info:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>',
+  shield:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
+  pen:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19 7-7 3 3-7 7-3-3z"/><path d="m18 13-1.5-7.5L2 2l3.5 14.5L13 18l5-5zM2 2l7.59 7.59"/><circle cx="11" cy="11" r="2"/></svg>',
+  arrow:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>',
+  refresh:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36L21 8"/><path d="M21 3v5h-5"/></svg>',
+  book:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5V21h16v-4"/><path d="M9 7h7M9 11h5"/></svg>',
+  history:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></svg>',
+  copy:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>'
+};
+
+/* =====================================================================
+   API (todas las llamadas pasan por funciones RPC seguras)
+   ===================================================================== */
+async function rpc(fn, args = {}) {
+  let r;
+  try {
+    r = await fetch(`${CONFIG.SUPABASE_URL.replace(/\/+$/, '')}/rest/v1/rpc/${fn}`, {
+      method: 'POST',
+      headers: { apikey: CONFIG.SUPABASE_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify(args)
+    });
+  } catch (e) { throw new Error('No hay conexión con el servidor. Revise su internet.'); }
+  const txt = await r.text();
+  let data; try { data = txt ? JSON.parse(txt) : null; } catch { data = txt; }
+  if (!r.ok) {
+    const msg = (data && (data.message || data.hint)) || txt || ('Error ' + r.status);
+    if (String(msg).includes('SESION_EXPIRADA')) { finSesion(); throw new Error('Su sesión expiró. Ingrese de nuevo.'); }
+    if (r.status === 404 && /function|could not find/i.test(msg)) throw new Error('Falta instalar el esquema en Supabase (función ' + fn + ').');
+    throw new Error(msg);
+  }
+  return data;
+}
+const api = (fn, args = {}) => rpc(fn, { p_token: S.token, ...args });
+
+/* =====================================================================
+   ESTADO
+   ===================================================================== */
+const S = { token: store.get('token'), user: null, app: 'Central de Solicitudes RH', empresa: 'Legrand',
+            modulos: [], departamentos: [], resumen: {}, publico: null };
+
+/* =====================================================================
+   UI: toast, modal, botón ocupado
+   ===================================================================== */
+function toast(msg, tipo = '') {
+  const t = document.createElement('div');
+  t.className = 'toast ' + tipo; t.innerHTML = esc(msg);
+  $('#toasts').appendChild(t);
+  setTimeout(() => t.remove(), tipo === 'err' ? 7000 : 4200);
+}
+function modal({ title, body, actions = [], size = '', onOpen }) {
+  const bg = document.createElement('div');
+  bg.className = 'modal-bg';
+  bg.innerHTML = `<div class="modal ${size}" role="dialog" aria-modal="true">
+    <div class="modal-h"><h2>${esc(title)}</h2><button class="btn icon ghost" data-x aria-label="Cerrar">${I.x}</button></div>
+    <div class="modal-b">${body}</div>
+    ${actions.length ? `<div class="modal-f">${actions.map((a, i) => `<button class="btn ${a.cls || ''}" data-a="${i}">${a.label}</button>`).join('')}</div>` : ''}
+  </div>`;
+  const close = () => bg.remove();
+  bg.addEventListener('mousedown', e => { if (e.target === bg) close(); });
+  $('[data-x]', bg).onclick = close;
+  actions.forEach((a, i) => { $(`[data-a="${i}"]`, bg).onclick = () => a.onClick ? a.onClick({ close, el: bg, btn: $(`[data-a="${i}"]`, bg) }) : close(); });
+  $('#modal-root').appendChild(bg);
+  onOpen && onOpen(bg, close);
+  return { close, el: bg };
+}
+function confirmar(title, texto, label = 'Confirmar', cls = 'pri') {
+  return new Promise(res => modal({ title, body: `<p style="margin:0">${texto}</p>`,
+    actions: [{ label: 'Cancelar', onClick: ({ close }) => { close(); res(false); } },
+              { label, cls, onClick: ({ close }) => { close(); res(true); } }] }));
+}
+async function ocupado(btn, fn) {
+  if (!btn) return fn();
+  const html = btn.innerHTML; btn.disabled = true; btn.innerHTML = '<span class="spin"></span>' + (btn.textContent.trim() ? ' Procesando…' : '');
+  try { return await fn(); } finally { if (btn.isConnected) { btn.disabled = false; btn.innerHTML = html; } }
+}
+
+/* =====================================================================
+   FIRMA (dibujo)
+   ===================================================================== */
+class Firma {
+  constructor(host) {
+    host.innerHTML = `<div class="sigpad"><canvas></canvas><div class="line"></div><div class="ph">${I.pen.replace('<svg', '<svg style="width:18px;height:18px;margin-right:6px;vertical-align:-3px"')}Firme aquí con el mouse o el dedo</div></div>
+      <div class="sig-tools"><span class="xs muted">Su firma quedará en el documento final.</span><button type="button" class="btn sm ghost" data-clear>Borrar firma</button></div>`;
+    this.wrap = $('.sigpad', host); this.c = $('canvas', host); this.ctx = this.c.getContext('2d');
+    this.trazos = 0; this.dibujando = false;
+    this.ajustar(); this._ro = new ResizeObserver(() => this.ajustar()); this._ro.observe(this.c);
+    const pos = e => { const r = this.c.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+    this.c.addEventListener('pointerdown', e => { e.preventDefault(); this.c.setPointerCapture(e.pointerId); this.dibujando = true; this.last = pos(e); this.ctx.beginPath(); this.ctx.arc(this.last[0], this.last[1], 1.1, 0, Math.PI * 2); this.ctx.fill(); });
+    this.c.addEventListener('pointermove', e => { if (!this.dibujando) return; const p = pos(e); this.ctx.beginPath(); this.ctx.moveTo(...this.last); this.ctx.lineTo(...p); this.ctx.stroke(); this.last = p; this.trazos++; this.wrap.classList.add('has'); });
+    const fin = () => { this.dibujando = false; };
+    this.c.addEventListener('pointerup', fin); this.c.addEventListener('pointercancel', fin);
+    $('[data-clear]', host).onclick = () => this.limpiar();
+  }
+  ajustar() {
+    const r = this.c.getBoundingClientRect(); if (!r.width) return;
+    const dpr = window.devicePixelRatio || 1;
+    if (this.c.width === Math.round(r.width * dpr)) return;
+    const prev = this.trazos ? this.c.toDataURL() : null;
+    this.c.width = Math.round(r.width * dpr); this.c.height = Math.round(r.height * dpr);
+    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    Object.assign(this.ctx, { lineWidth: 2.4, lineCap: 'round', lineJoin: 'round', strokeStyle: '#1B2A55', fillStyle: '#1B2A55' });
+    if (prev) { const img = new Image(); img.onload = () => this.ctx.drawImage(img, 0, 0, r.width, r.height); img.src = prev; }
+  }
+  limpiar() { this.ctx.clearRect(0, 0, this.c.width, this.c.height); this.trazos = 0; this.wrap.classList.remove('has'); }
+  vacia() { return this.trazos < 4; }
+  png() { // recorta y normaliza a 600x200 sobre fondo blanco (≈10–25 KB)
+    const W = 600, H = 200, o = document.createElement('canvas'); o.width = W; o.height = H;
+    const x = o.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, W, H);
+    const d = this.ctx.getImageData(0, 0, this.c.width, this.c.height).data;
+    let x0 = this.c.width, y0 = this.c.height, x1 = 0, y1 = 0;
+    for (let yy = 0; yy < this.c.height; yy += 2) for (let xx = 0; xx < this.c.width; xx += 2) {
+      if (d[(yy * this.c.width + xx) * 4 + 3] > 20) { if (xx < x0) x0 = xx; if (xx > x1) x1 = xx; if (yy < y0) y0 = yy; if (yy > y1) y1 = yy; }
+    }
+    if (x1 <= x0) return null;
+    const pad = 12; x0 = Math.max(0, x0 - pad); y0 = Math.max(0, y0 - pad); x1 = Math.min(this.c.width, x1 + pad); y1 = Math.min(this.c.height, y1 + pad);
+    const sw = x1 - x0, sh = y1 - y0, k = Math.min(W / sw, H / sh, 1.6), dw = sw * k, dh = sh * k;
+    x.drawImage(this.c, x0, y0, sw, sh, (W - dw) / 2, (H - dh) / 2, dw, dh);
+    return o.toDataURL('image/png');
+  }
+}
+
+/* =====================================================================
+   SESIÓN Y ARRANQUE
+   ===================================================================== */
+function finSesion() { S.token = null; S.user = null; store.set('token', null); }
+async function cargarBase() {
+  const [m, r] = await Promise.all([api('rh_modulos'), api('rh_resumen')]);
+  S.modulos = m.modulos || []; S.departamentos = m.departamentos || []; S.resumen = r || {};
+}
+async function iniciar() {
+  if (S.token) {
+    try {
+      const s = await rpc('rh_sesion', { p_token: S.token });
+      S.user = s.usuario; S.app = s.app; S.empresa = s.empresa; document.title = s.app;
+      await cargarBase();
+    } catch (e) { finSesion(); }
+  }
+  if (!S.user) return vistaLogin();
+  if (S.user.pin_temporal) return forzarCambioPin();
+  router();
+}
+window.addEventListener('hashchange', () => { if (S.user) router(); });
+
+/* =====================================================================
+   LOGIN
+   ===================================================================== */
+async function vistaLogin(paso = 'correo', ctx = {}) {
+  if (!S.publico) { try { S.publico = await rpc('rh_publico'); S.app = S.publico.app; S.empresa = S.publico.empresa; document.title = S.app; } catch (e) { S.publico = { departamentos: [], dominios: [] }; } }
+  const dom = (S.publico.dominios || []).map(d => '@' + d).join(', ');
+  let form = '';
+  if (paso === 'correo') form = `
+    <h1>Ingresar</h1><p class="muted" style="margin:6px 0 24px">Escriba su correo corporativo.</p>
+    <form id="f" class="stack">
+      <div class="field"><label for="em">Correo</label><input class="inp" id="em" type="email" autocomplete="email" placeholder="nombre${esc(dom.split(',')[0] || '@empresa.com')}" value="${esc(ctx.email || store.get('email') || '')}" required></div>
+      <button class="btn pri" style="width:100%;padding:12px">Continuar</button>
+      ${dom ? `<p class="xs muted" style="text-align:center">Solo correos ${esc(dom)}</p>` : ''}
+    </form>`;
+  if (paso === 'pin') form = `
+    <h1>Hola${ctx.nombre ? ', ' + esc(ctx.nombre.split(' ')[0]) : ''}</h1><p class="muted" style="margin:6px 0 24px">Cuenta de administrador · ingrese su PIN.</p>
+    <form id="f" class="stack">
+      <div class="field"><label for="pin">PIN</label><input class="inp" id="pin" type="password" inputmode="numeric" autocomplete="current-password" maxlength="8" style="font-size:22px;letter-spacing:8px;text-align:center" required></div>
+      <button class="btn pri" style="width:100%;padding:12px">Ingresar</button>
+      <button type="button" class="btn ghost" style="width:100%" data-back>Usar otro correo</button>
+    </form>`;
+  if (paso === 'codigo') form = `
+    <h1>Revise su correo</h1><p class="muted" style="margin:6px 0 24px">Enviamos un código de 6 dígitos a <b>${esc(ctx.email)}</b>. Vence en ${esc(ctx.minutos || 60)} minutos.</p>
+    <form id="f" class="stack">
+      <div class="otp">${[0,1,2,3,4,5].map(i => `<input inputmode="numeric" maxlength="1" data-i="${i}" aria-label="Dígito ${i + 1}">`).join('')}</div>
+      <button class="btn pri" style="width:100%;padding:12px">Verificar</button>
+      <div class="row between"><button type="button" class="btn ghost sm" data-back>Usar otro correo</button><button type="button" class="btn ghost sm" data-resend>Reenviar código</button></div>
+      <p class="xs muted">¿No llega? Revise la carpeta de correo no deseado.</p>
+    </form>`;
+  if (paso === 'no_registrado') form = `
+    <h1>Solicitar acceso</h1><p class="muted" style="margin:6px 0 20px"><b>${esc(ctx.email)}</b> aún no tiene usuario. Complete sus datos y un administrador lo habilitará.</p>
+    <form id="f" class="stack">
+      <div class="field"><label class="req" for="an">Nombre completo</label><input class="inp" id="an" required></div>
+      <div class="field"><label for="ad">Departamento</label><select class="inp" id="ad"><option value="">Seleccione…</option>${(S.publico.departamentos || []).map(d => `<option>${esc(d)}</option>`).join('')}</select></div>
+      <div class="field"><label for="ap">Puesto</label><input class="inp" id="ap"></div>
+      <div class="field"><label for="ac">Comentario (opcional)</label><textarea class="inp" id="ac" style="min-height:60px"></textarea></div>
+      <button class="btn pri" style="width:100%;padding:12px">Enviar solicitud de acceso</button>
+      <button type="button" class="btn ghost" style="width:100%" data-back>Volver</button>
+    </form>`;
+  if (paso === 'pendiente' || paso === 'enviada') form = `
+    <div class="alert a-info">${I.info}<div><b>${paso === 'enviada' ? 'Solicitud enviada.' : 'Su solicitud de acceso está en revisión.'}</b><br>Un administrador la revisará y recibirá un correo cuando su usuario esté listo.</div></div>
+    <button class="btn" data-back style="width:100%">Volver</button>`;
+  if (paso === 'inactivo') form = `
+    <div class="alert a-err">${I.warn}<div><b>Usuario inactivo.</b><br>Contacte a un administrador de la central para reactivarlo.</div></div>
+    <button class="btn" data-back style="width:100%">Volver</button>`;
+
+  $('#app').innerHTML = `<div class="login">
+    <section class="login-art">
+      <div class="brand"><div class="brand-mark">RH</div><div>${esc(S.empresa)}<small>Recursos Humanos</small></div></div>
+      <div><h1>${esc(S.app)}</h1><p>Envíe, firme y dé seguimiento a sus solicitudes de Recursos Humanos en un solo lugar.</p>
+        <ul><li>${I.pen}Firma digital en cada paso</li><li>${I.flow}Flujo de aprobación con avisos por correo</li><li>${I.doc}Documento final en PDF con todas las firmas</li></ul></div>
+      <div class="xs" style="opacity:.6">v${CONFIG.VERSION}</div>
+    </section>
+    <section class="login-form"><div class="login-card">${form}<p id="msg" class="small" style="color:var(--brick);min-height:20px;margin-top:12px"></p></div></section>
+  </div>`;
+  const msg = t => $('#msg').textContent = t || '';
+  const back = $('[data-back]'); if (back) back.onclick = () => vistaLogin('correo', ctx);
+  const f = $('#f'); if (!f) return;
+
+  if (paso === 'correo') {
+    $('#em').focus();
+    f.onsubmit = e => { e.preventDefault(); ocupado($('button', f), async () => {
+      msg(''); const email = $('#em').value.trim().toLowerCase();
+      try {
+        const r = await rpc('rh_login_inicio', { p_email: email });
+        if (!r.ok) return msg(r.error);
+        store.set('email', email);
+        vistaLogin(r.modo, { email, nombre: r.nombre, minutos: r.minutos });
+      } catch (err) { msg(err.message); }
+    }); };
+  }
+  if (paso === 'pin') {
+    $('#pin').focus();
+    f.onsubmit = e => { e.preventDefault(); ocupado($('button', f), async () => {
+      try { const r = await rpc('rh_login_pin', { p_email: ctx.email, p_pin: $('#pin').value }); if (!r.ok) { $('#pin').value = ''; return msg(r.error); } entrar(r); }
+      catch (err) { msg(err.message); }
+    }); };
+  }
+  if (paso === 'codigo') {
+    const ins = $$('.otp input'); ins[0].focus();
+    ins.forEach((inp, i) => {
+      inp.addEventListener('input', () => { inp.value = inp.value.replace(/\D/g, '').slice(-1); if (inp.value && ins[i + 1]) ins[i + 1].focus(); if (ins.every(x => x.value)) f.requestSubmit(); });
+      inp.addEventListener('keydown', e => { if (e.key === 'Backspace' && !inp.value && ins[i - 1]) ins[i - 1].focus(); });
+      inp.addEventListener('paste', e => { const t = (e.clipboardData.getData('text') || '').replace(/\D/g, '').slice(0, 6); if (t.length) { e.preventDefault(); t.split('').forEach((c, j) => ins[j] && (ins[j].value = c)); (ins[t.length] || ins[5]).focus(); if (t.length === 6) f.requestSubmit(); } });
+    });
+    f.onsubmit = e => { e.preventDefault(); ocupado($('button.pri', f), async () => {
+      try { const r = await rpc('rh_login_codigo', { p_email: ctx.email, p_codigo: ins.map(x => x.value).join('') });
+        if (!r.ok) { ins.forEach(x => x.value = ''); ins[0].focus(); return msg(r.error); } entrar(r); }
+      catch (err) { msg(err.message); }
+    }); };
+    $('[data-resend]').onclick = e => ocupado(e.currentTarget, async () => {
+      try { const r = await rpc('rh_login_inicio', { p_email: ctx.email }); if (!r.ok) return msg(r.error); msg(''); toast('Le enviamos un código nuevo.', 'ok'); }
+      catch (err) { msg(err.message); }
+    });
+  }
+  if (paso === 'no_registrado') {
+    $('#an').focus();
+    f.onsubmit = e => { e.preventDefault(); ocupado($('button.pri', f), async () => {
+      try { await rpc('rh_solicitar_acceso', { p_email: ctx.email, p_nombre: $('#an').value, p_departamento: $('#ad').value, p_puesto: $('#ap').value, p_comentario: $('#ac').value });
+        vistaLogin('enviada', ctx); }
+      catch (err) { msg(err.message); }
+    }); };
+  }
+}
+async function entrar(r) {
+  S.token = r.token; S.user = r.usuario; store.set('token', r.token);
+  await cargarBase();
+  if (S.user.pin_temporal) return forzarCambioPin();
+  router();
+}
+function forzarCambioPin() {
+  $('#app').innerHTML = `<div class="login-form" style="min-height:100vh"><div class="login-card card card-b">
+    <div class="alert a-info">${I.shield}<div><b>Cree su PIN personal.</b><br>Está usando un PIN temporal. Por seguridad, cámbielo antes de continuar.</div></div>
+    <form id="f" class="stack">
+      <div class="field"><label for="p0">PIN temporal</label><input class="inp" id="p0" type="password" inputmode="numeric" maxlength="8" required></div>
+      <div class="field"><label for="p1">Nuevo PIN (6 a 8 dígitos)</label><input class="inp" id="p1" type="password" inputmode="numeric" maxlength="8" required></div>
+      <div class="field"><label for="p2">Confirmar nuevo PIN</label><input class="inp" id="p2" type="password" inputmode="numeric" maxlength="8" required></div>
+      <button class="btn pri" style="width:100%">Guardar PIN</button>
+      <p id="msg" class="small" style="color:var(--brick);min-height:18px"></p>
+    </form></div></div>`;
+  $('#f').onsubmit = e => { e.preventDefault(); ocupado($('#f button'), async () => {
+    if ($('#p1').value !== $('#p2').value) return $('#msg').textContent = 'Los PIN no coinciden.';
+    try { await api('rh_cambiar_pin', { p_pin_actual: $('#p0').value, p_pin_nuevo: $('#p1').value }); S.user.pin_temporal = false; S.user.tiene_pin = true; toast('PIN actualizado.', 'ok'); router(); }
+    catch (err) { $('#msg').textContent = err.message; }
+  }); };
+}
+async function salir() { try { await api('rh_logout'); } catch {} finSesion(); location.hash = ''; vistaLogin(); }
+
+/* =====================================================================
+   ROUTER + SHELL
+   ===================================================================== */
+const esAdmin = () => S.user?.rol === 'admin';
+const esRH = () => ['admin', 'rh'].includes(S.user?.rol);
+function shell(activo, contenido) {
+  const r = S.resumen || {};
+  const a = (href, key, ic, txt, n) => `<a href="${href}" class="${activo === key ? 'on' : ''}">${ic}<span>${txt}</span>${n ? `<span class="pill">${n}</span>` : ''}</a>`;
+  $('#app').innerHTML = `
+  <header class="topbar">
+    <div class="brand grow"><div class="brand-mark">RH</div><div>${esc(S.app)}<small>${esc(S.empresa)}</small></div></div>
+    <button class="user-chip" id="userchip" title="${esc(S.user.email)}"><div class="avatar">${esc(iniciales(S.user.nombre || S.user.email))}</div><span class="small">${esc((S.user.nombre || S.user.email).split(' ')[0])}</span></button>
+  </header>
+  <div class="layout">
+    <aside class="side"><nav class="nav">
+      ${a('#/', 'inicio', I.home, 'Inicio')}
+      ${a('#/mis', 'mis', I.doc, 'Mis solicitudes', r.mis_abiertas)}
+      ${r.soy_aprobador || r.por_aprobar || esRH() ? a('#/aprobar', 'aprobar', I.inbox, 'Por aprobar', r.por_aprobar) : ''}
+      ${esRH() ? `<div class="sep"></div><div class="cap">Recursos Humanos</div>
+        ${a('#/todas', 'todas', I.list, 'Todas las solicitudes', r.pdf_pendiente)}
+        ${a('#/politicas', 'politicas', I.book, 'Políticas', r.sin_politica)}` : ''}
+      ${esAdmin() ? `<div class="sep"></div><div class="cap">Administración</div>
+        ${a('#/admin/usuarios', 'usuarios', I.users, 'Usuarios')}
+        ${a('#/admin/accesos', 'accesos', I.key, 'Solicitudes de acceso', r.accesos)}
+        ${a('#/admin/departamentos', 'departamentos', I.build, 'Departamentos')}
+        ${a('#/admin/modulos', 'modulos', I.flow, 'Formularios y flujos')}
+        ${a('#/admin/config', 'config', I.gear, 'Configuración')}
+        ${a('#/admin/correos', 'correos', I.mail, 'Bitácora de correos')}` : ''}
+    </nav></aside>
+    <main class="main" id="main">${contenido}</main>
+  </div>`;
+  $('#userchip').onclick = menuUsuario;
+}
+function menuUsuario() {
+  modal({ title: 'Mi cuenta', body: `
+    <div class="row" style="margin-bottom:14px"><div class="avatar" style="width:46px;height:46px;font-size:16px;background:var(--green);color:#fff">${esc(iniciales(S.user.nombre || S.user.email))}</div>
+    <div><div class="b">${esc(S.user.nombre || '—')}</div><div class="small muted">${esc(S.user.email)}</div><span class="tag ${S.user.rol === 'admin' ? 'adm' : S.user.rol === 'rh' ? 'rh' : ''}">${esc(ROLES[S.user.rol])}</span></div></div>
+    ${esAdmin() ? `<form id="fp" class="stack" style="border-top:1px solid var(--line);padding-top:14px"><h3>Cambiar PIN</h3>
+      <div class="grid3"><input class="inp" id="q0" type="password" inputmode="numeric" maxlength="8" placeholder="PIN actual"><input class="inp" id="q1" type="password" inputmode="numeric" maxlength="8" placeholder="Nuevo PIN"><input class="inp" id="q2" type="password" inputmode="numeric" maxlength="8" placeholder="Confirmar"></div>
+      <button class="btn sm">Actualizar PIN</button></form>` : ''}`,
+    actions: [{ label: I.out + ' Cerrar sesión', cls: 'dan', onClick: ({ close }) => { close(); salir(); } }],
+    onOpen: el => { const fp = $('#fp', el); if (fp) fp.onsubmit = e => { e.preventDefault(); ocupado($('button', fp), async () => {
+      if ($('#q1', el).value !== $('#q2', el).value) return toast('Los PIN no coinciden.', 'err');
+      try { await api('rh_cambiar_pin', { p_pin_actual: $('#q0', el).value, p_pin_nuevo: $('#q1', el).value }); toast('PIN actualizado.', 'ok'); fp.reset(); } catch (err) { toast(err.message, 'err'); }
+    }); }; } });
+}
+async function router() {
+  const h = (location.hash || '#/').slice(1).split('/').filter(Boolean);
+  const [a, b] = h;
+  try { S.resumen = await api('rh_resumen'); } catch (e) { if (!S.token) return vistaLogin(); }
+  if (!S.user) return;
+  window.scrollTo(0, 0);
+  try {
+    if (!a) return vistaInicio();
+    if (a === 'nueva') return vistaNueva(b);
+    if (a === 'editar') return vistaEditar(+b);
+    if (a === 'politicas' && esRH()) return vistaPoliticas();
+    if (a === 'mis') return vistaMis();
+    if (a === 'aprobar') return vistaAprobar();
+    if (a === 'todas' && esRH()) return vistaTodas();
+    if (a === 'solicitud') return vistaDetalle(+b);
+    if (a === 'admin' && esAdmin()) return ({ usuarios: adminUsuarios, accesos: adminAccesos, departamentos: adminDepartamentos,
+      modulos: adminModulos, config: adminConfig, correos: adminCorreos }[b] || adminUsuarios)();
+    location.hash = '#/';
+  } catch (e) {
+    if (!S.user) return vistaLogin();
+    shell('', `<div class="alert a-err">${I.warn}<div>${esc(e.message)}</div></div>`);
+  }
+}
+const cargando = (activo) => shell(activo, `<div class="empty"><span class="spin" style="width:26px;height:26px;color:var(--green)"></span></div>`);
+
+/* =====================================================================
+   INICIO
+   ===================================================================== */
+async function vistaInicio() {
+  const r = S.resumen; let avisos = '';
+  if (esAdmin()) {
+    try {
+      const c = await api('rh_admin_config');
+      if (!c.pa_url) avisos += `<div class="alert a-warn">${I.warn}<div><b>Los correos aún no están conectados.</b> Configure la URL del flujo de Power Automate en <a href="#/admin/config">Configuración</a>.</div></div>`;
+      if (!c._pg_net) avisos += `<div class="alert a-err">${I.warn}<div><b>Falta activar la extensión pg_net</b> en Supabase (Database → Extensions). Sin ella no salen correos.</div></div>`;
+      if (c.modo_prueba_correo) avisos += `<div class="alert a-info">${I.info}<div><b>Modo prueba activo:</b> todos los correos se desvían a ${esc(c.modo_prueba_correo)}.</div></div>`;
+      if (!c.app_url) avisos += `<div class="alert a-warn">${I.warn}<div>Falta la <b>URL de la app</b> en Configuración: sin ella los correos no llevan el botón para abrir la solicitud.</div></div>`;
+    } catch {}
+    S.modulos.forEach(m => { const mal = (m.flujo || []).filter(p => p.tipo === 'correo' && !(p.correos || '').trim()); if (mal.length) avisos += `<div class="alert a-warn">${I.warn}<div><b>${esc(m.nombre)}:</b> el flujo tiene pasos sin aprobador (${mal.map(p => esc(p.nombre)).join(', ')}). <a href="#/admin/modulos">Configurar flujo</a></div></div>`; });
+  }
+  if (esRH()) S.modulos.filter(m => m.activo && !m.politica).forEach(m => { avisos += `<div class="alert a-warn">${I.book}<div><b>${esc(m.nombre)}:</b> no hay política vigente publicada. Los colaboradores no podrán abrirla antes de aceptar la declaración. <a href="#/politicas">Publicar política</a></div></div>`; });
+  const tiles = [
+    `<a class="tile t-olive" href="#/aprobar"><div class="n">${r.por_aprobar || 0}</div><div class="t">Pendientes de mi aprobación</div></a>`,
+    `<a class="tile t-green" href="#/mis"><div class="n">${r.mis_abiertas || 0}</div><div class="t">Mis solicitudes en curso</div></a>`,
+    esRH() ? `<a class="tile t-slate" href="#/todas"><div class="n">${r.en_curso || 0}</div><div class="t">Solicitudes en aprobación (todas)</div></a>` : '',
+    esAdmin() && r.accesos ? `<a class="tile t-brick" href="#/admin/accesos"><div class="n">${r.accesos}</div><div class="t">Solicitudes de acceso</div></a>` : '',
+    esRH() && r.pdf_pendiente ? `<a class="tile t-brick" href="#/todas"><div class="n">${r.pdf_pendiente}</div><div class="t">Aprobadas sin PDF enviado</div></a>` : ''
+  ].join('');
+  shell('inicio', `
+    <div class="page-head"><div><h1>Hola, ${esc((S.user.nombre || '').split(' ')[0] || 'bienvenido')}</h1><p>¿Qué necesita gestionar hoy?</p></div></div>
+    ${avisos}
+    <div class="tiles">${tiles}</div>
+    <p class="sec-title">Trámites disponibles</p>
+    <div class="mods">
+      ${S.modulos.filter(m => m.activo).map(m => `<a class="card mod" href="#/nueva/${esc(m.codigo)}">
+        <div class="mod-ic">${I[m.icono] || I.doc}</div>
+        <div><h3>${esc(m.nombre)}</h3><p class="small muted" style="margin:4px 0 0">${esc(m.descripcion)}</p></div>
+        <div class="row small" style="color:var(--green);font-weight:700;margin-top:auto">${I.plus.replace('<svg', '<svg style="width:15px;height:15px"')} Nueva solicitud</div></a>`).join('')}
+      <div class="card mod soon"><div class="mod-ic">${I.plus}</div><div><h3>Próximos trámites</h3><p class="small muted" style="margin:4px 0 0">Vacaciones, constancias, permisos y más se agregarán como nuevos módulos.</p></div></div>
+    </div>`);
+}
+
+/* =====================================================================
+   FORMULARIO DINÁMICO
+   ===================================================================== */
+function valorAuto(f) {
+  if (f.auto === 'hoy') return hoy();
+  if (f.auto === 'nombre') return S.user.nombre || '';
+  if (f.auto === 'departamento') return S.user.departamento || '';
+  if (f.auto === 'puesto') return S.user.puesto || '';
+  return '';
+}
+function campoHTML(f, v, deshab = false) {
+  const id = 'c_' + f.key, d = deshab ? 'disabled' : '', req = f.requerido ? 'req' : '';
+  const lab = `<label class="${req}" for="${id}">${esc(f.label)}</label>`;
+  const help = f.ayuda ? `<span class="help">${esc(f.ayuda)}</span>` : '';
+  const ops = f.opciones || [];
+  let inner = '';
+  switch (f.tipo) {
+    case 'parrafo': inner = `<textarea class="inp" id="${id}" data-k="${esc(f.key)}" ${d}>${esc(v)}</textarea>`; break;
+    case 'correo': inner = `<input class="inp" id="${id}" type="email" data-k="${esc(f.key)}" value="${esc(v)}" placeholder="nombre@empresa.com" ${d}>`; break;
+    case 'fecha': inner = `<input class="inp" id="${id}" type="date" data-k="${esc(f.key)}" value="${esc(v)}" ${d}>`; break;
+    case 'numero': inner = `<input class="inp" id="${id}" type="number" data-k="${esc(f.key)}" value="${esc(v)}" ${d}>`; break;
+    case 'lista': inner = `<select class="inp" id="${id}" data-k="${esc(f.key)}" ${d}><option value="">Seleccione…</option>${ops.map(o => `<option ${o === v ? 'selected' : ''}>${esc(o)}</option>`).join('')}</select>`; break;
+    case 'departamento': { const deps = S.departamentos.includes(v) || !v ? S.departamentos : [v, ...S.departamentos];
+      inner = `<select class="inp" id="${id}" data-k="${esc(f.key)}" ${d}><option value="">Seleccione…</option>${deps.map(o => `<option ${o === v ? 'selected' : ''}>${esc(o)}</option>`).join('')}</select>`; break; }
+    case 'opcion': inner = `<div class="chk-grid" data-k="${esc(f.key)}" data-t="opcion">${ops.map(o => `<label class="chk"><input type="radio" name="${id}" value="${esc(o)}" ${o === v ? 'checked' : ''} ${d}><span>${esc(o)}</span></label>`).join('')}</div>`; break;
+    case 'casillas': inner = `<div class="chk-grid" data-k="${esc(f.key)}" data-t="casillas">${ops.map(o => `<label class="chk"><input type="checkbox" value="${esc(o)}" ${(v || []).includes(o) ? 'checked' : ''} ${d}><span>${esc(o)}</span></label>`).join('')}</div>`; break;
+    case 'si_no': return `<div class="field span2"><label class="chk"><input type="checkbox" data-k="${esc(f.key)}" data-t="si_no" ${v ? 'checked' : ''} ${d}><span><b class="${req}">${esc(f.label)}</b>${f.ayuda ? `<br><span class="help">${esc(f.ayuda)}</span>` : ''}</span></label></div>`;
+    case 'dias': {
+      const sel = v || [];
+      inner = `<div class="days" data-k="${esc(f.key)}" data-t="dias" data-max="${esc(f.max || '')}">${(ops.length ? ops : ['lun','mar','mie','jue','vie']).map(o => `<button type="button" class="day ${sel.includes(o) ? 'on' : ''}" data-d="${o}" ${d}>${DIAS[o] || o}</button>`).join('')}</div>
+        <div class="exc hidden" data-exc="${esc(f.key)}">
+          <div class="row" style="margin-bottom:10px;color:#5c5214">${I.warn.replace('<svg', '<svg style="width:18px;height:18px"')}<b class="small">Eligió días consecutivos. La política lo permite solo por excepción: indique el motivo.</b></div>
+          <div class="grid2"><div class="field"><label class="req">Motivo de la excepción</label><select class="inp" data-k="${esc(f.key)}_excepcion_motivo" ${d}><option value="">Seleccione…</option>${(f.motivos || ['Salud', 'Cuido', 'Otro']).map(o => `<option>${esc(o)}</option>`).join('')}</select></div>
+          <div class="field span2"><label class="req">Detalle de la excepción</label><textarea class="inp" data-k="${esc(f.key)}_excepcion_detalle" style="min-height:64px" ${d}></textarea><span class="help">La excepción agrega al flujo la aprobación del director del departamento y de RH.</span></div></div>
+        </div>`;
+      break;
+    }
+    default: inner = `<input class="inp" id="${id}" data-k="${esc(f.key)}" value="${esc(v)}" ${d}>`;
+  }
+  const ancho = ['parrafo', 'casillas', 'opcion', 'dias'].includes(f.tipo) ? 'span2' : '';
+  return `<div class="field ${ancho}">${lab}${inner}${help}</div>`;
+}
+function enlazarForm(root) {
+  $$('.days', root).forEach(box => {
+    const key = box.dataset.k, exc = $(`[data-exc="${key}"]`, root);
+    const refrescar = () => { const sel = $$('.day.on', box).map(b => b.dataset.d); exc && exc.classList.toggle('hidden', !consecutivos(sel)); };
+    box.addEventListener('click', e => { const b = e.target.closest('.day'); if (!b || b.disabled) return;
+      if (!b.classList.contains('on') && box.dataset.max && $$('.day.on', box).length >= +box.dataset.max) return toast(`Puede elegir como máximo ${box.dataset.max} día(s).`, 'err');
+      b.classList.toggle('on'); refrescar(); });
+    refrescar();
+  });
+}
+function leerForm(root, formulario) {
+  const datos = {};
+  formulario.forEach(f => {
+    if (f.tipo === 'casillas') datos[f.key] = $$(`[data-k="${f.key}"] input:checked`, root).map(i => i.value);
+    else if (f.tipo === 'opcion') datos[f.key] = $(`[data-k="${f.key}"] input:checked`, root)?.value || '';
+    else if (f.tipo === 'si_no') datos[f.key] = !!$(`[data-k="${f.key}"]`, root)?.checked;
+    else if (f.tipo === 'dias') {
+      const sel = $$(`[data-k="${f.key}"] .day.on`, root).map(b => b.dataset.d).sort((a, b) => DIAS_ORD.indexOf(a) - DIAS_ORD.indexOf(b));
+      datos[f.key] = sel;
+      if (consecutivos(sel)) { datos[f.key + '_excepcion_motivo'] = $(`[data-k="${f.key}_excepcion_motivo"]`, root).value; datos[f.key + '_excepcion_detalle'] = $(`[data-k="${f.key}_excepcion_detalle"]`, root).value.trim(); }
+    }
+    else datos[f.key] = ($(`[data-k="${f.key}"]`, root)?.value || '').trim();
+  });
+  return datos;
+}
+function validarForm(formulario, datos) {
+  for (const f of formulario) {
+    const v = datos[f.key];
+    const vacio = v == null || v === '' || v === false || (Array.isArray(v) && !v.length);
+    if (f.requerido && vacio) return `Complete el campo: ${f.label}`;
+    if (f.tipo === 'correo' && v && !/^[^@\s;,]+@[^@\s;,]+\.[^@\s;,]+$/.test(v)) return `Correo inválido en: ${f.label}`;
+    if (f.tipo === 'dias' && consecutivos(v) && (!datos[f.key + '_excepcion_motivo'] || !datos[f.key + '_excepcion_detalle'])) return 'Eligió días consecutivos: indique el motivo y el detalle de la excepción.';
+  }
+  if (datos.correo_jefatura && datos.correo_jefatura.toLowerCase() === S.user.email) return 'El correo de la jefatura no puede ser el suyo.';
+  return null;
+}
+
+/* =====================================================================
+   NUEVA SOLICITUD
+   ===================================================================== */
+function bloquePolitica(m) {
+  const p = m.politica;
+  if (!p) return `<div class="small muted">${esRH() ? 'No hay política vigente publicada para este trámite. <a href="#/politicas">Publicarla</a>.' : ''}</div>`;
+  return `<div class="pol" id="polbox"><div class="ic">${I.book}</div><div class="grow"><div class="b">${esc(p.titulo)}</div>
+    <div class="xs muted">${p.version ? 'Versión ' + esc(p.version) + ' · ' : ''}publicada ${fmtD(p.creado_en)}</div>
+    <div class="xs" id="polst" style="color:var(--brick);font-weight:600">Debe abrirla antes de aceptar la declaración.</div></div>
+    <button type="button" class="btn pri" id="polbtn">${I.book} Abrir política</button></div>`;
+}
+async function abrirPolitica(id, alAbrir) {
+  const r = await api('rh_politica_archivo', { p_id: id });
+  const bin = atob(r.contenido), arr = new Uint8Array(bin.length);
+  for (let k = 0; k < bin.length; k++) arr[k] = bin.charCodeAt(k);
+  const url = URL.createObjectURL(new Blob([arr], { type: r.mime })), esPdf = r.mime === 'application/pdf';
+  modal({ title: r.titulo + (r.version ? ' · v' + r.version : ''), size: 'lg', body: `
+      ${esPdf ? `<iframe class="pdfview" src="${url}" title="Política"></iframe>` : `<div class="alert a-info">${I.info}<div>La política está en formato Word. Descárguela para leerla.</div></div>`}
+      <div class="row wrap" style="margin-top:12px"><a class="btn" href="${url}" target="_blank" rel="noopener">Abrir en pestaña nueva</a><a class="btn" href="${url}" download="${esc(r.archivo_nombre)}">${I.pdf} Descargar</a></div>`,
+    actions: [{ label: 'Cerrar', cls: 'pri' }] });
+  alAbrir && alAbrir();
+}
+function vistaNueva(codigo, E) {
+  // E = {s, D} cuando se modifica una solicitud existente
+  const m = S.modulos.find(x => x.codigo === codigo && x.activo);
+  if (!m) { toast('El trámite no está disponible.', 'err'); location.hash = '#/'; return; }
+  const t = m.textos || {}, editando = !!E, prev = E ? E.s.datos : null;
+  const valor = f => editando ? (prev[f.key] ?? (f.tipo === 'casillas' || f.tipo === 'dias' ? [] : '')) : valorAuto(f);
+  const flujoTxt = (m.flujo || []).map(p => `<span class="tag ${p.condicion === 'excepcion' ? 'exc' : ''}">${esc(p.nombre)}${p.condicion === 'excepcion' ? ' · si hay excepción' : ''}</span>`).join(' → ');
+  let politicaAbierta = !m.politica;
+  shell(editando ? 'mis' : 'inicio', `
+    <div class="page-head"><div><a href="${editando ? '#/solicitud/' + E.s.id : '#/'}" class="small" style="text-decoration:none">← ${editando ? 'Volver a la solicitud' : 'Inicio'}</a>
+      <h1 style="margin-top:6px">${editando ? 'Modificar ' + esc(E.s.folio) : esc(m.nombre)}</h1><p>${editando ? esc(m.nombre) + ' · versión actual ' + (E.s.version || 1) : esc(m.descripcion)}</p></div></div>
+    <form id="fs" class="stack" novalidate>
+      ${editando ? `<div class="alert a-warn">${I.warn}<div><b>Al guardar, el flujo de aprobación se reinicia desde el primer paso.</b> Las aprobaciones que ya tenga quedan sin efecto, las personas involucradas reciben aviso y deberá firmar de nuevo. La versión anterior queda guardada en el historial.</div></div>` : ''}
+      ${t.intro ? `<div class="alert a-info">${I.shield}<div class="small">${esc(t.intro)}</div></div>` : ''}
+      <div class="card"><div class="card-h"><h2>Información de la solicitud</h2><span class="xs muted">Los campos con <span style="color:var(--brick)">*</span> son obligatorios</span></div>
+        <div class="card-b grid2">${m.formulario.map(f => campoHTML(f, valor(f))).join('')}</div></div>
+      <div class="card"><div class="card-b stack">
+        ${editando ? `<div class="field"><label for="motivo">¿Qué cambió y por qué? <span class="muted">(se informa a los aprobadores)</span></label><textarea class="inp" id="motivo" style="min-height:60px"></textarea></div>` : ''}
+        ${bloquePolitica(m)}
+        ${t.declaracion ? `<label class="chk ${politicaAbierta ? '' : 'off'}" id="declw" style="padding:14px"><input type="checkbox" id="decl" ${politicaAbierta ? '' : 'disabled'}><span><b>Declaración.</b> ${esc(t.declaracion)}</span></label>` : ''}
+        <div><div class="lbl req" style="margin-bottom:6px">Firma del solicitante</div><div id="sig"></div></div>
+        <div class="small muted">Ruta de aprobación: ${flujoTxt}</div>
+      </div></div>
+      <div class="row" style="justify-content:flex-end;gap:10px"><a class="btn" href="${editando ? '#/solicitud/' + E.s.id : '#/'}">Cancelar</a>
+        <button class="btn pri" id="enviar">${I.send} ${editando ? 'Guardar y reiniciar aprobación' : 'Enviar solicitud'}</button></div>
+    </form>`);
+  const root = $('#fs');
+  if (editando) $$('[data-k$="_excepcion_motivo"], [data-k$="_excepcion_detalle"]', root).forEach(el => { if (prev[el.dataset.k] != null) el.value = prev[el.dataset.k]; });
+  enlazarForm(root);
+  const firma = new Firma($('#sig'));
+  if (m.politica) $('#polbtn').onclick = e => ocupado(e.currentTarget, async () => {
+    try { await abrirPolitica(m.politica.id, () => {
+      politicaAbierta = true; const d = $('#decl'); if (d) { d.disabled = false; $('#declw').classList.remove('off'); }
+      $('#polbox').classList.add('ok'); $('#polst').style.color = 'var(--green)'; $('#polst').textContent = 'Abierta. Ya puede marcar la declaración.';
+    }); } catch (err) { toast(err.message, 'err'); }
+  });
+  root.onsubmit = e => { e.preventDefault(); ocupado($('#enviar'), async () => {
+    const datos = leerForm(root, m.formulario);
+    const err = validarForm(m.formulario, datos); if (err) return toast(err, 'err');
+    if (!politicaAbierta) return toast('Abra la política vigente antes de continuar.', 'err');
+    const decl = t.declaracion ? $('#decl').checked : true;
+    if (!decl) return toast('Debe marcar la casilla de declaración.', 'err');
+    if (firma.vacia()) return toast('Firme en el recuadro antes de enviar.', 'err');
+    const base = { p_datos: datos, p_firma: firma.png(), p_declaracion: decl, p_politica_id: m.politica?.id ?? null };
+    try {
+      if (editando) {
+        if (!await confirmar('Reiniciar el flujo de aprobación', `Se guardará la versión ${(E.s.version || 1) + 1} de <b>${esc(E.s.folio)}</b> y la aprobación empezará otra vez desde <b>${esc(m.flujo[0]?.nombre || 'el primer paso')}</b>. ¿Continuar?`, 'Sí, reiniciar', 'pri')) return;
+        const r = await api('rh_modificar_solicitud', { p_id: E.s.id, ...base, p_motivo: $('#motivo').value.trim() });
+        toast(`Cambios guardados (versión ${r.version}). El flujo se reinició.`, 'ok');
+        location.hash = '#/solicitud/' + r.id;
+      } else {
+        const r = await api('rh_crear_solicitud', { p_modulo: m.codigo, ...base });
+        toast(`Solicitud ${r.folio} enviada a aprobación.`, 'ok');
+        location.hash = '#/solicitud/' + r.id;
+      }
+    } catch (err) { toast(err.message, 'err'); }
+  }); };
+}
+async function vistaEditar(id) {
+  cargando('mis');
+  await cargarBase();
+  const D = await api('rh_solicitud', { p_id: id });
+  if (!D.permisos.modificar) { toast('Esta solicitud ya no se puede modificar.', 'err'); location.hash = '#/solicitud/' + id; return; }
+  vistaNueva(D.solicitud.modulo, { s: D.solicitud, D });
+}
+
+/* =====================================================================
+   LISTADOS
+   ===================================================================== */
+function tablaSolicitudes(rows, opts = {}) {
+  if (!rows.length) return `<div class="empty">${I.inbox}<div>${esc(opts.vacio || 'No hay solicitudes.')}</div></div>`;
+  return `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Folio</th>${opts.solicitante ? '<th>Solicitante</th>' : '<th>Trámite</th>'}<th>Enviada</th><th>Estado</th><th>${opts.extra || 'Paso actual'}</th></tr></thead><tbody>
+    ${rows.map(s => `<tr class="click" data-id="${s.id}">
+      <td><b>${esc(s.folio)}</b>${s.version > 1 ? ` <span class="tag">v${s.version}</span>` : ''}${s.excepcion ? ' <span class="tag exc">Excepción</span>' : ''}</td>
+      ${opts.solicitante ? `<td>${esc(s.solicitante_nombre)}<div class="xs muted">${esc(s.departamento || '')}</div></td>` : `<td>${esc(s.modulo_nombre)}</td>`}
+      <td class="small">${fmt(s.creado_en)}</td>
+      <td>${badge(s.estado)}<div class="mini-steps">${(s.pasos || []).map(p => `<i class="${p.estado}" title="${esc(p.paso)}: ${esc(ESTADOS[p.estado])}"></i>`).join('')}</div></td>
+      <td class="small">${opts.celda ? opts.celda(s) : s.paso_actual ? `${esc(s.paso_actual.paso)}<div class="xs muted">${esc((s.paso_actual.aprobadores || []).join(', '))}</div>` : s.estado === 'aprobada' ? (s.pdf_enviado_en ? `PDF enviado ${fmtD(s.pdf_enviado_en)}` : '<span style="color:var(--brick);font-weight:700">PDF sin enviar</span>') : '—'}</td>
+    </tr>`).join('')}</tbody></table></div>`;
+}
+const clicFilas = () => $$('tr.click[data-id]').forEach(tr => tr.onclick = () => location.hash = '#/solicitud/' + tr.dataset.id);
+async function vistaMis() {
+  cargando('mis');
+  const rows = await api('rh_mis_solicitudes');
+  const m = S.modulos.find(x => x.activo);
+  shell('mis', `<div class="page-head"><div><h1>Mis solicitudes</h1><p>Seguimiento de lo que ha enviado.</p></div>${m ? `<a class="btn pri" href="#/nueva/${esc(m.codigo)}">${I.plus} Nueva solicitud</a>` : ''}</div>
+    <div class="card">${tablaSolicitudes(rows, { vacio: 'Aún no ha enviado solicitudes.' })}</div>`);
+  clicFilas();
+}
+async function vistaAprobar() {
+  cargando('aprobar');
+  const r = await api('rh_pendientes');
+  shell('aprobar', `<div class="page-head"><div><h1>Por aprobar</h1><p>Solicitudes que esperan su revisión y firma.</p></div></div>
+    <div class="card" style="margin-bottom:22px"><div class="card-h"><h2>Pendientes (${r.pendientes.length})</h2></div>
+      ${tablaSolicitudes(r.pendientes, { solicitante: true, extra: 'Su paso', vacio: 'No tiene solicitudes pendientes. ¡Al día!', celda: s => `<b>${esc(s.mi_paso)}</b><div class="xs muted">desde ${fmt(s.paso_actual?.desde)}</div>` })}</div>
+    <div class="card"><div class="card-h"><h2>Resueltas por mí</h2></div>
+      ${tablaSolicitudes(r.resueltas, { solicitante: true, extra: 'Mi decisión', vacio: 'Todavía no ha resuelto solicitudes.', celda: s => `${badge(s.mi_decision)}<div class="xs muted">${fmt(s.resuelto_en)}</div>` })}</div>`);
+  clicFilas();
+}
+async function vistaTodas() {
+  const f = JSON.parse(store.get('filtros') || '{}');
+  cargando('todas');
+  const rows = await api('rh_todas', { p_filtros: f });
+  shell('todas', `<div class="page-head"><div><h1>Todas las solicitudes</h1><p>Vista de Recursos Humanos y administradores.</p></div>
+      <button class="btn" id="csv">${I.pdf} Exportar CSV</button></div>
+    <div class="card"><div class="card-h"><div class="row wrap grow">
+      <input class="inp" id="ft" placeholder="Buscar folio, nombre, correo, departamento…" value="${esc(f.texto || '')}" style="max-width:340px">
+      <select class="inp" id="fe" style="max-width:200px"><option value="">Todos los estados</option>${['en_aprobacion','aprobada','rechazada','cancelada'].map(e => `<option value="${e}" ${f.estado === e ? 'selected' : ''}>${ESTADOS[e]}</option>`).join('')}</select>
+      <span class="small muted">${rows.length} resultado(s)</span></div></div>
+      ${tablaSolicitudes(rows, { solicitante: true, vacio: 'No hay solicitudes con esos filtros.' })}</div>`);
+  clicFilas();
+  let tm; const aplicar = () => { store.set('filtros', JSON.stringify({ texto: $('#ft').value.trim(), estado: $('#fe').value })); vistaTodas(); };
+  $('#ft').oninput = () => { clearTimeout(tm); tm = setTimeout(aplicar, 450); };
+  $('#fe').onchange = aplicar;
+  if (f.texto) { const i = $('#ft'); i.focus(); i.setSelectionRange(i.value.length, i.value.length); }
+  $('#csv').onclick = () => {
+    const cols = ['folio', 'modulo_nombre', 'solicitante_nombre', 'solicitante_email', 'departamento', 'estado', 'excepcion', 'creado_en', 'finalizado_en', 'pdf_enviado_en'];
+    const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const csv = '﻿' + [cols.join(';'), ...rows.map(r => cols.map(c => q(c === 'estado' ? ESTADOS[r[c]] : c.endsWith('_en') ? (r[c] ? fmt(r[c]) : '') : r[c])).join(';'))].join('\n');
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = 'solicitudes_rh.csv'; a.click();
+  };
+}
+
+/* =====================================================================
+   DETALLE + APROBACIÓN
+   ===================================================================== */
+function valorTexto(f, datos) {
+  const v = datos[f.key];
+  if (f.tipo === 'dias') return (v || []).map(d => DIAS[d] || d).join(', ') || '—';
+  if (f.tipo === 'casillas') return (v || []).join(', ') || '—';
+  if (f.tipo === 'si_no') return v ? 'Sí' : 'No';
+  if (f.tipo === 'fecha') return fmtISO(v);
+  return (v == null || v === '') ? '—' : String(v);
+}
+function filasDatos(s) {
+  const out = [];
+  (s.formulario || []).forEach(f => {
+    out.push([f.label, valorTexto(f, s.datos)]);
+    if (f.tipo === 'dias' && s.datos[f.key + '_excepcion_motivo']) {
+      out.push(['Motivo de la excepción', s.datos[f.key + '_excepcion_motivo']]);
+      out.push(['Detalle de la excepción', s.datos[f.key + '_excepcion_detalle'] || '—']);
+    }
+  });
+  return out;
+}
+async function vistaDetalle(id) {
+  cargando('');
+  const D = await api('rh_solicitud', { p_id: id });
+  const s = D.solicitud, ap = D.aprobaciones || [], P = D.permisos;
+  const yoAprob = P.aprobacion_id ? ap.find(a => a.id === P.aprobacion_id) : null;
+  const activo = s.solicitante_email === S.user.email ? 'mis' : yoAprob || ap.some(a => a.resuelto_por_email === S.user.email) ? 'aprobar' : 'todas';
+  const tl = ap.map(a => `<li><div class="dot ${a.estado}">${a.estado === 'aprobado' ? I.check : a.estado === 'rechazado' ? I.x : a.orden}</div>
+      <div class="row between wrap"><b>${esc(a.paso)}</b>${badge(a.estado)}</div>
+      <div class="small muted">${a.resuelto_por_email ? `${esc(a.resuelto_por_nombre)} · ${fmt(a.resuelto_en)}` : esc((a.aprobadores || []).join(', '))}${a.estado === 'pendiente' ? ` · desde ${fmt(a.asignado_en)}` : ''}</div>
+      ${a.comentario ? `<div class="quote">${esc(a.comentario)}</div>` : ''}
+      ${a.firma ? `<img class="sig-img" style="height:54px;margin-top:8px" src="${a.firma}" alt="Firma">` : ''}
+      ${P.reasignar && ['pendiente', 'en_espera'].includes(a.estado) ? `<div class="row" style="margin-top:8px;gap:6px"><button class="btn sm" data-reasig="${a.id}">${I.edit} Reasignar</button>${a.estado === 'pendiente' ? `<button class="btn sm ghost" data-recordar="${a.id}">${I.mail} Recordar</button>` : ''}</div>` : ''}
+    </li>`).join('');
+  const panelAprob = yoAprob ? `<div class="card" style="border:2px solid var(--olive);margin-bottom:20px" id="panel-aprob">
+      <div class="card-h" style="background:var(--olive-50);border-radius:14px 14px 0 0"><h2>Su decisión · ${esc(yoAprob.paso)}</h2>${yoAprob.es_final ? '<span class="tag adm">Aprobación final</span>' : ''}</div>
+      <div class="card-b stack">
+        <div class="field"><label for="com">Comentario <span class="muted">(obligatorio si rechaza: motivo)</span></label><textarea class="inp" id="com" style="min-height:70px"></textarea></div>
+        <div><div class="lbl" style="margin-bottom:6px">Firma (obligatoria para aprobar)</div><div id="sig"></div></div>
+        <div class="row" style="justify-content:flex-end;gap:10px;flex-wrap:wrap">
+          <button class="btn dan" id="rech">${I.x} Rechazar</button><button class="btn pri" id="aprob">${I.check} Aprobar y firmar</button></div>
+        ${yoAprob.es_final ? '<p class="xs muted" style="margin:0">Al aprobar se genera el documento final en PDF y se envía al solicitante y a RH.</p>' : ''}
+      </div></div>` : '';
+  shell(activo, `
+    <div class="page-head"><div><a href="javascript:history.back()" class="small" style="text-decoration:none">← Volver</a>
+      <h1 style="margin-top:6px">${esc(s.folio)} · ${esc(D.modulo_nombre)}</h1>
+      <p class="row wrap" style="gap:8px">${badge(s.estado)}${s.version > 1 ? `<span class="tag">Versión ${s.version}</span>` : ''}${s.excepcion ? '<span class="tag exc">Con excepción</span>' : ''}<span class="small muted">Enviada ${fmt(s.creado_en)}${s.finalizado_en ? ' · Finalizada ' + fmt(s.finalizado_en) : ''}</span></p></div>
+      <div class="row wrap">
+        ${P.pdf ? `<button class="btn" id="dl">${I.pdf} Descargar PDF</button>` : ''}
+        ${P.reenviar ? `<button class="btn pri" id="reenv">${I.send} ${s.pdf_enviado_en ? 'Reenviar PDF' : 'Enviar PDF'}</button>` : ''}
+        ${P.modificar ? `<button class="btn ${s.estado === 'rechazada' ? 'pri' : ''}" id="modif">${I.edit} ${s.estado === 'rechazada' ? 'Modificar y reenviar' : 'Modificar'}</button>` : ''}
+        ${P.cancelar ? `<button class="btn ghost" id="canc" style="color:var(--brick)">${I.x} Cancelar solicitud</button>` : ''}
+      </div></div>
+    ${s.estado === 'aprobada' && !s.pdf_enviado_en ? `<div class="alert a-warn">${I.warn}<div>La solicitud está aprobada pero el documento final <b>aún no se ha enviado</b> por correo.</div></div>` : ''}
+    ${s.estado === 'rechazada' ? `<div class="alert a-err">${I.x}<div><b>Motivo del rechazo:</b> ${esc(s.motivo_rechazo)}${P.modificar ? '<br><span class="small">Puede corregirla y reenviarla (el flujo inicia de nuevo) o cancelarla definitivamente.</span>' : ''}</div></div>` : ''}
+    ${s.estado === 'cancelada' ? `<div class="alert a-info">${I.info}<div>Solicitud cancelada.${s.motivo_rechazo ? ' Motivo: ' + esc(s.motivo_rechazo) : ''}</div></div>` : ''}
+    ${s.estado === 'aprobada' && s.textos?.msg_aprobado ? `<div class="alert a-ok">${I.check}<div>${esc(s.textos.msg_aprobado)}</div></div>` : ''}
+    <div class="det">
+      <div>
+        ${panelAprob}
+        <div class="card"><div class="card-h"><h2>Detalle de la solicitud</h2></div><div class="card-b">
+          <dl class="kv">${filasDatos(s).map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('')}
+            <dt>Correo del solicitante</dt><dd>${esc(s.solicitante_email)}</dd></dl>
+          ${s.politica_id ? `<div class="pol ok" style="margin-top:16px"><div class="ic">${I.book}</div><div class="grow"><div class="small b">Política aceptada: ${esc(s.politica_titulo)}${s.politica_version ? ' · v' + esc(s.politica_version) : ''}</div><div class="xs muted">${fmt(s.politica_aceptada_en)}</div></div><button class="btn sm" data-pol="${s.politica_id}">Ver</button></div>` : ''}
+          ${s.textos?.declaracion ? `<label class="chk" style="margin-top:12px;pointer-events:none"><input type="checkbox" checked disabled><span class="small">${esc(s.textos.declaracion)}</span></label>` : ''}
+          <div style="margin-top:18px"><div class="sec-title">Firma del solicitante</div><img class="sig-img" src="${s.firma_solicitante}" alt="Firma del solicitante"><div class="small" style="margin-top:4px"><b>${esc(s.solicitante_nombre)}</b> · ${fmt(s.creado_en)}</div></div>
+        </div></div>
+      </div>
+      <div>
+        <div class="card"><div class="card-h"><h2>Flujo de aprobación</h2></div><div class="card-b"><ul class="tl">${tl}</ul></div></div>
+        ${(D.versiones || []).length ? `<div class="card" style="margin-top:16px"><div class="card-h"><h2>${I.history.replace('<svg', '<svg style="width:18px;height:18px;vertical-align:-3px;margin-right:6px"')}Versiones anteriores</h2></div><div class="card-b" style="padding-top:4px">
+          ${D.versiones.map((v, k) => { const sig = k === 0 ? s.datos : D.versiones[k - 1].datos;
+            const camb = (v.formulario || []).filter(f => JSON.stringify(v.datos[f.key] ?? null) !== JSON.stringify(sig[f.key] ?? null)).map(f => f.label);
+            return `<div class="ver"><div class="row between wrap"><b>Versión ${v.version}</b>${badge(v.estado_previo)}</div>
+              <div class="xs muted">Enviada ${fmt(v.enviada_en)} · reemplazada ${fmt(v.creado_en)}</div>
+              ${v.motivo_rechazo ? `<div class="xs" style="margin-top:4px"><b>Rechazo:</b> ${esc(v.motivo_rechazo)}</div>` : ''}
+              ${v.motivo_cambio ? `<div class="quote">${esc(v.motivo_cambio)}</div>` : ''}
+              <div class="xs" style="margin-top:6px">${camb.length ? 'Campos cambiados: ' + camb.map(c => `<span class="diff">${esc(c)}</span>`).join('') : 'Sin cambios en los campos'}</div>
+              <div class="xs muted" style="margin-top:4px">${(v.aprobaciones || []).filter(a => a.estado !== 'en_espera').map(a => `${esc(a.paso)}: ${esc(ESTADOS[a.estado] || a.estado)}${a.resuelto_por_nombre ? ' (' + esc(a.resuelto_por_nombre) + ')' : ''}`).join(' · ') || 'Sin aprobaciones registradas'}</div>
+              <button class="btn sm ghost" style="margin-top:6px" data-verv="${k}">Ver datos de esta versión</button></div>`; }).join('')}
+        </div></div>` : ''}
+        <details class="card" style="margin-top:16px"><summary class="card-b b" style="cursor:pointer">Bitácora (${(D.bitacora || []).length})</summary>
+          <div style="padding:0 20px 16px">${(D.bitacora || []).map(b => `<div style="padding:8px 0;border-top:1px solid var(--line)"><div class="small b">${esc(b.accion)}</div><div class="xs muted">${fmt(b.creado_en)} · ${esc(b.usuario_email)}</div>${b.detalle ? `<div class="xs">${esc(b.detalle)}</div>` : ''}</div>`).join('')}</div></details>
+      </div>
+    </div>`);
+
+  if (yoAprob) {
+    const firma = new Firma($('#sig'));
+    const resolver = (aprobar, btn) => ocupado(btn, async () => {
+      const com = $('#com').value.trim();
+      if (aprobar && firma.vacia()) return toast('Firme en el recuadro para aprobar.', 'err');
+      if (!aprobar && !com) { $('#com').focus(); return toast('Escriba el motivo del rechazo en el comentario.', 'err'); }
+      if (!await confirmar(aprobar ? 'Confirmar aprobación' : 'Confirmar rechazo',
+          aprobar ? `Va a aprobar <b>${esc(s.folio)}</b> como <b>${esc(yoAprob.paso)}</b>.` : `Va a rechazar <b>${esc(s.folio)}</b>. Se notificará al solicitante con el motivo.`,
+          aprobar ? 'Aprobar' : 'Rechazar', aprobar ? 'pri' : 'dan')) return;
+      try {
+        const r = await api('rh_resolver', { p_aprobacion_id: yoAprob.id, p_aprobar: aprobar, p_firma: firma.vacia() ? null : firma.png(), p_comentario: com });
+        if (r.final && r.aprobada) {
+          toast('Solicitud aprobada. Generando y enviando el documento final…', 'ok');
+          try { await enviarPDF(s.id, false); toast('Documento final enviado al solicitante y a RH.', 'ok'); }
+          catch (e) { toast('La solicitud quedó aprobada, pero el PDF no se pudo enviar: ' + e.message + '. Use "Enviar PDF".', 'err'); }
+        } else toast(aprobar ? `Aprobado. Se notificó al siguiente paso: ${r.siguiente}.` : 'Solicitud rechazada y notificada.', 'ok');
+        router();
+      } catch (e) { toast(e.message, 'err'); }
+    });
+    $('#aprob').onclick = e => resolver(true, e.currentTarget);
+    $('#rech').onclick = e => resolver(false, e.currentTarget);
+  }
+  if (P.pdf) $('#dl').onclick = e => ocupado(e.currentTarget, async () => { try { (await construirPDF(D)).save(s.folio + '.pdf'); } catch (err) { toast(err.message, 'err'); } });
+  if (P.reenviar) $('#reenv').onclick = () => modal({ title: 'Enviar documento final', body: `
+      <p style="margin-top:0">El PDF se genera de nuevo a partir de los registros (no se guarda copia).</p>
+      <label class="chk" style="margin-bottom:8px"><input type="radio" name="dest" value="todos" checked><span><b>Solicitante y RH</b><br><span class="small muted">${esc(s.solicitante_email)} + correos de RH configurados</span></span></label>
+      <label class="chk"><input type="radio" name="dest" value="yo"><span><b>Solo a mí</b><br><span class="small muted">${esc(S.user.email)}</span></span></label>`,
+    actions: [{ label: 'Cancelar' }, { label: I.send + ' Enviar', cls: 'pri', onClick: ({ close, el, btn }) => ocupado(btn, async () => {
+      const yo = $('input[name=dest]:checked', el).value === 'yo';
+      try { const r = await enviarPDF(s.id, yo, D); close(); toast('Enviado a ' + [...r.para, ...r.cc].join(', '), 'ok'); vistaDetalle(s.id); } catch (err) { toast(err.message, 'err'); }
+    }) }] });
+  if (P.modificar) $('#modif').onclick = async () => {
+    if (await confirmar('Modificar solicitud', `Los datos enviados están protegidos. Si modifica la solicitud, <b>el flujo de aprobación se reinicia desde el primer paso</b>${ap.some(a => a.estado === 'aprobado') ? ' y se pierden las aprobaciones ya otorgadas' : ''}. Deberá firmar de nuevo.`, 'Entiendo, modificar', 'pri')) location.hash = '#/editar/' + s.id;
+  };
+  $$('[data-pol]').forEach(b => b.onclick = () => ocupado(b, async () => { try { await abrirPolitica(+b.dataset.pol); } catch (err) { toast(err.message, 'err'); } }));
+  $$('[data-verv]').forEach(b => b.onclick = () => { const v = D.versiones[+b.dataset.verv];
+    modal({ title: `${s.folio} · versión ${v.version}`, size: 'lg', body: `<dl class="kv">${filasDatos({ formulario: v.formulario, datos: v.datos }).map(([k, x]) => `<dt>${esc(k)}</dt><dd>${esc(x)}</dd>`).join('')}</dl>
+      ${v.politica ? `<p class="small">Política aceptada: <b>${esc(v.politica.titulo)}</b>${v.politica.version ? ' v' + esc(v.politica.version) : ''} · ${fmt(v.politica.aceptada_en)}</p>` : ''}` }); });
+  if (P.cancelar) $('#canc').onclick = () => modal({ title: 'Cancelar solicitud', body: `<div class="field"><label>Motivo (opcional)</label><textarea class="inp" id="mc"></textarea></div>`,
+    actions: [{ label: 'Volver' }, { label: 'Cancelar solicitud', cls: 'dan', onClick: ({ close, el, btn }) => ocupado(btn, async () => {
+      try { await api('rh_cancelar', { p_id: s.id, p_motivo: $('#mc', el).value }); close(); toast('Solicitud cancelada.', 'ok'); vistaDetalle(s.id); } catch (err) { toast(err.message, 'err'); }
+    }) }] });
+  $$('[data-reasig]').forEach(b => b.onclick = () => { const a = ap.find(x => x.id === +b.dataset.reasig);
+    modal({ title: 'Reasignar aprobador', body: `<p style="margin-top:0">Paso <b>${esc(a.paso)}</b>. Actual: ${esc(a.aprobadores.join(', '))}</p>
+      <div class="field"><label>Nuevo(s) correo(s)</label><input class="inp" id="nr" value="${esc(a.aprobadores.join(', '))}"><span class="help">Separe varios con coma: cualquiera de ellos podrá aprobar.</span></div>`,
+      actions: [{ label: 'Cancelar' }, { label: 'Reasignar', cls: 'pri', onClick: ({ close, el, btn }) => ocupado(btn, async () => {
+        try { await api('rh_admin_reasignar', { p_aprobacion_id: a.id, p_correos: $('#nr', el).value }); close(); toast('Paso reasignado' + (a.estado === 'pendiente' ? ' y notificado.' : '.'), 'ok'); vistaDetalle(s.id); } catch (err) { toast(err.message, 'err'); }
+      }) }] }); });
+  $$('[data-recordar]').forEach(b => b.onclick = () => ocupado(b, async () => { try { await api('rh_admin_reenviar_aviso', { p_aprobacion_id: +b.dataset.recordar }); toast('Recordatorio enviado.', 'ok'); } catch (err) { toast(err.message, 'err'); } }));
+}
+async function enviarPDF(id, soloAMi, D) {
+  D = D || await api('rh_solicitud', { p_id: id });
+  const doc = await construirPDF(D);
+  const b64 = doc.output('datauristring').split(',')[1];
+  return api('rh_enviar_pdf', { p_id: id, p_pdf_base64: b64, p_solo_a_mi: soloAMi });
+}
+
+/* =====================================================================
+   PDF (se genera en el navegador; no se almacena)
+   ===================================================================== */
+const latin = s => String(s ?? '').normalize('NFC').replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/[–—]/g, '-').replace(/…/g, '...').replace(/[^\x09\x0A\x0D\x20-\x7E\xA0-\xFF]/g, '');
+async function construirPDF(D) {
+  if (!window.jspdf) throw new Error('No se pudo cargar el generador de PDF. Revise su conexión.');
+  const s = D.solicitud, ap = (D.aprobaciones || []).filter(a => a.estado !== 'omitido');
+  const doc = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4' });
+  const W = 210, M = 16, CW = W - 2 * M, VERDE = '#14564A', TINTA = '#16211F', GRIS = '#4A5A57', LINEA = '#E1E7E5';
+  let y = 0;
+  const nueva = () => { doc.addPage(); y = 20; };
+  const espacio = h => { if (y + h > 280) nueva(); };
+  const T = (txt, x, yy, o = {}) => doc.text(Array.isArray(txt) ? txt.map(latin) : latin(txt), x, yy, o);
+  const split = (txt, w) => doc.splitTextToSize(latin(txt), w);
+
+  // Encabezado
+  doc.setFillColor(VERDE); doc.rect(0, 0, W, 30, 'F');
+  doc.setTextColor('#FFFFFF'); doc.setFont('helvetica', 'bold'); doc.setFontSize(16); T(S.empresa, M, 13);
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(9); T(S.app + ' · Recursos Humanos', M, 19.5);
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(12); T(s.folio, W - M, 13, { align: 'right' });
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); T('Documento final', W - M, 19.5, { align: 'right' });
+  y = 42;
+  doc.setTextColor(TINTA); doc.setFont('helvetica', 'bold'); doc.setFontSize(17); T(D.modulo_nombre, M, y);
+  doc.setFillColor('#E6F0ED'); doc.roundedRect(W - M - 36, y - 6, 36, 8.5, 2, 2, 'F');
+  doc.setTextColor(VERDE); doc.setFontSize(9.5); T('APROBADA', W - M - 18, y - 0.4, { align: 'center' });
+  y += 6; doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(GRIS);
+  T(`Enviada: ${fmt(s.creado_en)}    Aprobación final: ${fmt(s.finalizado_en)}${s.version > 1 ? '    Versión ' + s.version : ''}`, M, y); y += 7;
+  if (s.textos?.intro) { doc.setFont('helvetica', 'italic'); doc.setFontSize(8.5); doc.setTextColor(GRIS); const l = split(s.textos.intro, CW); T(l, M, y); y += l.length * 3.8 + 4; }
+
+  // Datos
+  const seccion = (t, min = 14) => { espacio(min); doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(VERDE); T(t.toUpperCase(), M, y); y += 2; doc.setDrawColor(VERDE); doc.setLineWidth(0.5); doc.line(M, y, W - M, y); y += 6; };
+  seccion('Información de la solicitud');
+  const LW = 62;
+  filasDatos(s).concat([['Correo del solicitante', s.solicitante_email]]).forEach(([k, v]) => {
+    doc.setFontSize(9.5); doc.setFont('helvetica', 'normal');
+    const lk = split(k, LW - 4); doc.setFont('helvetica', 'bold'); const lv = split(v, CW - LW);
+    const h = Math.max(lk.length, lv.length) * 4.4 + 3;
+    espacio(h);
+    doc.setFont('helvetica', 'normal'); doc.setTextColor(GRIS); T(lk, M, y);
+    doc.setFont('helvetica', 'bold'); doc.setTextColor(TINTA); T(lv, M + LW, y);
+    y += h - 1; doc.setDrawColor(LINEA); doc.setLineWidth(0.2); doc.line(M, y - 2.2, W - M, y - 2.2); y += 1.5;
+  });
+  if (s.textos?.declaracion) {
+    y += 2; doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(TINTA);
+    const l = split('[X]  ' + s.textos.declaracion, CW); espacio(l.length * 4 + 4); T(l, M, y); y += l.length * 4 + 4;
+  }
+  if (s.politica_id) {
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(VERDE); espacio(6);
+    T(`Política aceptada: ${s.politica_titulo}${s.politica_version ? ' (versión ' + s.politica_version + ')' : ''} - ${fmt(s.politica_aceptada_en)}`, M, y); y += 6;
+  }
+
+  // Firma del solicitante
+  const bloqueFirma = (img, titulo, nombre, detalle, extra) => {
+    const lx = extra ? split(extra, CW - 70) : [];
+    const h = Math.max(30, 16 + lx.length * 3.8);
+    espacio(h + 4);
+    doc.setDrawColor(LINEA); doc.setLineWidth(0.3); doc.roundedRect(M, y, CW, h, 2, 2);
+    if (img) { try { doc.addImage(img, 'PNG', M + 3, y + 2, 60, 20, undefined, 'FAST'); } catch {} }
+    doc.setDrawColor('#9AA8A5'); doc.line(M + 4, y + 23, M + 62, y + 23);
+    doc.setFontSize(7.5); doc.setTextColor(GRIS); doc.setFont('helvetica', 'normal'); T('Firma', M + 4, y + 26.5);
+    const x2 = M + 70;
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(9.5); doc.setTextColor(VERDE); T(titulo, x2, y + 6);
+    doc.setTextColor(TINTA); doc.setFontSize(10); T(nombre, x2, y + 11.5);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(GRIS); T(detalle, x2, y + 16);
+    if (lx.length) { doc.setTextColor(TINTA); T(lx, x2, y + 20.5); }
+    y += h + 4;
+  };
+  seccion('Firma del solicitante', 48);
+  bloqueFirma(s.firma_solicitante, 'Solicitante', s.solicitante_nombre, `${s.solicitante_email} · ${fmt(s.creado_en)}`);
+
+  seccion('Flujo de aprobación', 48);
+  ap.forEach((a, i) => bloqueFirma(a.firma, `${i + 1}. ${a.paso} - ${ESTADOS[a.estado] || a.estado}`, a.resuelto_por_nombre || '-',
+    `${a.resuelto_por_email || ''} · ${fmt(a.resuelto_en)}`, a.comentario ? 'Comentario: ' + a.comentario : ''));
+
+  if (s.textos?.msg_aprobado) { const l = split(s.textos.msg_aprobado, CW - 8); espacio(l.length * 4.5 + 8);
+    doc.setFillColor('#E6F0ED'); doc.roundedRect(M, y, CW, l.length * 4.5 + 6, 2, 2, 'F');
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(9.5); doc.setTextColor(VERDE); T(l, M + 4, y + 5.5); y += l.length * 4.5 + 10; }
+
+  // Pie
+  const n = doc.getNumberOfPages(), gen = fmt(new Date());
+  for (let p = 1; p <= n; p++) {
+    doc.setPage(p); doc.setDrawColor(LINEA); doc.setLineWidth(0.2); doc.line(M, 285, W - M, 285);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor('#7C8B88');
+    T(`Documento generado electrónicamente el ${gen} a partir de los registros de ${S.app}. Folio ${s.folio}.`, M, 289.5);
+    T(`Página ${p} de ${n}`, W - M, 289.5, { align: 'right' });
+  }
+  return doc;
+}
+
+/* =====================================================================
+   RH · POLÍTICAS
+   ===================================================================== */
+async function vistaPoliticas() {
+  cargando('politicas');
+  await cargarBase();
+  const rows = await api('rh_politicas');
+  const kb = n => n > 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB';
+  shell('politicas', `<div class="page-head"><div><h1>Políticas</h1><p>El colaborador debe abrir la política vigente antes de aceptar la declaración. Queda registrado qué versión aceptó.</p></div></div>
+    <div class="grid2" style="grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);align-items:start">
+      <form class="card" id="fp"><div class="card-h"><h2>Publicar política</h2></div><div class="card-b stack">
+        <div class="field"><label>Trámite</label><select class="inp" id="pm">${S.modulos.map(m => `<option value="${esc(m.codigo)}">${esc(m.nombre)}</option>`).join('')}</select></div>
+        <div class="field"><label class="req">Título</label><input class="inp" id="pt" placeholder="Política de Teletrabajo"></div>
+        <div class="field"><label>Versión</label><input class="inp" id="pv" placeholder="Ej. 2026-01 o 3.0"></div>
+        <div class="field"><label class="req">Archivo (PDF o Word, máx. 8 MB)</label><input class="inp" id="pf" type="file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"></div>
+        <label class="chk"><input type="checkbox" id="pvig" checked><span><b>Publicar como vigente</b><br><span class="small muted">Reemplaza a la vigente actual para las solicitudes nuevas. Las ya enviadas conservan la que aceptaron.</span></span></label>
+        <button class="btn pri">${I.book} Publicar</button></div></form>
+      <div class="card"><div class="card-h"><h2>Historial</h2></div>
+        ${!rows.length ? `<div class="empty">${I.book}<div>Aún no hay políticas publicadas.</div></div>` : `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Política</th><th>Publicada</th><th>Aceptaciones</th><th></th></tr></thead><tbody>
+        ${rows.map(p => `<tr><td><b>${esc(p.titulo)}</b>${p.version ? ` <span class="tag">v${esc(p.version)}</span>` : ''}${p.vigente ? ' <span class="badge s-aprobada">Vigente</span>' : ''}
+            <div class="xs muted">${esc(p.modulo_nombre)} · ${esc(p.archivo_nombre)} · ${kb(p.tamano)}</div></td>
+          <td class="small">${fmtD(p.creado_en)}<div class="xs muted">${esc(p.subido_por || '')}</div></td><td class="small">${p.aceptaciones}</td>
+          <td style="text-align:right;white-space:nowrap"><button class="btn sm" data-ver="${p.id}">Abrir</button>
+            ${p.vigente ? '' : `<button class="btn sm" data-vig="${p.id}">Hacer vigente</button>`}
+            ${p.aceptaciones ? '' : `<button class="btn sm ghost icon" data-del="${p.id}" title="Eliminar">${I.trash}</button>`}</td></tr>`).join('')}
+        </tbody></table></div>`}</div></div>`);
+  $('#fp').onsubmit = e => { e.preventDefault(); ocupado($('#fp button.pri'), async () => {
+    const f = $('#pf').files[0];
+    if (!$('#pt').value.trim()) return toast('Escriba el título.', 'err');
+    if (!f) return toast('Seleccione el archivo.', 'err');
+    if (f.size > 8 * 1024 * 1024) return toast('El archivo supera 8 MB.', 'err');
+    const mime = /\.pdf$/i.test(f.name) ? 'application/pdf' : /\.docx$/i.test(f.name) ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' : f.type;
+    const b64 = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1]); r.onerror = rej; r.readAsDataURL(f); });
+    try { await api('rh_politica_subir', { p_modulo: $('#pm').value, p_titulo: $('#pt').value, p_version: $('#pv').value, p_archivo_nombre: f.name, p_mime: mime, p_contenido: b64, p_vigente: $('#pvig').checked });
+      toast('Política publicada.', 'ok'); vistaPoliticas(); } catch (err) { toast(err.message, 'err'); }
+  }); };
+  $$('[data-ver]').forEach(b => b.onclick = () => ocupado(b, async () => { try { await abrirPolitica(+b.dataset.ver); } catch (err) { toast(err.message, 'err'); } }));
+  $$('[data-vig]').forEach(b => b.onclick = () => ocupado(b, async () => { try { await api('rh_politica_vigente', { p_id: +b.dataset.vig }); toast('Política vigente actualizada.', 'ok'); vistaPoliticas(); } catch (err) { toast(err.message, 'err'); } }));
+  $$('[data-del]').forEach(b => b.onclick = async () => { if (!await confirmar('Eliminar política', '¿Eliminar esta versión? No ha sido aceptada en ninguna solicitud.', 'Eliminar', 'dan')) return;
+    try { await api('rh_politica_eliminar', { p_id: +b.dataset.del }); vistaPoliticas(); } catch (err) { toast(err.message, 'err'); } });
+}
+
+/* =====================================================================
+   ADMIN · USUARIOS
+   ===================================================================== */
+async function adminUsuarios() {
+  cargando('usuarios');
+  const us = await api('rh_admin_usuarios');
+  const filtro = store.get('fu') || '';
+  shell('usuarios', `<div class="page-head"><div><h1>Usuarios</h1><p>Administradores ingresan con PIN; el resto con un código por correo.</p></div>
+      <button class="btn pri" id="nu">${I.plus} Nuevo usuario</button></div>
+    <div class="card"><div class="card-h"><input class="inp" id="bu" placeholder="Buscar…" value="${esc(filtro)}" style="max-width:320px"><span class="small muted">${us.length} usuario(s)</span></div>
+    <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Usuario</th><th>Departamento / puesto</th><th>Rol</th><th>Estado</th><th>Último acceso</th><th></th></tr></thead><tbody id="tu">
+    ${us.map(u => `<tr data-q="${esc((u.nombre + ' ' + u.email + ' ' + u.departamento).toLowerCase())}">
+      <td><b>${esc(u.nombre || '—')}</b><div class="xs muted">${esc(u.email)}</div></td>
+      <td class="small">${esc(u.departamento || '—')}<div class="xs muted">${esc(u.puesto)}</div></td>
+      <td><span class="tag ${u.rol === 'admin' ? 'adm' : u.rol === 'rh' ? 'rh' : ''}">${esc(ROLES[u.rol])}</span>${u.rol === 'admin' ? `<div class="xs muted">${u.tiene_pin ? (u.pin_temporal ? 'PIN temporal' : 'PIN activo') : 'Sin PIN'}</div>` : ''}</td>
+      <td>${u.activo ? '<span class="badge s-aprobada">Activo</span>' : '<span class="badge s-cancelada">Inactivo</span>'}${u.origen === 'aprobador' ? '<div class="xs muted">creado como aprobador</div>' : ''}</td>
+      <td class="small">${fmt(u.ultimo_acceso)}</td>
+      <td style="text-align:right;white-space:nowrap"><button class="btn sm" data-ed="${u.id}">${I.edit} Editar</button>${u.id !== S.user.id ? ` <button class="btn sm ghost icon" data-del="${u.id}" title="Eliminar">${I.trash}</button>` : ''}</td></tr>`).join('')}
+    </tbody></table></div></div>`);
+  const filtrar = () => { const q = $('#bu').value.toLowerCase(); store.set('fu', q); $$('#tu tr').forEach(tr => tr.style.display = tr.dataset.q.includes(q) ? '' : 'none'); };
+  $('#bu').oninput = filtrar; filtrar();
+  $('#nu').onclick = () => modalUsuario({ activo: true, rol: 'usuario' });
+  $$('[data-ed]').forEach(b => b.onclick = () => modalUsuario(us.find(u => u.id === b.dataset.ed)));
+  $$('[data-del]').forEach(b => b.onclick = async () => { const u = us.find(x => x.id === b.dataset.del);
+    if (!await confirmar('Eliminar usuario', `¿Eliminar a <b>${esc(u.email)}</b>? Sus solicitudes se conservan. Si solo quiere quitarle el acceso, mejor desactívelo.`, 'Eliminar', 'dan')) return;
+    try { await api('rh_admin_eliminar_usuario', { p_id: u.id }); toast('Usuario eliminado.', 'ok'); adminUsuarios(); } catch (e) { toast(e.message, 'err'); } });
+}
+function opcionesDep(v) { const d = S.departamentos.includes(v) || !v ? S.departamentos : [v, ...S.departamentos]; return `<option value="">—</option>` + d.map(x => `<option ${x === v ? 'selected' : ''}>${esc(x)}</option>`).join(''); }
+function modalUsuario(u, alGuardar) {
+  const nuevo = !u.id;
+  modal({ title: nuevo ? 'Nuevo usuario' : 'Editar usuario', body: `<form id="fu" class="grid2">
+      <div class="field span2"><label class="req">Correo</label><input class="inp" id="ue" type="email" value="${esc(u.email || '')}"></div>
+      <div class="field span2"><label>Nombre completo</label><input class="inp" id="un" value="${esc(u.nombre || '')}"></div>
+      <div class="field"><label>Departamento</label><select class="inp" id="ud">${opcionesDep(u.departamento)}</select></div>
+      <div class="field"><label>Puesto</label><input class="inp" id="up" value="${esc(u.puesto || '')}"></div>
+      <div class="field"><label>Rol</label><select class="inp" id="ur">${Object.entries(ROLES).map(([k, v]) => `<option value="${k}" ${u.rol === k ? 'selected' : ''}>${v}</option>`).join('')}</select>
+        <span class="help">Colaborador: solo sus solicitudes. RH: además ve todas y publica políticas. Admin: además usuarios y flujos.</span></div>
+      <div class="field"><label>Estado</label><select class="inp" id="ua"><option value="1" ${u.activo ? 'selected' : ''}>Activo</option><option value="0" ${!u.activo ? 'selected' : ''}>Inactivo</option></select></div>
+      <div class="field span2 ${u.rol === 'admin' ? '' : 'hidden'}" id="upin-w"><label>${u.tiene_pin ? 'Restablecer PIN (dejar vacío para no cambiar)' : 'PIN temporal (6 a 8 dígitos)'}</label>
+        <input class="inp" id="upin" inputmode="numeric" maxlength="8" placeholder="Ej. 6 dígitos" autocomplete="off"><span class="help">Entréguelo a la persona por un medio seguro; el sistema le pedirá cambiarlo al ingresar.</span></div>
+      <label class="chk span2"><input type="checkbox" id="unot"><span><b>Notificar por correo al usuario</b><br><span class="small muted">Desmarcado = puede crear y probar sin que la persona reciba aviso todavía.</span></span></label>
+    </form>`,
+    actions: [{ label: 'Cancelar' }, { label: 'Guardar', cls: 'pri', onClick: ({ close, el, btn }) => ocupado(btn, async () => {
+      try {
+        const r = await api('rh_admin_guardar_usuario', { p_usuario: { id: u.id || null, email: $('#ue', el).value, nombre: $('#un', el).value, departamento: $('#ud', el).value,
+          puesto: $('#up', el).value, rol: $('#ur', el).value, activo: $('#ua', el).value === '1', pin: $('#upin', el).value }, p_notificar: $('#unot', el).checked });
+        close(); toast(r.nuevo ? 'Usuario creado.' : 'Usuario actualizado.', 'ok'); alGuardar ? alGuardar() : adminUsuarios();
+      } catch (e) { toast(e.message, 'err'); }
+    }) }],
+    onOpen: el => { $('#ur', el).onchange = () => $('#upin-w', el).classList.toggle('hidden', $('#ur', el).value !== 'admin'); } });
+}
+
+/* =====================================================================
+   ADMIN · SOLICITUDES DE ACCESO
+   ===================================================================== */
+async function adminAccesos() {
+  cargando('accesos');
+  const rows = await api('rh_admin_accesos');
+  shell('accesos', `<div class="page-head"><div><h1>Solicitudes de acceso</h1><p>Personas que pidieron usuario desde la pantalla de ingreso.</p></div></div>
+    <div class="card">${!rows.length ? `<div class="empty">${I.key}<div>No hay solicitudes de acceso.</div></div>` : `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Persona</th><th>Departamento / puesto</th><th>Comentario</th><th>Fecha</th><th>Estado</th><th></th></tr></thead><tbody>
+    ${rows.map(a => `<tr><td><b>${esc(a.nombre)}</b><div class="xs muted">${esc(a.email)}</div></td><td class="small">${esc(a.departamento || '—')}<div class="xs muted">${esc(a.puesto)}</div></td>
+      <td class="small" style="max-width:260px">${esc(a.comentario || '—')}</td><td class="small">${fmt(a.creado_en)}</td>
+      <td>${a.estado === 'pendiente' ? badge('pendiente') : a.estado === 'aprobada' ? badge('aprobada') : badge('rechazada')}${a.resuelto_por ? `<div class="xs muted">${esc(a.resuelto_por)}</div>` : ''}</td>
+      <td style="text-align:right;white-space:nowrap">${a.estado === 'pendiente' ? `<button class="btn sm pri" data-ok="${a.id}">${I.check} Crear usuario</button> <button class="btn sm" data-no="${a.id}">Rechazar</button>` : ''}</td></tr>`).join('')}
+    </tbody></table></div>`}</div>`);
+  $$('[data-ok]').forEach(b => b.onclick = () => { const a = rows.find(x => x.id === +b.dataset.ok);
+    modal({ title: 'Crear usuario', body: `<div class="grid2">
+        <div class="field span2"><label>Correo</label><input class="inp" value="${esc(a.email)}" disabled></div>
+        <div class="field span2"><label>Nombre</label><input class="inp" id="an" value="${esc(a.nombre)}"></div>
+        <div class="field"><label>Departamento</label><select class="inp" id="ad">${opcionesDep(a.departamento)}</select></div>
+        <div class="field"><label>Puesto</label><input class="inp" id="ap" value="${esc(a.puesto)}"></div>
+        <div class="field"><label>Rol</label><select class="inp" id="ar">${Object.entries(ROLES).map(([k, v]) => `<option value="${k}" ${k === 'usuario' ? 'selected' : ''}>${v}</option>`).join('')}</select></div>
+        <div class="field hidden" id="apw"><label>PIN temporal</label><input class="inp" id="apin" inputmode="numeric" maxlength="8"></div>
+        <label class="chk span2"><input type="checkbox" id="anot"><span><b>Notificar por correo que su acceso está listo</b><br><span class="small muted">Déjelo sin marcar si todavía está en pruebas.</span></span></label></div>`,
+      actions: [{ label: 'Cancelar' }, { label: 'Crear usuario', cls: 'pri', onClick: ({ close, el, btn }) => ocupado(btn, async () => {
+        try { await api('rh_admin_resolver_acceso', { p_id: a.id, p_aprobar: true, p_datos: { nombre: $('#an', el).value, departamento: $('#ad', el).value, puesto: $('#ap', el).value, rol: $('#ar', el).value, pin: $('#apin', el).value }, p_notificar: $('#anot', el).checked, p_nota: '' });
+          close(); toast('Usuario creado.', 'ok'); adminAccesos(); } catch (e) { toast(e.message, 'err'); }
+      }) }], onOpen: el => { $('#ar', el).onchange = () => $('#apw', el).classList.toggle('hidden', $('#ar', el).value !== 'admin'); } }); });
+  $$('[data-no]').forEach(b => b.onclick = () => { const a = rows.find(x => x.id === +b.dataset.no);
+    modal({ title: 'Rechazar acceso', body: `<p style="margin-top:0">${esc(a.nombre)} · ${esc(a.email)}</p><div class="field"><label>Nota (opcional, se incluye en el correo)</label><textarea class="inp" id="nn"></textarea></div>
+      <label class="chk" style="margin-top:10px"><input type="checkbox" id="nnot"><span>Notificar a la persona por correo</span></label>`,
+      actions: [{ label: 'Cancelar' }, { label: 'Rechazar', cls: 'dan', onClick: ({ close, el, btn }) => ocupado(btn, async () => {
+        try { await api('rh_admin_resolver_acceso', { p_id: a.id, p_aprobar: false, p_datos: {}, p_notificar: $('#nnot', el).checked, p_nota: $('#nn', el).value }); close(); toast('Solicitud rechazada.', 'ok'); adminAccesos(); } catch (e) { toast(e.message, 'err'); }
+      }) }] }); });
+}
+
+/* =====================================================================
+   ADMIN · DEPARTAMENTOS
+   ===================================================================== */
+async function adminDepartamentos() {
+  cargando('departamentos');
+  const deps = await api('rh_admin_departamentos');
+  shell('departamentos', `<div class="page-head"><div><h1>Departamentos</h1><p>El director de cada departamento aprueba las excepciones de su equipo.</p></div><button class="btn pri" id="nd">${I.plus} Nuevo departamento</button></div>
+    <div class="card"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Departamento</th><th>Director</th><th>Estado</th><th></th></tr></thead><tbody>
+    ${deps.map(d => `<tr><td><b>${esc(d.nombre)}</b></td><td>${d.director_email ? `${esc(d.director_nombre || '—')}<div class="xs muted">${esc(d.director_email)}</div>` : '<span class="small" style="color:var(--brick);font-weight:600">Sin director asignado</span>'}</td>
+      <td>${d.activo ? '<span class="badge s-aprobada">Activo</span>' : '<span class="badge s-cancelada">Inactivo</span>'}</td>
+      <td style="text-align:right;white-space:nowrap"><button class="btn sm" data-ed="${d.id}">${I.edit} Editar</button> <button class="btn sm ghost icon" data-del="${d.id}" title="Eliminar">${I.trash}</button></td></tr>`).join('')}
+    </tbody></table></div></div>`);
+  const abrir = d => modal({ title: d.id ? 'Editar departamento' : 'Nuevo departamento', body: `<div class="grid2">
+      <div class="field span2"><label class="req">Nombre</label><input class="inp" id="dn" value="${esc(d.nombre || '')}"></div>
+      <div class="field"><label>Nombre del director</label><input class="inp" id="ddn" value="${esc(d.director_nombre || '')}"></div>
+      <div class="field"><label>Correo del director</label><input class="inp" id="dde" type="email" value="${esc(d.director_email || '')}"></div>
+      <div class="field"><label>Estado</label><select class="inp" id="da"><option value="1" ${d.activo !== false ? 'selected' : ''}>Activo</option><option value="0" ${d.activo === false ? 'selected' : ''}>Inactivo</option></select></div></div>`,
+    actions: [{ label: 'Cancelar' }, { label: 'Guardar', cls: 'pri', onClick: ({ close, el, btn }) => ocupado(btn, async () => {
+      try { await api('rh_admin_guardar_departamento', { p_dep: { id: d.id || null, nombre: $('#dn', el).value, director_nombre: $('#ddn', el).value, director_email: $('#dde', el).value, activo: $('#da', el).value === '1' } });
+        close(); toast('Departamento guardado.', 'ok'); await cargarBase(); adminDepartamentos(); } catch (e) { toast(e.message, 'err'); }
+    }) }] });
+  $('#nd').onclick = () => abrir({});
+  $$('[data-ed]').forEach(b => b.onclick = () => abrir(deps.find(d => d.id === +b.dataset.ed)));
+  $$('[data-del]').forEach(b => b.onclick = async () => { const d = deps.find(x => x.id === +b.dataset.del);
+    if (!await confirmar('Eliminar departamento', `¿Eliminar <b>${esc(d.nombre)}</b>? Las solicitudes existentes no se afectan.`, 'Eliminar', 'dan')) return;
+    try { await api('rh_admin_eliminar_departamento', { p_id: d.id }); await cargarBase(); adminDepartamentos(); } catch (e) { toast(e.message, 'err'); } });
+}
+
+/* =====================================================================
+   ADMIN · FORMULARIOS Y FLUJOS
+   ===================================================================== */
+let ED = null, ED_TAB = 'formulario';
+async function adminModulos() {
+  await cargarBase();
+  const cod = store.get('mod') || S.modulos[0]?.codigo;
+  const m = S.modulos.find(x => x.codigo === cod) || S.modulos[0];
+  if (!m) return shell('modulos', '<div class="empty">No hay módulos.</div>');
+  ED = JSON.parse(JSON.stringify(m)); ED.textos = ED.textos || {};
+  pintarEditor();
+}
+function pintarEditor() {
+  const tabs = { formulario: 'Formulario', flujo: 'Flujo de aprobación', textos: 'Textos y mensajes', general: 'General' };
+  shell('modulos', `<div class="page-head"><div><h1>Formularios y flujos</h1><p>Los cambios aplican a las solicitudes nuevas; las ya enviadas conservan su versión.</p></div>
+      <div class="row wrap">${S.modulos.length > 1 ? `<select class="inp" id="msel" style="width:auto">${S.modulos.map(x => `<option value="${x.codigo}" ${x.codigo === ED.codigo ? 'selected' : ''}>${esc(x.nombre)}</option>`).join('')}</select>` : ''}
+      <button class="btn" id="prev">Vista previa</button><button class="btn pri" id="guardar">${I.check} Guardar cambios</button></div></div>
+    <div class="tabs">${Object.entries(tabs).map(([k, v]) => `<button data-tab="${k}" class="${ED_TAB === k ? 'on' : ''}">${v}</button>`).join('')}</div>
+    <div id="edbody"></div>`);
+  $$('[data-tab]').forEach(b => b.onclick = () => { ED_TAB = b.dataset.tab; pintarEditor(); });
+  if ($('#msel')) $('#msel').onchange = e => { store.set('mod', e.target.value); adminModulos(); };
+  $('#guardar').onclick = e => ocupado(e.currentTarget, async () => {
+    try { await api('rh_admin_guardar_modulo', { p_modulo: ED }); toast('Cambios guardados.', 'ok'); await cargarBase(); } catch (err) { toast(err.message, 'err'); }
+  });
+  $('#prev').onclick = () => { modal({ title: 'Vista previa · ' + ED.nombre, size: 'lg', body: `${ED.textos.intro ? `<div class="alert a-info">${I.shield}<div class="small">${esc(ED.textos.intro)}</div></div>` : ''}<div class="grid2" id="pv">${ED.formulario.map(f => campoHTML(f, valorAuto(f))).join('')}</div>
+      ${ED.textos.declaracion ? `<label class="chk" style="margin-top:16px"><input type="checkbox"><span><b>Declaración.</b> ${esc(ED.textos.declaracion)}</span></label>` : ''}`, onOpen: el => enlazarForm(el) }); };
+  ({ formulario: edFormulario, flujo: edFlujo, textos: edTextos, general: edGeneral })[ED_TAB]();
+}
+function edFormulario() {
+  const F = ED.formulario;
+  const conOps = t => ['lista', 'opcion', 'casillas'].includes(t);
+  $('#edbody').innerHTML = `<div class="alert a-info">${I.info}<div class="small">Los campos marcados como <b>sistema</b> no se pueden eliminar: <span class="kbd">correo_jefatura</span> se usa para enviar la aprobación a la jefatura y <span class="kbd">departamento</span> para encontrar al director. Sí puede cambiar su texto.</div></div>
+    <div class="stack">${F.map((f, i) => `<div class="fcard ${f.sistema ? 'sys' : ''}" data-i="${i}">
+      <div class="fcard-h"><span class="num">${i + 1}</span><input class="inp grow" data-p="label" value="${esc(f.label)}" placeholder="Etiqueta del campo">
+        <button class="btn icon ghost" data-mv="-1" ${i === 0 ? 'disabled' : ''} title="Subir">${I.up}</button><button class="btn icon ghost" data-mv="1" ${i === F.length - 1 ? 'disabled' : ''} title="Bajar">${I.down}</button>
+        <button class="btn icon ghost" data-rm ${f.sistema ? 'disabled title="Campo del sistema"' : 'title="Eliminar"'} style="color:var(--brick)">${I.trash}</button></div>
+      <div class="grid3">
+        <div class="field"><span class="lbl">Tipo</span><select class="inp" data-p="tipo" ${f.sistema ? 'disabled' : ''}>${Object.entries(TIPOS_CAMPO).map(([k, v]) => `<option value="${k}" ${f.tipo === k ? 'selected' : ''}>${v}</option>`).join('')}</select></div>
+        <div class="field"><span class="lbl">Clave interna</span><input class="inp" value="${esc(f.key)}" disabled>${f.sistema ? '<span class="help">Campo del sistema</span>' : ''}</div>
+        <div class="field"><span class="lbl">Valor inicial</span><select class="inp" data-p="auto"><option value="">Vacío</option>${[['hoy', 'Fecha de hoy'], ['nombre', 'Nombre del usuario'], ['departamento', 'Departamento del usuario'], ['puesto', 'Puesto del usuario']].map(([k, v]) => `<option value="${k}" ${f.auto === k ? 'selected' : ''}>${v}</option>`).join('')}</select></div>
+        <div class="field span2"><span class="lbl">Texto de ayuda</span><input class="inp" data-p="ayuda" value="${esc(f.ayuda || '')}"></div>
+        <label class="chk" style="align-self:end"><input type="checkbox" data-p="requerido" ${f.requerido ? 'checked' : ''} ${f.key === 'correo_jefatura' ? 'disabled' : ''}><span>Obligatorio</span></label>
+        ${conOps(f.tipo) ? `<div class="field span2" style="grid-column:1/-1"><span class="lbl">Opciones (una por línea)</span><textarea class="inp" data-p="opciones">${esc((f.opciones || []).join('\n'))}</textarea></div>` : ''}
+        ${f.tipo === 'dias' ? `<div class="field" style="grid-column:1/-1"><span class="lbl">Días disponibles</span><div class="days" data-dias>${DIAS_ORD.map(d => `<button type="button" class="day ${(f.opciones || []).includes(d) ? 'on' : ''}" data-d="${d}">${DIAS[d]}</button>`).join('')}</div></div>
+          <div class="field"><span class="lbl">Máximo de días (vacío = sin límite)</span><input class="inp" type="number" min="1" max="7" data-p="max" value="${esc(f.max || '')}"></div>
+          <div class="field span2"><span class="lbl">Motivos de excepción (uno por línea)</span><textarea class="inp" data-p="motivos" style="min-height:70px">${esc((f.motivos || []).join('\n'))}</textarea></div>` : ''}
+      </div></div>`).join('')}</div>
+    <button class="btn" id="addf" style="margin-top:14px">${I.plus} Agregar campo</button>`;
+  const body = $('#edbody');
+  body.oninput = body.onchange = e => {
+    const card = e.target.closest('[data-i]'), p = e.target.dataset.p; if (!card || !p) return;
+    const f = F[+card.dataset.i];
+    if (p === 'requerido') f.requerido = e.target.checked;
+    else if (p === 'opciones' || p === 'motivos') f[p] = e.target.value.split('\n').map(x => x.trim()).filter(Boolean);
+    else if (p === 'max') { if (e.target.value) f.max = +e.target.value; else delete f.max; }
+    else if (p === 'auto') { if (e.target.value) f.auto = e.target.value; else delete f.auto; }
+    else f[p] = e.target.value;
+    if (p === 'tipo' && e.type === 'change') { if (f.tipo === 'dias' && !f.opciones?.length) { f.opciones = ['lun', 'mar', 'mie', 'jue', 'vie']; f.motivos = ['Salud', 'Cuido de familiares', 'Otro']; } edFormulario(); }
+  };
+  body.onclick = e => {
+    const card = e.target.closest('[data-i]'); const i = card ? +card.dataset.i : -1;
+    const mv = e.target.closest('[data-mv]'); if (mv && !mv.disabled) { const j = i + +mv.dataset.mv; [F[i], F[j]] = [F[j], F[i]]; return edFormulario(); }
+    const rm = e.target.closest('[data-rm]'); if (rm && !rm.disabled) { F.splice(i, 1); return edFormulario(); }
+    const d = e.target.closest('[data-dias] .day'); if (d) { d.classList.toggle('on'); F[i].opciones = $$('.day.on', d.parentNode).map(x => x.dataset.d); }
+  };
+  $('#addf').onclick = () => modal({ title: 'Agregar campo', body: `<div class="grid2"><div class="field span2"><label class="req">Etiqueta</label><input class="inp" id="nl" placeholder="Ej. Teléfono de contacto"></div>
+      <div class="field"><label>Tipo</label><select class="inp" id="nt">${Object.entries(TIPOS_CAMPO).map(([k, v]) => `<option value="${k}">${v}</option>`).join('')}</select></div>
+      <label class="chk" style="align-self:end"><input type="checkbox" id="nrq"><span>Obligatorio</span></label></div>`,
+    actions: [{ label: 'Cancelar' }, { label: 'Agregar', cls: 'pri', onClick: ({ close, el }) => {
+      const label = $('#nl', el).value.trim(); if (!label) return toast('Escriba la etiqueta.', 'err');
+      let key = slug(label), n = 2; while (F.some(f => f.key === key)) key = slug(label).slice(0, 36) + '_' + n++;
+      const f = { key, label, tipo: $('#nt', el).value, requerido: $('#nrq', el).checked };
+      if (['lista', 'opcion', 'casillas'].includes(f.tipo)) f.opciones = ['Opción 1', 'Opción 2'];
+      if (f.tipo === 'dias') { f.opciones = ['lun', 'mar', 'mie', 'jue', 'vie']; f.motivos = ['Salud', 'Cuido de familiares', 'Otro']; }
+      F.push(f); close(); edFormulario(); window.scrollTo(0, document.body.scrollHeight);
+    } }], onOpen: el => $('#nl', el).focus() });
+}
+function edFlujo() {
+  const P = ED.flujo;
+  $('#edbody').innerHTML = `<div class="grid2" style="grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);align-items:start">
+    <div><div class="flow">
+      <div class="step-start">Solicitante envía y firma</div>
+      ${P.map((p, i) => `<div class="arrow">${I.arrow}</div><div class="fcard step ${p.condicion === 'excepcion' ? 'cond-exc' : ''}" data-i="${i}">
+        <div class="fcard-h"><span class="num">${i + 1}</span><input class="inp grow" data-p="nombre" value="${esc(p.nombre)}" placeholder="Nombre del paso">
+          <button class="btn icon ghost" data-mv="-1" ${i === 0 ? 'disabled' : ''}>${I.up}</button><button class="btn icon ghost" data-mv="1" ${i === P.length - 1 ? 'disabled' : ''}>${I.down}</button>
+          <button class="btn icon ghost" data-rm style="color:var(--brick)" ${P.length === 1 ? 'disabled' : ''}>${I.trash}</button></div>
+        <div class="grid2">
+          <div class="field"><span class="lbl">¿Quién aprueba?</span><select class="inp" data-p="tipo">${Object.entries(TIPOS_APROB).map(([k, v]) => `<option value="${k}" ${p.tipo === k ? 'selected' : ''}>${v}</option>`).join('')}</select></div>
+          <div class="field"><span class="lbl">¿Cuándo aplica?</span><select class="inp" data-p="condicion"><option value="siempre" ${p.condicion !== 'excepcion' ? 'selected' : ''}>Siempre</option><option value="excepcion" ${p.condicion === 'excepcion' ? 'selected' : ''}>Solo si hay excepción (días consecutivos)</option></select></div>
+          ${p.tipo === 'correo' ? `<div class="field span2"><span class="lbl req">Correo(s) del aprobador</span><input class="inp" data-p="correos" value="${esc(p.correos || '')}" placeholder="persona@legrand.com" style="${(p.correos || '').trim() ? '' : 'border-color:var(--brick)'}"><span class="help">Si pone varios (separados por coma), cualquiera de ellos puede aprobar.</span></div>`
+            : `<div class="span2 small muted">${p.tipo === 'jefatura' ? 'Se usa el correo que el solicitante escribe en el campo <span class="kbd">correo_jefatura</span>.' : 'Se usa el director configurado en <a href="#/admin/departamentos">Departamentos</a> según el departamento elegido.'}</div>`}
+        </div></div>`).join('')}
+      <div class="arrow">${I.arrow}</div><div class="step-end">Aprobada → PDF al solicitante y RH</div>
+    </div><button class="btn" id="addp" style="margin-top:14px">${I.plus} Agregar paso</button></div>
+    <div class="card card-b small stack" style="position:sticky;top:120px">
+      <h3>Cómo funciona</h3>
+      <p style="margin:0">Los pasos se ejecutan en orden. Cada aprobador recibe un correo, ingresa con su código y firma.</p>
+      <p style="margin:0">Los pasos <b style="color:var(--olive)">“solo si hay excepción”</b> se saltan cuando el solicitante no eligió días consecutivos.</p>
+      <p style="margin:0">El <b>último paso que aplique</b> es la aprobación final: al aprobarlo se genera el PDF con todas las firmas y se envía al solicitante y a los correos de RH de <a href="#/admin/config">Configuración</a>.</p>
+      <p style="margin:0">Si alguien rechaza, el flujo termina y el solicitante recibe el motivo.</p>
+    </div></div>`;
+  const body = $('#edbody');
+  body.oninput = body.onchange = e => {
+    const card = e.target.closest('[data-i]'), p = e.target.dataset.p; if (!card || !p) return;
+    P[+card.dataset.i][p] = e.target.value;
+    if (e.type === 'change' && (p === 'tipo' || p === 'condicion')) edFlujo();
+  };
+  body.onclick = e => {
+    const card = e.target.closest('[data-i]'); const i = card ? +card.dataset.i : -1;
+    const mv = e.target.closest('[data-mv]'); if (mv && !mv.disabled) { const j = i + +mv.dataset.mv; [P[i], P[j]] = [P[j], P[i]]; return edFlujo(); }
+    const rm = e.target.closest('[data-rm]'); if (rm && !rm.disabled) { P.splice(i, 1); return edFlujo(); }
+  };
+  $('#addp').onclick = () => { P.push({ id: 'p' + Date.now(), nombre: 'Nuevo paso', tipo: 'correo', correos: '', condicion: 'siempre' }); edFlujo(); };
+}
+function edTextos() {
+  const T = ED.textos;
+  const campos = [['intro', 'Texto inicial (confidencialidad)', 'Se muestra al inicio del formulario y en el PDF.'],
+                  ['declaracion', 'Declaración (casilla obligatoria)', 'El solicitante debe marcarla para poder enviar.'],
+                  ['msg_aprobado', 'Mensaje al aprobarse', 'Va en el correo final con el PDF y en el documento.'],
+                  ['msg_rechazado', 'Mensaje al rechazarse', 'Va en el correo de rechazo, antes del motivo.']];
+  $('#edbody').innerHTML = `<div class="card card-b stack">${campos.map(([k, l, h]) => `<div class="field"><label>${l}</label><textarea class="inp" data-t="${k}">${esc(T[k] || '')}</textarea><span class="help">${h}</span></div>`).join('')}</div>`;
+  $('#edbody').oninput = e => { if (e.target.dataset.t) T[e.target.dataset.t] = e.target.value; };
+  $('#edbody').onclick = null;
+}
+function edGeneral() {
+  $('#edbody').innerHTML = `<div class="card card-b grid2">
+    <div class="field"><label>Nombre del trámite</label><input class="inp" data-g="nombre" value="${esc(ED.nombre)}"></div>
+    <div class="field"><label>Prefijo del folio</label><input class="inp" data-g="prefijo" value="${esc(ED.prefijo)}" maxlength="6"><span class="help">Ej. TT → TT-2026-0001</span></div>
+    <div class="field span2"><label>Descripción</label><input class="inp" data-g="descripcion" value="${esc(ED.descripcion)}"></div>
+    <label class="chk"><input type="checkbox" data-g="activo" ${ED.activo ? 'checked' : ''}><span><b>Módulo activo</b><br><span class="small muted">Si se desactiva, nadie puede crear solicitudes nuevas.</span></span></label></div>`;
+  $('#edbody').oninput = $('#edbody').onchange = e => { const g = e.target.dataset.g; if (g) ED[g] = e.target.type === 'checkbox' ? e.target.checked : e.target.value; };
+  $('#edbody').onclick = null;
+}
+
+/* =====================================================================
+   ADMIN · CONFIGURACIÓN
+   ===================================================================== */
+async function adminConfig() {
+  cargando('config');
+  const c = await api('rh_admin_config');
+  const v = k => esc(c[k] ?? '');
+  const dom = Array.isArray(c.dominios_permitidos) ? c.dominios_permitidos.join(', ') : '';
+  const urlApp = location.href.split('#')[0];
+  shell('config', `<div class="page-head"><div><h1>Configuración</h1><p>Correo, seguridad y textos generales.</p></div><button class="btn pri" id="gc">${I.check} Guardar</button></div>
+    ${c._pg_net ? '' : `<div class="alert a-err">${I.warn}<div><b>pg_net no está activo.</b> Supabase → Database → Extensions → busque <span class="kbd">pg_net</span> y actívelo. Sin esto no salen correos.</div></div>`}
+    <div class="stack">
+    <div class="card"><div class="card-h"><h2>Power Automate (correos)</h2><span class="row small">${c.pa_url ? '<span class="dot-st" style="background:var(--green)"></span> Conectado' : '<span class="dot-st" style="background:var(--brick)"></span> Sin configurar'}</span></div><div class="card-b grid2">
+      <div class="field span2"><label>URL del flujo de Power Automate (disparador HTTP)</label><div class="copy-box"><input class="inp" type="password" autocomplete="off" data-c="pa_url" value="${v('pa_url')}" placeholder="Pegue aquí la URL HTTP POST del flujo"><button class="btn" type="button" id="verurl" title="Mostrar u ocultar">Ver</button></div><span class="help">Se guarda en la base de datos y solo los administradores la ven. Debe ser un flujo propio de esta app (no el de Pricing).</span></div>
+      <div class="field span2"><label>Secreto compartido</label><div class="copy-box"><input class="inp" data-c="pa_secreto" value="${v('pa_secreto')}"><button class="btn" id="cpy" title="Copiar">${I.copy}</button><button class="btn" id="gen" title="Generar nuevo">${I.refresh}</button></div>
+        <span class="help">Pegue este mismo valor en la condición del flujo. Si lo cambia aquí, cámbielo también en Power Automate.</span></div>
+      <div class="field span2"><label>Copia del PDF final para RH</label><input class="inp" data-c="correos_rh" value="${v('correos_rh')}" placeholder="rrhh@legrand.com, gerente.rh@legrand.com"><span class="help">Si se deja vacío, se usa el aprobador del último paso.</span></div>
+      <div class="field span2"><label>Modo prueba: desviar TODOS los correos a</label><input class="inp" data-c="modo_prueba_correo" value="${v('modo_prueba_correo')}" placeholder="vacío = modo normal"><span class="help">Para probar sin molestar a nadie: el asunto indica a quién iba dirigido.</span></div>
+      <div class="row span2 wrap"><input class="inp" id="tp" placeholder="Correo para la prueba (vacío = el suyo)" style="max-width:320px"><button class="btn" id="test">${I.mail} Enviar correo de prueba</button><a href="#/admin/correos" class="small">Ver bitácora de correos →</a></div>
+    </div></div>
+    <div class="card"><div class="card-h"><h2>Aplicación</h2></div><div class="card-b grid2">
+      <div class="field"><label>Nombre de la app</label><input class="inp" data-c="nombre_app" value="${v('nombre_app')}"></div>
+      <div class="field"><label>Empresa</label><input class="inp" data-c="nombre_empresa" value="${v('nombre_empresa')}"></div>
+      <div class="field span2"><label>URL pública de la app (para los botones de los correos)</label><div class="copy-box"><input class="inp" data-c="app_url" value="${v('app_url')}" placeholder="https://..."><button class="btn" id="usar" title="Usar la dirección actual">Usar actual</button></div><span class="help">Dirección actual: ${esc(urlApp)}</span></div>
+    </div></div>
+    <div class="card"><div class="card-h"><h2>Seguridad de acceso</h2></div><div class="card-b grid3">
+      <div class="field"><label>Dominios permitidos</label><input class="inp" id="dom" value="${esc(dom)}"><span class="help">Separados por coma. Vacío = cualquier correo.</span></div>
+      <div class="field"><label>Vigencia del código (minutos)</label><input class="inp" type="number" min="5" max="1440" data-c="minutos_codigo" value="${v('minutos_codigo')}"></div>
+      <div class="field"><label>Duración de la sesión (horas)</label><input class="inp" type="number" min="1" max="168" data-c="horas_sesion" value="${v('horas_sesion')}"></div>
+    </div></div></div>`);
+  $('#cpy').onclick = () => { navigator.clipboard?.writeText($('[data-c=pa_secreto]').value); toast('Secreto copiado.', 'ok'); };
+  $('#gen').onclick = () => { const a = new Uint8Array(18); crypto.getRandomValues(a); $('[data-c=pa_secreto]').value = [...a].map(x => x.toString(16).padStart(2, '0')).join(''); toast('Secreto nuevo generado: guarde y actualícelo en Power Automate.'); };
+  $('#usar').onclick = () => $('[data-c=app_url]').value = urlApp;
+  $('#verurl').onclick = () => { const i = $('[data-c=pa_url]'); i.type = i.type === 'password' ? 'text' : 'password'; $('#verurl').textContent = i.type === 'password' ? 'Ver' : 'Ocultar'; };
+  const guardar = async () => {
+    const cfg = {}; $$('[data-c]').forEach(i => cfg[i.dataset.c] = i.type === 'number' ? +i.value : i.value.trim());
+    cfg.dominios_permitidos = $('#dom').value.split(/[,;\s]+/).map(x => x.trim().replace(/^@/, '')).filter(Boolean);
+    await api('rh_admin_guardar_config', { p_cfg: cfg });
+  };
+  $('#gc').onclick = e => ocupado(e.currentTarget, async () => { try { await guardar(); toast('Configuración guardada.', 'ok'); adminConfig(); } catch (err) { toast(err.message, 'err'); } });
+  $('#test').onclick = e => ocupado(e.currentTarget, async () => {
+    try { await guardar(); const r = await api('rh_admin_probar_correo', { p_para: $('#tp').value });
+      toast(r.configurado ? 'Correo de prueba enviado a Power Automate. Revise la bitácora en unos segundos.' : 'Falta la URL de Power Automate.', r.configurado ? 'ok' : 'err'); }
+    catch (err) { toast(err.message, 'err'); }
+  });
+}
+async function adminCorreos() {
+  cargando('correos');
+  const rows = await api('rh_admin_correos');
+  const st = r => r.estado !== 'enviado' ? `<span class="badge s-rechazada">${esc(r.estado)}</span>`
+    : r.http ? (r.http >= 200 && r.http < 300 ? `<span class="badge s-aprobada">HTTP ${r.http}</span>` : `<span class="badge s-rechazada">HTTP ${r.http}</span>`)
+    : r.error ? `<span class="badge s-rechazada" title="${esc(r.error)}">Error</span>` : '<span class="badge s-cancelada">Enviado</span>';
+  shell('correos', `<div class="page-head"><div><h1>Bitácora de correos</h1><p>Últimos 150 envíos hacia Power Automate. HTTP 202 = el flujo lo recibió.</p></div><button class="btn" id="rf">${I.refresh} Actualizar</button></div>
+    <div class="card">${!rows.length ? `<div class="empty">${I.mail}<div>Aún no se han enviado correos.</div></div>` : `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Fecha</th><th>Tipo</th><th>Para</th><th>Asunto</th><th>Resultado</th></tr></thead><tbody>
+    ${rows.map(r => `<tr><td class="small" style="white-space:nowrap">${fmt(r.creado_en)}</td><td><span class="tag">${esc(r.tipo)}</span></td><td class="small">${esc(r.para)}</td><td class="small">${esc(r.asunto.replace(/(código de acceso: )\d{6}/i, '$1••••••'))}</td><td>${st(r)}${r.error ? `<div class="xs muted" style="max-width:220px">${esc(r.error)}</div>` : ''}</td></tr>`).join('')}
+    </tbody></table></div>`}</div>
+    <p class="xs muted" style="margin-top:10px">Supabase conserva el resultado HTTP solo unas horas; después la columna muestra “Enviado”.</p>`);
+  $('#rf').onclick = adminCorreos;
+}
+
+iniciar();
+</script>
+</body>
+</html>
