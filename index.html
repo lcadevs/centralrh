@@ -1140,7 +1140,7 @@ async function vistaPoliticas() {
         <div class="field"><label>Trámite</label><select class="inp" id="pm">${S.modulos.map(m => `<option value="${esc(m.codigo)}">${esc(m.nombre)}</option>`).join('')}</select></div>
         <div class="field"><label class="req">Título</label><input class="inp" id="pt" placeholder="Política de Teletrabajo"></div>
         <div class="field"><label>Versión</label><input class="inp" id="pv" placeholder="Ej. 2026-01 o 3.0"></div>
-        <div class="field"><label class="req">Archivo (PDF o Word, máx. 8 MB)</label><input class="inp" id="pf" type="file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"></div>
+        <div class="field"><label class="req">Archivo (PDF o Word, máx. 15 MB)</label><input class="inp" id="pf" type="file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"></div>
         <label class="chk"><input type="checkbox" id="pvig" checked><span><b>Publicar como vigente</b><br><span class="small muted">Reemplaza a la vigente actual para las solicitudes nuevas. Las ya enviadas conservan la que aceptaron.</span></span></label>
         <button class="btn pri">${I.book} Publicar</button></div></form>
       <div class="card"><div class="card-h"><h2>Historial</h2></div>
@@ -1156,7 +1156,7 @@ async function vistaPoliticas() {
     const f = $('#pf').files[0];
     if (!$('#pt').value.trim()) return toast('Escriba el título.', 'err');
     if (!f) return toast('Seleccione el archivo.', 'err');
-    if (f.size > 8 * 1024 * 1024) return toast('El archivo supera 8 MB.', 'err');
+    if (f.size > 15 * 1024 * 1024) return toast('El archivo supera 15 MB.', 'err');
     const mime = /\.pdf$/i.test(f.name) ? 'application/pdf' : /\.docx$/i.test(f.name) ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' : f.type;
     const b64 = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1]); r.onerror = rej; r.readAsDataURL(f); });
     try { await api('rh_politica_subir', { p_modulo: $('#pm').value, p_titulo: $('#pt').value, p_version: $('#pv').value, p_archivo_nombre: f.name, p_mime: mime, p_contenido: b64, p_vigente: $('#pvig').checked });
