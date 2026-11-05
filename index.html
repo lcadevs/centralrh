@@ -761,7 +761,9 @@ function bloquePolitica(m) {
 }
 async function abrirPolitica(id, alAbrir) {
   const r = await api('rh_politica_archivo', { p_id: id });
-  const bin = atob(r.contenido), arr = new Uint8Array(bin.length);
+  let b64 = r.contenido || '';
+  if (!b64) { const partes = []; for (let n = 1; n <= r.partes; n++) partes.push((await api('rh_politica_leer_parte', { p_id: id, p_n: n })).contenido); b64 = partes.join(''); }
+  const bin = atob(b64), arr = new Uint8Array(bin.length);
   for (let k = 0; k < bin.length; k++) arr[k] = bin.charCodeAt(k);
   const url = URL.createObjectURL(new Blob([arr], { type: r.mime })), esPdf = r.mime === 'application/pdf';
   modal({ title: r.titulo + (r.version ? ' · v' + r.version : ''), size: 'lg', body: `
@@ -1159,8 +1161,22 @@ async function vistaPoliticas() {
     if (f.size > 15 * 1024 * 1024) return toast('El archivo supera 15 MB.', 'err');
     const mime = /\.pdf$/i.test(f.name) ? 'application/pdf' : /\.docx$/i.test(f.name) ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' : f.type;
     const b64 = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1]); r.onerror = rej; r.readAsDataURL(f); });
-    try { await api('rh_politica_subir', { p_modulo: $('#pm').value, p_titulo: $('#pt').value, p_version: $('#pv').value, p_archivo_nombre: f.name, p_mime: mime, p_contenido: b64, p_vigente: $('#pvig').checked });
-      toast('Política publicada.', 'ok'); vistaPoliticas(); } catch (err) { toast(err.message, 'err'); }
+    const btn = $('#fp button.pri'), PARTE = 1000000, total = Math.ceil(b64.length / PARTE);  // 1 000 000 es múltiplo de 4
+    try {
+      const { id } = await api('rh_politica_iniciar', { p_modulo: $('#pm').value, p_titulo: $('#pt').value, p_version: $('#pv').value,
+        p_archivo_nombre: f.name, p_mime: mime, p_tamano: f.size, p_partes: total });
+      for (let n = 1; n <= total; n++) {
+        btn.innerHTML = `<span class="spin"></span> Subiendo ${Math.round((n - 1) / total * 100)}%`;
+        let ok = false;
+        for (let intento = 1; intento <= 3 && !ok; intento++) {
+          try { await api('rh_politica_parte', { p_id: id, p_n: n, p_contenido: b64.slice((n - 1) * PARTE, n * PARTE) }); ok = true; }
+          catch (err) { if (intento === 3) throw err; await new Promise(r => setTimeout(r, 800 * intento)); }
+        }
+      }
+      btn.innerHTML = '<span class="spin"></span> Finalizando…';
+      await api('rh_politica_finalizar', { p_id: id, p_vigente: $('#pvig').checked });
+      toast('Política publicada.', 'ok'); vistaPoliticas();
+    } catch (err) { toast(err.message, 'err'); }
   }); };
   $$('[data-ver]').forEach(b => b.onclick = () => ocupado(b, async () => { try { await abrirPolitica(+b.dataset.ver); } catch (err) { toast(err.message, 'err'); } }));
   $$('[data-vig]').forEach(b => b.onclick = () => ocupado(b, async () => { try { await api('rh_politica_vigente', { p_id: +b.dataset.vig }); toast('Política vigente actualizada.', 'ok'); vistaPoliticas(); } catch (err) { toast(err.message, 'err'); } }));
