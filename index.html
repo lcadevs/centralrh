@@ -1829,7 +1829,7 @@ async function adminConfig() {
       <div class="field span2"><label>Secreto compartido</label><div class="copy-box"><input class="inp" data-c="pa_secreto" value="${v('pa_secreto')}"><button class="btn" id="cpy" title="Copiar">${I.copy}</button><button class="btn" id="gen" title="Generar nuevo">${I.refresh}</button></div>
         <span class="help">Pegue este mismo valor en la condición del flujo. Si lo cambia aquí, cámbielo también en Power Automate.</span></div>
       <div class="field span2"><label>Modo prueba: desviar TODOS los correos a</label><input class="inp" data-c="modo_prueba_correo" value="${v('modo_prueba_correo')}" placeholder="vacío = modo normal"><span class="help">Para probar sin molestar a nadie: el asunto indica a quién iba dirigido.</span></div>
-      <div class="row span2 wrap"><input class="inp" id="tp" placeholder="Correo para la prueba (vacío = el suyo)" style="max-width:320px"><button class="btn" id="test">${I.mail} Enviar correo de prueba</button><a href="#/admin/correos" class="small">Ver bitácora de correos →</a></div>
+      <div class="row span2 wrap"><input class="inp" id="tp" placeholder="Correo para la prueba (vacío = el suyo)" style="max-width:320px"><button class="btn" id="test">${I.mail} Enviar correo de prueba</button><button class="btn" id="diag" title="4 envíos de distinto tamaño, con y sin adjunto">${I.refresh} Diagnóstico de envíos</button><a href="#/admin/correos" class="small">Ver bitácora de correos →</a></div>
     </div></div>
     <div class="card"><div class="card-h"><h2>Aplicación</h2></div><div class="card-b grid2">
       <div class="field"><label>Nombre de la app</label><input class="inp" data-c="nombre_app" value="${v('nombre_app')}"></div>
@@ -1868,6 +1868,10 @@ async function adminConfig() {
       try { const r = await api('rh_admin_datos_prueba', { p_accion: 'borrar' }); toast(`Datos de prueba borrados: ${r.solicitudes} solicitudes y ${r.usuarios} personas.`, 'ok'); adminConfig(); }
       catch (err) { toast(err.message, 'err'); } });
   };
+  $('#diag').onclick = e => ocupado(e.currentTarget, async () => {
+    try { await guardar(); const r = await api('rh_admin_diagnostico_correo', { p_para: $('#tp').value });
+      toast(`Se enviaron 4 correos de diagnóstico a ${r.para.join(', ')}. Revise la bitácora en 1–2 minutos.`, 'ok'); setTimeout(() => { location.hash = '#/admin/correos'; }, 1500); }
+    catch (err) { toast(err.message, 'err'); } });
   $('#test').onclick = e => ocupado(e.currentTarget, async () => {
     try { await guardar(); const r = await api('rh_admin_probar_correo', { p_para: $('#tp').value });
       toast(r.configurado ? 'Correo de prueba enviado a Power Automate. Revise la bitácora en unos segundos.' : 'Falta la URL de Power Automate.', r.configurado ? 'ok' : 'err'); }
@@ -1880,7 +1884,7 @@ async function adminCorreos() {
   const st = r => r.estado !== 'enviado' ? `<span class="badge s-rechazada">${esc(r.estado)}</span>`
     : r.http ? (r.http >= 200 && r.http < 300 ? `<span class="badge s-aprobada">HTTP ${r.http}</span>` : `<span class="badge s-rechazada">HTTP ${r.http}</span>`)
     : r.error ? `<span class="badge s-rechazada" title="${esc(r.error)}">Error</span>` : '<span class="badge s-cancelada">Enviado</span>';
-  shell('correos', `<div class="page-head"><div><h1>Bitácora de correos</h1><p>Últimos 150 envíos hacia Power Automate. HTTP 202 = el flujo lo recibió.</p></div><button class="btn" id="rf">${I.refresh} Actualizar</button></div>
+  shell('correos', `<div class="page-head"><div><h1>Bitácora de correos</h1><p>Últimos 150 envíos hacia Power Automate. <b>HTTP 202</b> = el flujo lo recibió · <b>HTTP 200</b> = el flujo confirmó el envío (si agregó las respuestas, paso 3.6b de la guía) · <b>Error / Timeout</b> = el flujo no respondió.</p></div><button class="btn" id="rf">${I.refresh} Actualizar</button></div>
     <div class="card">${!rows.length ? `<div class="empty">${I.mail}<div>Aún no se han enviado correos.</div></div>` : `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Fecha</th><th>Tipo</th><th>Para</th><th>Asunto</th><th>Resultado</th></tr></thead><tbody>
     ${rows.map(r => `<tr><td class="small" style="white-space:nowrap">${fmt(r.creado_en)}</td><td><span class="tag">${esc(r.tipo)}</span></td><td class="small">${esc(r.para)}</td><td class="small">${esc(r.asunto.replace(/(código de acceso: )\d{6}/i, '$1••••••'))}</td><td>${st(r)}${r.error ? `<div class="xs muted" style="max-width:220px">${esc(r.error)}</div>` : ''}</td></tr>`).join('')}
     </tbody></table></div>`}</div>
