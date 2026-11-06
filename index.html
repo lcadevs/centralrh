@@ -15,7 +15,7 @@
 const CONFIG = {
   SUPABASE_URL: 'https://iecfgpqnnsxmnmbxnfcp.supabase.co',
   SUPABASE_KEY: 'sb_publishable_Mt2sdPIzEcfbKv15x4-JTQ_Tf6csjiH',
-  VERSION: '1.7'
+  VERSION: '1.8'
 };
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -148,6 +148,20 @@ table.tbl{width:100%;border-collapse:collapse;font-size:14px}
 .s-aprobada,.s-aprobado{background:var(--ok-50);color:var(--ok)}
 .s-rechazada,.s-rechazado{background:var(--danger-50);color:var(--danger)}
 .s-cancelada,.s-omitido,.s-en_espera{background:var(--gris-50);color:var(--gris)}
+.s-info_solicitada,.s-info{background:#E8EEF7;color:var(--acero)}
+.mini-steps i.info{background:var(--acero)} .tl .dot.info{background:var(--acero);color:#fff}
+.files{border:1px dashed var(--line-2);border-radius:12px;padding:10px 12px;background:var(--surface-2)}
+.files .fl{display:flex;flex-direction:column;gap:6px;margin-bottom:8px} .files .fl:empty{display:none}
+.file-it{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:7px 10px;font-size:13px}
+.file-it .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600} .file-it .sz{color:var(--ink-3);font-size:12px}
+.opt-nota{margin-top:8px;border-left:4px solid var(--acero);background:#EEF3F9;border-radius:8px;padding:9px 12px;font-size:13px;color:var(--ink)}
+.opt-nota.warn{border-color:var(--warn);background:var(--warn-50)} .opt-nota.err{border-color:var(--danger);background:#FDECEC;color:var(--danger);font-weight:600}
+.alerta-amb svg{width:20px;height:20px;flex:none;margin-top:1px}
+.alerta-amb{display:flex;gap:12px;border:1px solid #E6D9B8;background:var(--warn-50);border-radius:12px;padding:12px 14px;margin-bottom:16px;color:#5E4813}
+.qa{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:10px} .qa .q{font-weight:600} .qa .a{margin-top:8px;padding-top:8px;border-top:1px dashed var(--line)}
+.dl-ap{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;font-size:12.5px;margin-top:6px} .dl-ap dt{color:var(--ink-3)} .dl-ap dd{margin:0;font-weight:600}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.mod-pick{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
 .tag{display:inline-block;border-radius:6px;padding:2px 8px;font-size:12px;font-weight:600;background:var(--gris-50);color:var(--gris)}
 .tag.adm{background:var(--pri-50);color:var(--pri)} .tag.rh{background:var(--warn-50);color:#6E5418} .tag.exc{background:#FDECEC;color:var(--danger);font-weight:700;border:1px solid #F0C4C5} .tag.prb{background:var(--warn-50);color:#6E5418}
 .exc-alerta{border:2px solid var(--danger);background:#FDECEC;border-radius:14px;padding:14px 18px;margin-bottom:18px;display:flex;gap:14px;align-items:flex-start;box-shadow:0 0 0 4px rgba(166,61,64,.08)}
@@ -299,11 +313,11 @@ const fmtISO = s => { if (!s) return '—'; const m = String(s).match(/^(\d{4})-
 const hoy = () => new Date().toLocaleDateString('en-CA', {timeZone: TZ});
 const DIAS = {lun:'Lunes', mar:'Martes', mie:'Miércoles', jue:'Jueves', vie:'Viernes', sab:'Sábado', dom:'Domingo'};
 const DIAS_ORD = ['lun','mar','mie','jue','vie','sab','dom'];
-const ESTADOS = {en_aprobacion:'En aprobación', aprobada:'Aprobada', rechazada:'Rechazada', cancelada:'Cancelada',
-                 pendiente:'Pendiente', aprobado:'Aprobado', rechazado:'Rechazado', omitido:'Omitido', en_espera:'En espera'};
+const ESTADOS = {en_aprobacion:'En aprobación', info_solicitada:'Información solicitada', aprobada:'Aprobada', rechazada:'Rechazada', cancelada:'Cancelada',
+                 info:'Esperando información', pendiente:'Pendiente', aprobado:'Aprobado', rechazado:'Rechazado', omitido:'Omitido', en_espera:'En espera'};
 const ROLES = {admin:'Administrador', rh:'Recursos Humanos', usuario:'Colaborador'};
 const TIPOS_CAMPO = {texto:'Texto corto', parrafo:'Párrafo', correo:'Correo', fecha:'Fecha', numero:'Número', lista:'Lista desplegable',
-                     opcion:'Opción única', casillas:'Casillas (varias)', si_no:'Casilla Sí/No', departamento:'Departamento (catálogo)', dias:'Días de la semana'};
+                     opcion:'Opción única', casillas:'Casillas (varias)', si_no:'Casilla Sí/No', departamento:'Departamento (catálogo)', dias:'Días de la semana', archivo:'Archivos adjuntos (PDF/JPG/PNG)'};
 const TIPOS_APROB = {jefatura:'Jefatura inmediata (correo del formulario)', director_departamento:'Responsable del departamento (definido en este trámite)', correo:'Correo(s) específico(s)'};
 const dur = horas => { const x = +horas; if (horas == null || isNaN(x)) return '—'; if (x < 1) return Math.max(1, Math.round(x * 60)) + ' min'; if (x < 24) return (Math.round(x * 10) / 10) + ' h'; const d = Math.round(x / 24 * 10) / 10; return d + (d === 1 ? ' día' : ' días'); };
 const diasDesde = d => d ? Math.floor((Date.now() - new Date(d).getTime()) / 86400000) : 0;
@@ -349,6 +363,8 @@ const I = { // íconos (trazo)
   refresh:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36L21 8"/><path d="M21 3v5h-5"/></svg>',
   chart:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="7" y="12" width="3" height="6" rx="1"/><rect x="12" y="8" width="3" height="10" rx="1"/><rect x="17" y="5" width="3" height="13" rx="1"/></svg>',
   xls:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 12l4 5M13 12l-4 5"/></svg>',
+  birrete:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 9 12 4 2 9l10 5 10-5Z"/><path d="M6 11v5c0 1.7 2.7 3 6 3s6-1.3 6-3v-5"/><path d="M22 9v6"/></svg>',
+  clip:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21 11-8.6 8.6a5 5 0 0 1-7-7l8.5-8.6a3.3 3.3 0 0 1 4.7 4.7l-8.6 8.6a1.7 1.7 0 0 1-2.4-2.4l7.9-7.9"/></svg>',
   book:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5V21h16v-4"/><path d="M9 7h7M9 11h5"/></svg>',
   history:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></svg>',
   copy:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>'
@@ -695,7 +711,7 @@ async function router() {
     if (a === 'mis') return vistaMis();
     if (a === 'aprobar') return vistaAprobar();
     if (a === 'todas' && esRH()) return vistaTodas();
-    if (a === 'reportes' && esRH()) return vistaReportes(b);
+    if (a === 'reportes' && esRH()) return vistaReportes(b, h[2]);
     if (a === 'solicitud') return vistaDetalle(+b);
     if (a === 'admin' && b === 'modulos' && esAdmin()) { location.hash = '#/modulo/' + (S.modulos[0]?.codigo || '') + '/formulario'; return; }
     if (a === 'admin' && esAdmin()) return ({ usuarios: adminUsuarios, accesos: adminAccesos, departamentos: adminDepartamentos,
@@ -727,6 +743,7 @@ async function vistaInicio() {
   }
   if (esRH()) S.modulos.filter(m => m.activo && !m.politica).forEach(m => { avisos += `<div class="alert a-warn">${I.book}<div><b>${esc(m.nombre)}:</b> no hay política vigente publicada. Los colaboradores no podrán abrirla antes de aceptar la declaración. <a href="#/modulo/${esc(m.codigo)}/politica">Publicar política</a></div></div>`; });
   if (esAdmin() && r.prueba) avisos += `<div class="alert a-info">${I.info}<div>Hay <b>${r.prueba} solicitudes de prueba</b> cargadas (folios PRUEBA-xx); también cuentan en los reportes. <a href="#/admin/config">Borrarlas en Configuración general</a></div></div>`;
+  if (r.mis_info) avisos = `<div class="alert a-info" style="border-color:var(--acero)">${I.info}<div><b>Le solicitaron información adicional en ${r.mis_info} solicitud(es).</b> Ábrala desde <a href="#/mis">Mis solicitudes</a> y use <b>Responder</b>.</div></div>` + avisos;
   const tiles = [
     `<a class="tile t-acero" href="#/aprobar"><div class="n">${r.por_aprobar || 0}</div><div class="t">Pendientes de mi aprobación</div></a>`,
     `<a class="tile t-pri" href="#/mis"><div class="n">${r.mis_abiertas || 0}</div><div class="t">Mis solicitudes en curso</div></a>`,
@@ -756,6 +773,7 @@ function valorAuto(f) {
   if (f.auto === 'nombre') return S.user.nombre || '';
   if (f.auto === 'departamento') return S.user.departamento || '';
   if (f.auto === 'puesto') return S.user.puesto || '';
+  if (f.auto === 'email') return S.user.email || '';
   return '';
 }
 function campoHTML(f, v, deshab = false) {
@@ -766,7 +784,14 @@ function campoHTML(f, v, deshab = false) {
   let inner = '';
   switch (f.tipo) {
     case 'parrafo': inner = `<textarea class="inp" id="${id}" data-k="${esc(f.key)}" ${d}>${esc(v)}</textarea>`; break;
-    case 'correo': inner = `<input class="inp" id="${id}" type="email" data-k="${esc(f.key)}" value="${esc(v)}" placeholder="nombre@empresa.com" ${d}>`; break;
+    case 'correo': inner = `<input class="inp" id="${id}" type="email" data-k="${esc(f.key)}" value="${esc(f.auto === 'email' ? S.user.email : v)}" placeholder="nombre@empresa.com" ${f.auto === 'email' ? 'readonly style="background:var(--surface-2)"' : ''} ${d}>`; break;
+    case 'archivo': {
+      const max = f.max_archivos || 5;
+      inner = `<div class="files" data-k="${esc(f.key)}" data-t="archivo" data-max="${max}"><div class="fl"></div>
+        <label class="btn sm" ${d ? 'style="display:none"' : ''}>${I.clip} Adjuntar archivo<input type="file" hidden multiple accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"></label>
+        <span class="xs muted" style="margin-left:8px">PDF, JPG o PNG · máx. 5 MB c/u · hasta ${max}</span></div>`;
+      break;
+    }
     case 'fecha': inner = `<input class="inp" id="${id}" type="date" data-k="${esc(f.key)}" value="${esc(v)}" ${d}>`; break;
     case 'numero': inner = `<input class="inp" id="${id}" type="number" data-k="${esc(f.key)}" value="${esc(v)}" ${d}>`; break;
     case 'lista': inner = `<select class="inp" id="${id}" data-k="${esc(f.key)}" ${d}><option value="">Seleccione…</option>${ops.map(o => `<option ${o === v ? 'selected' : ''}>${esc(o)}</option>`).join('')}</select>`; break;
@@ -788,10 +813,17 @@ function campoHTML(f, v, deshab = false) {
     }
     default: inner = `<input class="inp" id="${id}" data-k="${esc(f.key)}" value="${esc(v)}" ${d}>`;
   }
-  const ancho = ['parrafo', 'casillas', 'opcion', 'dias'].includes(f.tipo) ? 'span2' : '';
+  // v1.8: opciones con nota, excepción (con justificación) y detalle según la política
+  if (['lista', 'opcion'].includes(f.tipo) && (f.notas_opciones || f.excepcion_opciones || f.detalle_opciones || f.restricciones)) {
+    inner += `<div class="opt-nota hidden" data-nota-de="${esc(f.key)}"></div>`;
+    if (f.excepcion_justificar) inner += `<div class="exc hidden" data-excop="${esc(f.key)}" style="margin-top:10px">
+        <div class="row" style="margin-bottom:8px;color:#6E5418">${I.warn.replace('<svg', '<svg style="width:18px;height:18px"')}<b class="small">Esta opción es una excepción a la política: justifíquela.</b></div>
+        <div class="field"><label class="req">Justificación de la excepción</label><textarea class="inp" data-k="${esc(f.key)}_excepcion_detalle" style="min-height:64px" ${d}></textarea></div></div>`;
+  }
+  const ancho = ['parrafo', 'casillas', 'opcion', 'dias', 'archivo'].includes(f.tipo) ? 'span2' : '';
   return `<div class="field ${ancho}">${lab}${inner}${help}</div>`;
 }
-function enlazarForm(root) {
+function enlazarForm(root, formulario = []) {
   $$('.days', root).forEach(box => {
     const key = box.dataset.k, exc = $(`[data-exc="${key}"]`, root);
     const refrescar = () => { const sel = $$('.day.on', box).map(b => b.dataset.d), c = causasExc(sel, { max_politica: box.dataset.maxpol });
@@ -801,6 +833,95 @@ function enlazarForm(root) {
       b.classList.toggle('on'); refrescar(); });
     refrescar();
   });
+  // v1.8: notas, excepciones, restricciones y antigüedad según la opción elegida
+  const conReglas = formulario.filter(f => ['lista', 'opcion'].includes(f.tipo) && (f.notas_opciones || f.excepcion_opciones || f.detalle_opciones || f.restricciones));
+  const refrescarOpciones = () => {
+    const datos = leerForm(root, formulario.filter(f => f.tipo !== 'archivo'));
+    conReglas.forEach(f => {
+      const v = datos[f.key], box = $(`[data-nota-de="${f.key}"]`, root), ex = $(`[data-excop="${f.key}"]`, root); if (!box) return;
+      const partes = [], det = (f.detalle_opciones || {})[v];
+      let clase = '';
+      if (v && (f.notas_opciones || {})[v]) partes.push(esc(f.notas_opciones[v]));
+      if (det?.nota) partes.push(esc(det.nota));
+      const ant = antiguedadMeses(datos[f.antiguedad_campo || 'fecha_ingreso']);
+      if (det && det.antiguedad_meses != null && ant != null && ant < det.antiguedad_meses) {
+        partes.push(`<b>Atención:</b> según su fecha de ingreso tiene ${ant} mes(es) de antigüedad y la política pide ${det.antiguedad_meses} para esta opción. RH lo revisará.`); clase = 'warn'; }
+      const err = errorRestriccion(f, datos); if (err) { partes.push(esc(err)); clase = 'err'; }
+      box.innerHTML = partes.join('<br>'); box.className = 'opt-nota ' + clase + (partes.length ? '' : ' hidden');
+      if (ex) ex.classList.toggle('hidden', !(f.excepcion_opciones || []).includes(v));
+    });
+  };
+  if (conReglas.length) { root.addEventListener('change', refrescarOpciones); root.addEventListener('input', e => { if (e.target.type === 'date') refrescarOpciones(); }); refrescarOpciones(); }
+  // v1.8: adjuntos
+  $$('.files', root).forEach(box => {
+    box._files = box._files || [];
+    const pintar = () => { $('.fl', box).innerHTML = box._files.map((x, k) => `<div class="file-it">${I.clip.replace('<svg', '<svg style="width:15px;height:15px;flex:none"')}<span class="nm" title="${esc(x.nombre)}">${esc(x.nombre)}</span><span class="sz">${kb(x.tamano)}${x.file ? ' · por subir' : ''}</span>
+        ${box.querySelector('label.btn')?.style.display === 'none' ? '' : `<button type="button" class="btn icon ghost sm" data-quitar="${k}" title="Quitar">${I.x}</button>`}</div>`).join(''); };
+    box._pintar = pintar; pintar();
+    box.addEventListener('click', e => { const q = e.target.closest('[data-quitar]'); if (!q) return; box._files.splice(+q.dataset.quitar, 1); pintar(); });
+    $('input[type=file]', box)?.addEventListener('change', async e => {
+      const max = +box.dataset.max || 5;
+      for (const file of [...e.target.files]) {
+        if (box._files.length >= max) { toast(`Máximo ${max} archivo(s) en este campo.`, 'err'); break; }
+        if (!/^(application\/pdf|image\/(jpeg|png))$/.test(file.type) && !/\.(pdf|jpe?g|png)$/i.test(file.name)) { toast(`"${file.name}": solo se aceptan PDF, JPG o PNG. Si es Word o Excel, guárdelo como PDF.`, 'err'); continue; }
+        try { const listo = await prepararArchivo(file); box._files.push(listo); } catch (err) { toast(err.message, 'err'); }
+      }
+      e.target.value = ''; pintar();
+    });
+  });
+}
+const antiguedadMeses = f => { if (!f || !/^\d{4}-\d{2}-\d{2}$/.test(f)) return null; const [y, m, d] = f.split('-').map(Number), [Y, M, D] = hoy().split('-').map(Number);
+  let n = (Y - y) * 12 + (M - m); if (D < d) n--; return Math.max(0, n); };
+function errorRestriccion(f, datos) {
+  const r = (f.restricciones || {})[datos[f.key]]; if (!r) return null;
+  const otro = datos[r.campo]; if (!otro) return null;
+  return (r.valores || []).includes(otro) ? null : (r.mensaje || `"${datos[f.key]}" no aplica para la opción elegida.`);
+}
+// Imágenes grandes se comprimen a JPG; PDF se sube tal cual (máx. 5 MB)
+async function prepararArchivo(file) {
+  let blob = file, nombre = file.name, mime = file.type || (/\.pdf$/i.test(file.name) ? 'application/pdf' : /\.png$/i.test(file.name) ? 'image/png' : 'image/jpeg');
+  if (mime.startsWith('image/') && file.size > 900 * 1024) {
+    const img = await new Promise((ok, mal) => { const im = new Image(); im.onload = () => ok(im); im.onerror = () => mal(new Error(`No se pudo leer la imagen "${file.name}".`)); im.src = URL.createObjectURL(file); });
+    const esc2 = Math.min(1, 2000 / Math.max(img.width, img.height)), cv = document.createElement('canvas');
+    cv.width = Math.round(img.width * esc2); cv.height = Math.round(img.height * esc2);
+    const cx = cv.getContext('2d'); cx.fillStyle = '#fff'; cx.fillRect(0, 0, cv.width, cv.height); cx.drawImage(img, 0, 0, cv.width, cv.height);
+    blob = await new Promise(ok => cv.toBlob(ok, 'image/jpeg', 0.82)); mime = 'image/jpeg'; nombre = nombre.replace(/\.(png|jpe?g)$/i, '') + '.jpg';
+  }
+  if (blob.size > 5 * 1024 * 1024) throw new Error(`"${file.name}" pesa ${kb(blob.size)}; el máximo es 5 MB.`);
+  return { file: blob, nombre, tamano: blob.size, mime };
+}
+const b64DeBlob = blob => new Promise((ok, mal) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(',')[1] || ''); r.onerror = () => mal(new Error('No se pudo leer el archivo.')); r.readAsDataURL(blob); });
+// Sube los archivos nuevos (por partes) y devuelve [{id, nombre, tamano, mime}]
+async function subirLista(lista, avance) {
+  const out = [];
+  for (const x of lista) {
+    if (x.id) { out.push({ id: x.id, nombre: x.nombre, tamano: x.tamano, mime: x.mime }); continue; }
+    const b64 = await b64DeBlob(x.file), T = 700000, partes = Math.max(1, Math.ceil(b64.length / T));
+    avance && avance(`Subiendo ${x.nombre}…`);
+    const { id } = await api('rh_adjunto_iniciar', { p_nombre: x.nombre, p_mime: x.mime, p_tamano: x.tamano, p_partes: partes });
+    for (let n = 0; n < partes; n++) {
+      for (let t = 1; t <= 3; t++) { try { await api('rh_adjunto_parte', { p_id: id, p_n: n + 1, p_contenido: b64.slice(n * T, (n + 1) * T) }); break; }
+        catch (err) { if (t === 3) throw err; await new Promise(z => setTimeout(z, 700 * t)); } }
+      if (partes > 1) avance && avance(`Subiendo ${x.nombre} (${n + 1}/${partes})…`);
+    }
+    await api('rh_adjunto_finalizar', { p_id: id });
+    Object.assign(x, { id, file: null }); out.push({ id, nombre: x.nombre, tamano: x.tamano, mime: x.mime });
+  }
+  return out;
+}
+async function subirArchivos(root, formulario, datos, avance) {
+  for (const f of formulario.filter(f => f.tipo === 'archivo')) {
+    const box = $(`.files[data-k="${f.key}"]`, root); if (!box) continue;
+    datos[f.key] = await subirLista(box._files, avance); box._pintar && box._pintar();
+  }
+}
+async function descargarAdjunto(id, abrir = true) {
+  let r = await api('rh_adjunto_descargar', { p_id: id, p_n: 1 }); const partes = [r.contenido];
+  for (let n = 2; n <= r.partes; n++) partes.push((await api('rh_adjunto_descargar', { p_id: id, p_n: n })).contenido);
+  const bin = atob(partes.join('')), arr = new Uint8Array(bin.length); for (let k = 0; k < bin.length; k++) arr[k] = bin.charCodeAt(k);
+  const url = URL.createObjectURL(new Blob([arr], { type: r.mime })), a = document.createElement('a');
+  a.href = url; if (abrir) { a.target = '_blank'; a.rel = 'noopener'; } else a.download = r.nombre; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
 }
 function leerForm(root, formulario) {
   const datos = {};
@@ -813,7 +934,10 @@ function leerForm(root, formulario) {
       datos[f.key] = sel;
       if (causasExc(sel, f).length) { datos[f.key + '_excepcion_motivo'] = $(`[data-k="${f.key}_excepcion_motivo"]`, root).value; datos[f.key + '_excepcion_detalle'] = $(`[data-k="${f.key}_excepcion_detalle"]`, root).value.trim(); }
     }
+    else if (f.tipo === 'archivo') datos[f.key] = [...($(`.files[data-k="${f.key}"]`, root)?._files || [])];
     else datos[f.key] = ($(`[data-k="${f.key}"]`, root)?.value || '').trim();
+    if (['lista', 'opcion'].includes(f.tipo) && (f.excepcion_opciones || []).includes(datos[f.key]) && f.excepcion_justificar)
+      datos[f.key + '_excepcion_detalle'] = ($(`[data-k="${f.key}_excepcion_detalle"]`, root)?.value || '').trim();
   });
   return datos;
 }
@@ -824,6 +948,9 @@ function validarForm(formulario, datos) {
     if (f.requerido && vacio) return `Complete el campo: ${f.label}`;
     if (f.tipo === 'correo' && v && !/^[^@\s;,]+@[^@\s;,]+\.[^@\s;,]+$/.test(v)) return `Correo inválido en: ${f.label}`;
     if (f.tipo === 'dias' && causasExc(v, f).length && (!datos[f.key + '_excepcion_motivo'] || !datos[f.key + '_excepcion_detalle'])) return `Su solicitud es una excepción (${causasExc(v, f).join(' y ')}): indique el motivo y el detalle.`;
+    if (f.tipo === 'archivo' && (v || []).length > (f.max_archivos || 5)) return `En "${f.label}" se permiten máximo ${f.max_archivos || 5} archivo(s).`;
+    if (['lista', 'opcion'].includes(f.tipo) && (f.excepcion_opciones || []).includes(v) && f.excepcion_justificar && !datos[f.key + '_excepcion_detalle']) return `Seleccionó "${v}" (excepción): escriba la justificación.`;
+    const er = errorRestriccion(f, datos); if (er) return er;
   }
   if (datos.correo_jefatura && datos.correo_jefatura.toLowerCase() === S.user.email) return 'El correo de la jefatura no puede ser el suyo.';
   return null;
@@ -933,8 +1060,7 @@ async function fuentesDePolitica(files) {
       const lib = await cargarPdfJs();
       const doc = await lib.getDocument({ data: new Uint8Array(await f.arrayBuffer()), isEvalSupported: false }).promise;
       for (let i = 1; i <= doc.numPages; i++) fuentes.push({ doc, i });
-    } else if (/^image\/(jpeg|png)$/.test(f.type) || /\.(jpe?g|png)$/i.test(f.name)) fuentes.push({ file: f });
-    else throw new Error(`"${f.name}" no es PDF, JPG ni PNG. Si la política está en Word, ábrala y use Archivo → Guardar como → PDF.`);
+    } else throw new Error(`"${f.name}" no es PDF. Solo se aceptan políticas en PDF: si está en Word, ábrala y use Archivo → Guardar como → PDF.`);
   }
   return fuentes;
 }
@@ -983,7 +1109,8 @@ function vistaNueva(codigo, E) {
     </form>`);
   const root = $('#fs');
   if (editando) $$('[data-k$="_excepcion_motivo"], [data-k$="_excepcion_detalle"]', root).forEach(el => { if (prev[el.dataset.k] != null) el.value = prev[el.dataset.k]; });
-  enlazarForm(root);
+  if (editando) $$('.files', root).forEach(box => { box._files = (prev[box.dataset.k] || []).map(x => ({ ...x })); });
+  enlazarForm(root, m.formulario);
   const firma = new Firma($('#sig'));
   if (m.politica) $('#polbtn').onclick = e => ocupado(e.currentTarget, async () => {
     try { await abrirPolitica(m.politica.id, () => {
@@ -998,8 +1125,11 @@ function vistaNueva(codigo, E) {
     const decl = t.declaracion ? $('#decl').checked : true;
     if (!decl) return toast('Debe marcar la casilla de declaración.', 'err');
     if (firma.vacia()) return toast('Firme en el recuadro antes de enviar.', 'err');
-    const base = { p_datos: datos, p_firma: firma.png(), p_declaracion: decl, p_politica_id: m.politica?.id ?? null };
     try {
+      const btn = $('#enviar'), txt0 = btn.innerHTML;
+      await subirArchivos(root, m.formulario, datos, t => { btn.innerHTML = `<span class="spin"></span> ${esc(t)}`; });
+      btn.innerHTML = `<span class="spin"></span> Enviando…`;
+      const base = { p_datos: datos, p_firma: firma.png(), p_declaracion: decl, p_politica_id: m.politica?.id ?? null };
       if (editando) {
         if (!await confirmar('Reiniciar el flujo de aprobación', `Se guardará la versión ${(E.s.version || 1) + 1} de <b>${esc(E.s.folio)}</b> y la aprobación empezará otra vez desde <b>${esc(m.flujo[0]?.nombre || 'el primer paso')}</b>. ¿Continuar?`, 'Sí, reiniciar', 'pri')) return;
         const r = await api('rh_modificar_solicitud', { p_id: E.s.id, ...base, p_motivo: $('#motivo').value.trim() });
@@ -1039,8 +1169,8 @@ const clicFilas = () => $$('tr.click[data-id]').forEach(tr => tr.onclick = () =>
 async function vistaMis() {
   cargando('mis');
   const rows = await api('rh_mis_solicitudes');
-  const m = S.modulos.find(x => x.activo);
-  shell('mis', `<div class="page-head"><div><h1>Mis solicitudes</h1><p>Seguimiento de lo que ha enviado.</p></div>${m ? `<a class="btn pri" href="#/nueva/${esc(m.codigo)}">${I.plus} Nueva solicitud</a>` : ''}</div>
+  const act = S.modulos.filter(x => x.activo);
+  shell('mis', `<div class="page-head"><div><h1>Mis solicitudes</h1><p>Seguimiento de lo que ha enviado.</p></div>${act.length ? `<a class="btn pri" href="${act.length === 1 ? '#/nueva/' + esc(act[0].codigo) : '#/'}">${I.plus} Nueva solicitud</a>` : ''}</div>
     <div class="card">${tablaSolicitudes(rows, { vacio: 'Aún no ha enviado solicitudes.' })}</div>`);
   clicFilas();
 }
@@ -1084,25 +1214,74 @@ async function vistaTodas() {
 /* =====================================================================
    REPORTES Y KPIs (RH y Admin)
    ===================================================================== */
-const COL = { aprobada: 'var(--ok)', rechazada: 'var(--danger)', en_aprobacion: 'var(--warn)', cancelada: 'var(--line-2)' };
+const COL = { aprobada: 'var(--ok)', rechazada: 'var(--danger)', en_aprobacion: 'var(--warn)', info_solicitada: 'var(--acero)', cancelada: 'var(--line-2)' };
 function filtrosReporte() {
   const hoyS = hoy(), f = JSON.parse(store.get('rep') || '{}');
-  return { modulo: f.modulo ?? (S.modulos[0]?.codigo || ''), desde: f.desde || hoyS.slice(0, 4) + '-01-01', hasta: f.hasta || hoyS };
+  return { modulo: f.modulo || '', desde: f.desde || hoyS.slice(0, 4) + '-01-01', hasta: f.hasta || hoyS };
 }
-async function vistaReportes(tab) {
-  tab = ['indicadores', 'aprobadores', 'exportar'].includes(tab) ? tab : 'indicadores';
-  const F = filtrosReporte();
+const TABS_REP = ['indicadores', 'beneficio', 'aprobadores', 'exportar'];
+async function vistaReportes(a, b) {
+  // v1.8: cada trámite tiene sus propios reportes. #/reportes → elegir trámite; #/reportes/<trámite>/<pestaña>
+  await cargarBase();
+  const mods = S.modulos;
+  if (a && TABS_REP.includes(a)) { b = a; a = filtrosReporte().modulo; }
+  let mod = mods.find(m => m.codigo === a);
+  if (!mod && mods.length === 1) mod = mods[0];
+  if (!mod) {
+    shell('reportes', `<div class="page-head"><div><h1>Reportes y KPIs</h1><p>Elija el trámite: cada uno tiene sus propios indicadores.</p></div></div>
+      <div class="mod-pick">${mods.map(m => `<a class="card mod" href="#/reportes/${esc(m.codigo)}/indicadores"><div class="mod-ic">${I[m.icono] || I.doc}</div>
+        <div><h3>${esc(m.nombre)}</h3><p class="small muted" style="margin:4px 0 0">${m.opciones?.beneficio ? 'Solicitudes, tiempos, presupuesto, reembolsos y beneficiarios activos' : 'Solicitudes, tiempos de aprobación y excepciones'}${m.activo ? '' : ' · <b>inactivo</b>'}</p></div>
+        <div class="row small" style="color:var(--pri);font-weight:700;margin-top:auto">Ver reportes →</div></a>`).join('')}</div>`);
+    return;
+  }
+  const conBen = !!mod.opciones?.beneficio;
+  const tab = TABS_REP.includes(b) && (b !== 'beneficio' || conBen) ? b : 'indicadores';
+  const F = { ...filtrosReporte(), modulo: mod.codigo };
+  if (filtrosReporte().modulo !== mod.codigo) store.set('rep', JSON.stringify(F));
   cargando('reportes');
   const R = await api('rh_reporte', { p_modulo: F.modulo, p_desde: F.desde, p_hasta: F.hasta });
+  const RB = tab === 'beneficio' ? await api('rh_reporte_beneficio', { p_modulo: F.modulo, p_desde: F.desde, p_hasta: F.hasta }) : null;
   const T = R.totales, pct = n => T.total ? Math.round(n / T.total * 100) + '%' : '—';
   const diasRec = R.dias_recordatorio || 6;
   const filtros = `<div class="card" style="margin-bottom:16px"><div class="card-b row wrap" style="gap:12px;align-items:flex-end">
-      <div class="field" style="min-width:200px"><label>Trámite</label><select class="inp" id="rmod"><option value="">Todos los trámites</option>${S.modulos.map(m => `<option value="${esc(m.codigo)}" ${F.modulo === m.codigo ? 'selected' : ''}>${esc(nombreCorto(m))}</option>`).join('')}</select></div>
+      <div class="field" style="min-width:200px"><label>Trámite</label>${mods.length > 1 ? `<select class="inp" id="rmod">${mods.map(m => `<option value="${esc(m.codigo)}" ${F.modulo === m.codigo ? 'selected' : ''}>${esc(nombreCorto(m))}</option>`).join('')}</select>` : `<input class="inp" value="${esc(mod.nombre)}" disabled>`}</div>
       <div class="field"><label>Enviadas desde</label><input class="inp" type="date" id="rdesde" value="${esc(F.desde)}"></div>
       <div class="field"><label>Hasta</label><input class="inp" type="date" id="rhasta" value="${esc(F.hasta)}"></div>
       <div class="row wrap" style="gap:6px"><button class="btn sm" data-rango="anio">Este año</button><button class="btn sm" data-rango="90">Últimos 90 días</button><button class="btn sm" data-rango="todo">Todo</button></div>
       <button class="btn pri" id="raplicar">Aplicar</button></div></div>`;
-  const tabs = `<div class="tabs">${[['indicadores', 'Indicadores'], ['aprobadores', 'Aprobadores'], ['exportar', 'Exportar a Excel']].map(([k, l]) => `<a href="#/reportes/${k}" class="${k === tab ? 'on' : ''}">${l}</a>`).join('')}</div>`;
+  const tabs = `<div class="tabs">${[['indicadores', 'Indicadores'], conBen ? ['beneficio', 'Beneficio y presupuesto'] : null, ['aprobadores', 'Aprobadores'], ['exportar', 'Exportar a Excel']].filter(Boolean).map(([k, l]) => `<a href="#/reportes/${esc(mod.codigo)}/${k}" class="${k === tab ? 'on' : ''}">${l}</a>`).join('')}</div>`;
+  if (tab === 'beneficio') {
+    const mon = n => (RB.moneda === 'USD' ? 'US$' : RB.moneda + ' ') + Number(n || 0).toLocaleString('es-CR', { maximumFractionDigits: 0 });
+    const P = RB.presupuesto, pctE = P.monto ? Math.round(P.ejecutado / P.monto * 100) : null, pctC = P.monto ? Math.round(P.comprometido / P.monto * 100) : null;
+    const maxT = Math.max(1, ...RB.por_tipo.map(t => t.solicitudes));
+    var cuerpoB = `
+      <div class="kpis">
+        <div class="kpi"><div class="l">Solicitantes</div><div class="v">${RB.totales.solicitantes}</div><div class="s">${RB.totales.solicitudes} solicitudes · ${RB.totales.aprobadas} aprobadas</div></div>
+        <div class="kpi"><div class="l">Beneficiarios activos hoy</div><div class="v" style="color:var(--ok)">${RB.activos.n}</div><div class="s">vigencia ${RB.vigencia_meses} meses desde la aprobación</div></div>
+        <div class="kpi"><div class="l">Monto aprobado</div><div class="v">${mon(RB.totales.monto_aprobado)}</div><div class="s">solicitudes del periodo</div></div>
+        <div class="kpi"><div class="l">Reembolsado</div><div class="v">${mon(RB.totales.ejecutado)}</div><div class="s">${RB.totales.monto_aprobado ? Math.round(RB.totales.ejecutado / RB.totales.monto_aprobado * 100) + '% de lo aprobado' : '—'}</div></div>
+      </div>
+      <div class="card" style="margin-bottom:16px"><div class="card-h"><h2>Presupuesto ${P.anio}</h2>${P.monto == null ? `<a class="small" href="#/modulo/${esc(mod.codigo)}/politica">Definir presupuesto →</a>` : ''}</div><div class="card-b">
+        ${P.monto == null ? '<div class="small muted">No hay presupuesto definido para este año. RH lo define en la configuración del trámite (pestaña Política y plazos).</div>' : `
+        <div class="kpis" style="margin:0 0 12px"><div class="kpi"><div class="l">Presupuesto</div><div class="v">${mon(P.monto)}</div></div>
+          <div class="kpi"><div class="l">Comprometido (aprobado en ${P.anio})</div><div class="v">${mon(P.comprometido)}</div><div class="s">${pctC}% del presupuesto</div></div>
+          <div class="kpi"><div class="l">Ejecutado (reembolsos ${P.anio})</div><div class="v">${mon(P.ejecutado)}</div><div class="s">${pctE}% del presupuesto</div></div>
+          <div class="kpi"><div class="l">Disponible</div><div class="v" style="color:${P.monto - P.comprometido < 0 ? 'var(--danger)' : 'var(--ok)'}">${mon(P.monto - P.comprometido)}</div><div class="s">presupuesto − comprometido</div></div></div>
+        <div class="track" style="height:14px;background:var(--gris-50);border-radius:8px;overflow:hidden;position:relative"><div style="position:absolute;inset:0 auto 0 0;width:${Math.min(100, pctC)}%;background:var(--pri-100)"></div><div style="position:absolute;inset:0 auto 0 0;width:${Math.min(100, pctE)}%;background:var(--pri)"></div></div>
+        <div class="leyenda" style="margin-top:8px"><span><i style="background:var(--pri)"></i>Ejecutado</span><span><i style="background:var(--pri-100)"></i>Comprometido</span></div>`}</div></div>
+      <div class="grid2" style="align-items:start">
+        <div class="card"><div class="card-h"><h2>Por tipo de apoyo</h2></div><div class="card-b">${RB.por_tipo.length ? RB.por_tipo.map(t => `<div class="hbar"><span class="small b">${esc(t.tipo)}<div class="xs muted" style="font-weight:400">${t.aprobadas} aprobadas · ${mon(t.monto)} aprobado · ${mon(t.ejecutado)} reembolsado</div></span>
+            <div class="track"><div class="fill" style="width:${t.solicitudes / maxT * 100}%"></div></div><span class="num">${t.solicitudes}</span></div>`).join('') : '<div class="empty">Sin solicitudes en el periodo.</div>'}</div></div>
+        <div class="card"><div class="card-h"><h2>Por período de aplicación</h2></div>${RB.por_periodo.length ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Período</th><th class="num">Solicitantes</th><th class="num">Aprob. / Total</th><th class="num">Monto</th></tr></thead><tbody>
+          ${RB.por_periodo.map(x => `<tr><td style="white-space:nowrap"><b>${esc(x.periodo)}</b> <span class="xs muted">${x.anio}</span></td><td class="num">${x.solicitantes}</td><td class="num">${x.aprobadas} / ${x.solicitudes}</td><td class="num" style="white-space:nowrap">${mon(x.monto)}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">Sin solicitudes en el periodo.</div>'}</div>
+      </div>
+      <div class="card" style="margin-top:16px"><div class="card-h"><h2>Beneficiarios activos (${RB.activos.n})</h2><span class="xs muted">Aprobados en los últimos ${RB.vigencia_meses} meses y no finalizados · ${mon(RB.activos.ejecutado)} reembolsado de ${mon(RB.activos.monto)}</span></div>
+        ${RB.activos.lista.length ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Folio</th><th>Solicitante</th><th>Tipo</th><th>Vence</th><th class="num">Aprobado</th><th class="num">Reembolsado</th><th class="num">Saldo</th></tr></thead><tbody>
+        ${RB.activos.lista.map(x => `<tr class="click" data-id="${x.id}"><td><b>${esc(x.folio)}</b></td><td class="small">${esc(x.solicitante)}</td><td class="small">${esc(x.tipo || '—')}</td><td class="small">${fmtD(x.vence)}</td>
+          <td class="num">${mon(x.monto)}</td><td class="num">${mon(x.ejecutado)}</td><td class="num" style="${x.saldo < 0 ? 'color:var(--danger)' : ''}">${mon(x.saldo)}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">No hay beneficiarios activos.</div>'}</div>
+      ${RB.finalizados.length ? `<p class="small" style="margin-top:12px">Beneficios finalizados en el periodo: ${RB.finalizados.map(x => `<b>${x.n}</b> ${esc(x.motivo || '')}`).join(' · ')}</p>` : ''}
+      <p class="xs muted" style="margin-top:10px">Solicitantes, montos y tipos según la fecha de envío; "activos" y "presupuesto" son a hoy y del año de la fecha "Hasta". Montos según lo registrado por el aprobador final y los reembolsos que registra RH en cada solicitud.</p>`;
+  }
   let cuerpo = '';
   if (tab === 'indicadores') {
     const HA = R.horas_aprobacion || {};
@@ -1157,6 +1336,7 @@ async function vistaReportes(tab) {
         </tbody></table></div>` : '<div class="empty">No hay pasos pendientes. ¡Todo al día!</div>'}</div>
       <p class="xs muted" style="margin-top:10px">Tiempos de respuesta de las solicitudes enviadas en el periodo; incluye rondas anteriores de solicitudes modificadas. "Pendientes ahora" muestra todos los pasos abiertos, sin importar la fecha.</p>`;
   }
+  if (tab === 'beneficio') cuerpo = cuerpoB;
   if (tab === 'exportar') {
     cuerpo = `<div class="card"><div class="card-b stack">
       <div class="row" style="gap:14px;align-items:flex-start"><div class="mod-ic" style="flex:none">${I.xls}</div>
@@ -1174,14 +1354,16 @@ async function vistaReportes(tab) {
       <div class="card-b" id="hexp"><span class="muted small">Cargando…</span></div></div>`;
   }
   const avisoPrueba = T.prueba ? `<div class="alert a-info">${I.info}<div class="small">Este periodo incluye <b>${T.prueba} solicitudes de prueba</b> (PRUEBA-xx). Se pueden borrar en <a href="#/admin/config">Configuración general</a>.</div></div>` : '';
-  shell('reportes', `<div class="page-head"><div><h1>Reportes y KPIs</h1><p>Indicadores de solicitudes y tiempos de aprobación.</p></div></div>${filtros}${avisoPrueba}${tabs}${cuerpo}`);
-  const guardarF = f => { store.set('rep', JSON.stringify(f)); vistaReportes(tab); };
-  $('#raplicar').onclick = () => guardarF({ modulo: $('#rmod').value, desde: $('#rdesde').value, hasta: $('#rhasta').value });
+  shell('reportes', `<div class="page-head"><div>${mods.length > 1 ? '<a href="#/reportes" class="small" style="text-decoration:none">← Elegir otro trámite</a>' : ''}<h1 style="margin-top:6px">Reportes · ${esc(nombreCorto(mod))}</h1><p>Indicadores de este trámite.</p></div></div>${filtros}${avisoPrueba}${tabs}${cuerpo}`);
+  const guardarF = f => { store.set('rep', JSON.stringify(f)); if (f.modulo !== mod.codigo) location.hash = `#/reportes/${f.modulo}/${tab === 'beneficio' ? 'indicadores' : tab}`; else vistaReportes(mod.codigo, tab); };
+  $('#raplicar').onclick = () => guardarF({ modulo: $('#rmod')?.value || mod.codigo, desde: $('#rdesde').value, hasta: $('#rhasta').value });
+  if ($('#rmod')) $('#rmod').onchange = () => guardarF({ modulo: $('#rmod').value, desde: $('#rdesde').value, hasta: $('#rhasta').value });
+  if (tab === 'beneficio') clicFilas();
   $$('[data-rango]').forEach(b => b.onclick = () => { const hs = hoy(), r = b.dataset.rango;
     const d = r === 'anio' ? hs.slice(0, 4) + '-01-01' : r === '90' ? new Date(Date.now() - 90 * 86400000).toLocaleDateString('en-CA', { timeZone: TZ }) : '2000-01-01';
-    guardarF({ modulo: $('#rmod').value, desde: d, hasta: hs }); });
+    guardarF({ modulo: $('#rmod')?.value || mod.codigo, desde: d, hasta: hs }); });
   $$('[data-recp]').forEach(b => b.onclick = () => ocupado(b, async () => {
-    try { const r = await api('rh_recordar', { p_aprobacion_id: +b.dataset.recp }); toast('Recordatorio enviado a ' + r.para.join(', '), 'ok'); vistaReportes(tab); } catch (err) { toast(err.message, 'err'); } }));
+    try { const r = await api('rh_recordar', { p_aprobacion_id: +b.dataset.recp }); toast('Recordatorio enviado a ' + r.para.join(', '), 'ok'); vistaReportes(mod.codigo, tab); } catch (err) { toast(err.message, 'err'); } }));
   if ($('#xls')) $('#xls').onclick = e => ocupado(e.currentTarget, async () => { try { await descargarExcel(F, R); historialExport(); } catch (err) { toast(err.message, 'err'); } });
   if ($('#hexp')) historialExport();
 }
@@ -1221,6 +1403,10 @@ async function descargarExcel(F, R) {
     Object.assign(fila, { 'Paso actual': pa ? pa.paso : '', 'Aprobador actual': pa ? pa.aprobadores.join(', ') : '', 'Esperando desde': pa ? D(pa.asignado_en) : null,
       'Días esperando': pa ? Math.round((Date.now() - new Date(pa.asignado_en)) / 864e5 * 10) / 10 : null, 'Recordatorios': s.recordatorios,
       'Motivo de rechazo / cancelación': s.motivo_rechazo || '', 'Aviso de aprobación enviado el': D(s.pdf_enviado_en), 'Avisos enviados': s.pdf_envios });
+    (s.aprobaciones || []).forEach(a => datosAprobTxt(a).forEach(([k, v]) => { fila[k] = v; }));
+    if (s.datos._alertas) fila['Alertas'] = s.datos._alertas.join(' | ');
+    if ((s.intercambios || []).length) fila['Información solicitada'] = s.intercambios.map(x => `${x.pregunta} → ${x.respuesta || '(sin respuesta)'}`).join(' | ');
+    if (s.beneficio_fin) Object.assign(fila, { 'Beneficio finalizado el': s.beneficio_fin, 'Motivo de finalización': s.beneficio_fin_motivo || '' });
     return fila;
   });
   const hojaAp = [];
@@ -1228,6 +1414,7 @@ async function descargarExcel(F, R) {
     'Orden': a.orden, 'Paso': a.paso, 'Asignado a': (a.aprobadores || []).join(', '), 'Estado del paso': ESTADOS[a.estado] || a.estado,
     'Resuelto por': a.resuelto_por_nombre || '', 'Correo de quien resolvió': a.resuelto_por_email || '', 'Le llegó el': D(a.asignado_en), 'Resuelto el': D(a.resuelto_en),
     'Horas': horas(a.asignado_en, a.resuelto_en), 'Comentario': a.comentario || '' })));
+  const hojaRe = (E.reembolsos || []).map(r => ({ 'Folio': r.folio, 'Solicitante': r.solicitante, 'Fecha': r.fecha, 'Monto': +r.monto, 'Detalle': r.descripcion, 'Registrado por': r.registrado_por, 'Registrado el': D(r.creado_en) }));
   const hojaT = E.tiempos.map(t => ({ 'Folio': t.folio, 'Versión': t.version, 'Orden': t.orden, 'Paso': t.paso, 'Aprobador': t.aprobador_nombre, 'Correo': t.aprobador_email,
     'Decisión': ESTADOS[t.decision] || t.decision, 'Le llegó el': D(t.asignado_en), 'Resuelto el': D(t.resuelto_en), 'Horas': +t.horas, 'Días': Math.round(t.horas / 24 * 100) / 100 }));
   const hojaA = R.aprobadores.map(a => ({ 'Aprobador': a.nombre, 'Correo': a.email, 'Resueltas': a.resueltas, 'Aprobadas': a.aprobadas, 'Rechazadas': a.rechazadas,
@@ -1249,7 +1436,7 @@ async function descargarExcel(F, R) {
     ws['!cols'] = anchos; if (!aoa) ws['!autofilter'] = { ref: ws['!ref'] };
     X.utils.book_append_sheet(wb, ws, nombre);
   };
-  agregar(hojaSol, 'Solicitudes'); agregar(hojaAp, 'Aprobaciones'); agregar(hojaT, 'Tiempos'); agregar(hojaA, 'Aprobadores'); agregar(hojaR, 'Resumen', true);
+  agregar(hojaSol, 'Solicitudes'); agregar(hojaAp, 'Aprobaciones'); agregar(hojaT, 'Tiempos'); if (hojaRe.length) agregar(hojaRe, 'Reembolsos'); agregar(hojaA, 'Aprobadores'); agregar(hojaR, 'Resumen', true);
   const pctCell = wb.Sheets['Resumen']['B15']; if (pctCell && typeof pctCell.v === 'number') pctCell.z = '0%';
   const mod = F.modulo ? nombreCorto(S.modulos.find(m => m.codigo === F.modulo) || { nombre: F.modulo }) : 'Todos';
   X.writeFile(wb, `Solicitudes RH - ${mod} - ${F.desde} a ${F.hasta}.xlsx`, { cellDates: true });
@@ -1265,6 +1452,7 @@ function valorTexto(f, datos) {
   if (f.tipo === 'casillas') return (v || []).join(', ') || '—';
   if (f.tipo === 'si_no') return v ? 'Sí' : 'No';
   if (f.tipo === 'fecha') return fmtISO(v);
+  if (f.tipo === 'archivo') return (v || []).map(x => x.nombre).join(', ') || '—';
   return (v == null || v === '') ? '—' : String(v);
 }
 function filasDatos(s) {
@@ -1276,8 +1464,27 @@ function filasDatos(s) {
       out.push(['Motivo de la excepción', s.datos[f.key + '_excepcion_motivo']]);
       out.push(['Detalle de la excepción', s.datos[f.key + '_excepcion_detalle'] || '—']);
     }
+    if (['lista', 'opcion'].includes(f.tipo) && s.datos[f.key + '_excepcion_detalle']) out.push(['Justificación de la excepción', s.datos[f.key + '_excepcion_detalle']]);
   });
   return out;
+}
+// Datos que registró el aprobador (monto, porcentaje, fecha…)
+const datosAprobTxt = a => (a.datos_def || []).filter(d => a.datos && a.datos[d.key] != null && a.datos[d.key] !== '')
+  .map(d => [d.label, d.tipo === 'fecha' ? fmtISO(a.datos[d.key]) : d.tipo === 'numero' ? Number(a.datos[d.key]).toLocaleString('es-CR', { maximumFractionDigits: 2 }) : String(a.datos[d.key])]);
+// Lo que dice la política para la opción elegida (porcentaje, tope)
+function detalleElegido(s) {
+  for (const f of (s.formulario || [])) { const d = (f.detalle_opciones || {})[s.datos[f.key]]; if (d) return { campo: f, valor: s.datos[f.key], d }; }
+  return null;
+}
+function pistaPolitica(s) {
+  const x = detalleElegido(s); if (!x) return '';
+  const p = [x.d.porcentaje != null ? `reembolso <b>${x.d.porcentaje} %</b>` : '', x.d.tope ? `tope anual <b>US$${Number(x.d.tope).toLocaleString('es-CR')}</b>` : '', x.d.antiguedad_meses ? `antigüedad mínima ${x.d.antiguedad_meses} mes(es)` : ''].filter(Boolean);
+  return p.length ? `Según la política para <b>${esc(x.valor)}</b>: ${p.join(' · ')}.` : '';
+}
+function sugerencia(d, s) {
+  if (d.sugerir === 'hoy' || (d.tipo === 'fecha' && d.key.includes('aprobacion'))) return hoy();
+  const x = detalleElegido(s); if (x && d.sugerir && x.d[d.sugerir] != null) return x.d[d.sugerir];
+  return '';
 }
 async function vistaDetalle(id) {
   cargando('');
@@ -1289,6 +1496,8 @@ async function vistaDetalle(id) {
       <div class="row between wrap"><b>${esc(a.paso)}</b>${badge(a.estado)}</div>
       <div class="small muted">${a.resuelto_por_email ? `${esc(a.resuelto_por_nombre)} · ${fmt(a.resuelto_en)}` : esc((a.aprobadores || []).join(', '))}${a.estado === 'pendiente' ? ` · desde ${fmt(a.asignado_en)}` : ''}</div>
       ${a.comentario ? `<div class="quote">${esc(a.comentario)}</div>` : ''}
+      ${datosAprobTxt(a).length ? `<dl class="dl-ap">${datosAprobTxt(a).map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('')}</dl>` : ''}
+      ${a.estado === 'info' ? `<div class="xs" style="margin-top:4px;color:var(--acero);font-weight:600">Esperando la respuesta del solicitante</div>` : ''}
       ${a.firma ? `<img class="sig-img" style="height:54px;margin-top:8px" src="${a.firma}" alt="Firma">` : ''}
       ${a.estado === 'pendiente' && s.estado === 'en_aprobacion' ? `<div class="xs" style="margin-top:4px;color:${diasDesde(a.asignado_en) >= (P.dias_recordatorio || 6) ? 'var(--danger)' : 'var(--ink-3)'};font-weight:600">Esperando hace ${dur((Date.now() - new Date(a.asignado_en)) / 3600000)}${P.ultimo_recordatorio ? ` · último recordatorio ${fmt(P.ultimo_recordatorio)}` : ''}</div>` : ''}
       ${(P.reasignar && ['pendiente', 'en_espera'].includes(a.estado)) || (a.id === P.recordar_paso) ? `<div class="row wrap" style="margin-top:8px;gap:6px">
@@ -1298,21 +1507,59 @@ async function vistaDetalle(id) {
       </div>` : ''}
     </li>`).join('');
   const kd = ((s.formulario || []).find(f => f.tipo === 'dias') || {}).key || 'dias';
+  const EXC = { causa: s.datos._exc_causa || s.datos[kd + '_excepcion_causa'], motivo: s.datos._exc_motivo || s.datos[kd + '_excepcion_motivo'], detalle: s.datos._exc_detalle || s.datos[kd + '_excepcion_detalle'] };
   const alertaExc = s.excepcion ? `<div class="exc-alerta ${yoAprob ? 'pulso' : ''}"><div class="ic">${I.warn}</div><div class="grow">
       <div class="t">Excepción a la política</div>
       <div class="small" style="margin-top:2px">Esta solicitud <b>no cumple la política vigente</b>${yoAprob ? ' y requiere su aprobación expresa como excepción' : ''}.</div>
-      <dl><dt>Causa</dt><dd>${esc(s.datos[kd + '_excepcion_causa'] || '—')}</dd><dt>Motivo</dt><dd>${esc(s.datos[kd + '_excepcion_motivo'] || '—')}</dd>
-        <dt>Detalle</dt><dd style="white-space:pre-wrap">${esc(s.datos[kd + '_excepcion_detalle'] || '—')}</dd></dl></div></div>` : '';
+      <dl><dt>Causa</dt><dd>${esc(EXC.causa || '—')}</dd>${EXC.motivo ? `<dt>Motivo</dt><dd>${esc(EXC.motivo)}</dd>` : ''}
+        <dt>${EXC.motivo ? 'Detalle' : 'Justificación'}</dt><dd style="white-space:pre-wrap">${esc(EXC.detalle || '—')}</dd></dl></div></div>` : '';
+  const alertas = (s.datos._alertas || []).length && (esRH() || yoAprob || ap.some(a => a.resuelto_por_email === S.user.email)) ? `<div class="alerta-amb">${I.warn}<div><b>Para revisar</b>${s.datos._alertas.map(x => `<div class="small">${esc(x)}</div>`).join('')}</div></div>` : '';
+  const pregunta = (s.intercambios || []).slice(-1)[0];
+  const bannerInfo = s.estado === 'info_solicitada' && pregunta ? (P.responder ? `<div class="card" style="border:2px solid var(--acero);margin-bottom:20px" id="panel-resp">
+      <div class="card-h" style="background:#E8EEF7;border-radius:14px 14px 0 0"><h2>Le solicitan información adicional</h2><span class="xs muted">${esc(pregunta.por_nombre)} · ${esc(pregunta.paso)} · ${fmt(pregunta.en)}</span></div>
+      <div class="card-b stack"><div class="quote" style="margin:0;white-space:pre-wrap">${esc(pregunta.pregunta)}</div>
+        <div class="field"><label class="req" for="resp">Su respuesta</label><textarea class="inp" id="resp" style="min-height:80px"></textarea></div>
+        <div class="field"><span class="lbl">Archivos (opcional)</span><div class="files" data-k="_resp" data-t="archivo" data-max="10"><div class="fl"></div><label class="btn sm">${I.clip} Adjuntar archivo<input type="file" hidden multiple accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"></label><span class="xs muted" style="margin-left:8px">PDF, JPG o PNG · máx. 5 MB c/u</span></div></div>
+        <div class="row wrap" style="justify-content:flex-end;gap:10px"><span class="xs muted grow">Al responder, la solicitud vuelve al mismo paso. Si necesita cambiar los datos del formulario use <b>Modificar</b> (el flujo se reinicia).</span><button class="btn pri" id="enviar-resp">${I.send} Enviar respuesta</button></div></div></div>`
+      : `<div class="alert a-info" style="border-color:var(--acero)">${I.info}<div><b>Esperando información del solicitante.</b> ${esc(pregunta.por_nombre)} (${esc(pregunta.paso)}) preguntó: <i>${esc(pregunta.pregunta)}</i></div></div>`) : '';
+  const qa = (s.intercambios || []).length ? `<div class="card" style="margin-top:16px"><div class="card-h"><h2>Información adicional</h2></div><div class="card-b">${s.intercambios.map(x => `<div class="qa">
+      <div class="xs muted">${esc(x.por_nombre)} · ${esc(x.paso)} · ${fmt(x.en)}</div><div class="q" style="white-space:pre-wrap">${esc(x.pregunta)}</div>
+      ${x.respuesta ? `<div class="a"><div class="xs muted">Respuesta · ${fmt(x.respondido_en)}</div><div class="small" style="white-space:pre-wrap">${esc(x.respuesta)}</div>
+        ${(x.adjuntos || []).map(f => `<button class="btn sm ghost" data-adj="${f.id}">${I.clip} ${esc(f.nombre)}</button>`).join('')}</div>` : '<div class="a xs muted">Sin respuesta todavía</div>'}</div>`).join('')}</div></div>` : '';
+  const camposArch = (s.formulario || []).filter(f => f.tipo === 'archivo');
+  const docs = camposArch.length ? `<div class="card" style="margin-top:16px"><div class="card-h"><h2>${I.clip.replace('<svg', '<svg style="width:18px;height:18px;vertical-align:-3px;margin-right:6px"')}Documentos adjuntos</h2></div><div class="card-b stack" style="gap:12px">
+      ${camposArch.map(f => `<div><div class="small b">${esc(f.label)}</div>${(s.datos[f.key] || []).length ? (s.datos[f.key] || []).map(x => `<div class="file-it" style="margin-top:6px">${I.clip.replace('<svg', '<svg style="width:15px;height:15px;flex:none"')}<span class="nm">${esc(x.nombre)}</span><span class="sz">${kb(x.tamano)}</span>
+          <button class="btn sm" data-adj="${x.id}">Abrir</button><button class="btn sm ghost icon" data-adjd="${x.id}" title="Descargar">${I.pdf}</button></div>`).join('') : '<div class="xs muted">—</div>'}</div>`).join('')}</div></div>` : '';
+  const B = D.beneficio, R$ = n => n == null ? '—' : (B?.moneda === 'USD' ? 'US$' : (B?.moneda || '') + ' ') + Number(n).toLocaleString('es-CR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const benef = B ? `<div class="card" style="margin-top:16px"><div class="card-h"><h2>Beneficio y reembolsos</h2><span class="badge ${B.estado === 'activo' ? 's-aprobada' : 's-cancelada'}">${B.estado === 'activo' ? 'Activo' : B.estado === 'vencido' ? 'Vencido' : 'Finalizado'}</span></div><div class="card-b stack">
+      <dl class="kv"><dt>Vigencia</dt><dd>${fmtD(B.inicio)} → ${fmtD(B.vence)}</dd><dt>Tipo</dt><dd>${esc(B.tipo || '—')}</dd>
+        <dt>Monto aprobado</dt><dd>${R$(B.monto_aprobado)}</dd><dt>Reembolsado</dt><dd>${R$(B.ejecutado)}</dd>
+        <dt>Saldo</dt><dd style="${B.saldo < 0 ? 'color:var(--danger)' : ''}">${R$(B.saldo)}</dd>
+        ${B.fin ? `<dt>Finalizado</dt><dd>${fmtISO(B.fin)} · ${esc(B.fin_motivo || '')}<div class="xs muted">${esc(B.fin_por || '')}</div></dd>` : ''}</dl>
+      ${(D.reembolsos || []).length ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Fecha</th><th>Detalle</th><th class="num">Monto</th>${P.beneficio ? '<th></th>' : ''}</tr></thead><tbody>
+        ${D.reembolsos.map(r => `<tr><td class="small">${fmtISO(r.fecha)}</td><td class="small">${esc(r.descripcion || '—')}<div class="xs muted">${esc(r.registrado_por)}</div></td><td class="num">${R$(r.monto)}</td>
+          ${P.beneficio ? `<td style="text-align:right"><button class="btn sm ghost icon" data-delre="${r.id}" title="Eliminar">${I.trash}</button></td>` : ''}</tr>`).join('')}</tbody></table></div>` : '<div class="xs muted">Sin reembolsos registrados.</div>'}
+      ${P.beneficio ? `<div class="row wrap" style="gap:8px;align-items:flex-end;border-top:1px solid var(--line);padding-top:12px">
+          <div class="field" style="width:150px"><label>Fecha</label><input class="inp" type="date" id="re_f" value="${hoy()}"></div>
+          <div class="field" style="width:140px"><label>Monto</label><input class="inp" type="number" min="0" step="0.01" id="re_m"></div>
+          <div class="field grow" style="min-width:180px"><label>Detalle (materia, factura)</label><input class="inp" id="re_d"></div>
+          <button class="btn pri" id="re_add">${I.plus} Registrar reembolso</button></div>
+        <div class="row wrap" style="gap:8px">${B.fin ? `<button class="btn" id="ben_react">Reactivar beneficio</button>` : `<button class="btn ghost" id="ben_fin" style="color:var(--danger)">Finalizar beneficio (salida, no uso…)</button>`}</div>` : ''}
+    </div></div>` : '';
   const pasoUnif = yoAprob && yoAprob.paso.includes(' + ');
   const panelAprob = yoAprob ? `<div class="card" style="border:2px solid ${s.excepcion ? 'var(--danger)' : 'var(--warn)'};margin-bottom:20px" id="panel-aprob">
       <div class="card-h" style="background:${s.excepcion ? '#FDECEC' : 'var(--warn-50)'};border-radius:14px 14px 0 0"><h2>Su decisión · ${esc(yoAprob.paso)}</h2><div class="row wrap" style="gap:6px">${s.excepcion ? '<span class="tag exc">⚠ Excepción</span>' : ''}${yoAprob.es_final ? '<span class="tag adm">Aprobación final</span>' : ''}</div></div>
       <div class="card-b stack">
         ${pasoUnif ? `<div class="alert a-info" style="margin:0">${I.info}<div class="small">Usted figura en varios pasos seguidos de este flujo (<b>${esc(yoAprob.paso)}</b>). Se unificaron en <b>una sola aprobación</b>: su firma cuenta para todos ellos.</div></div>` : ''}
         ${s.excepcion ? `<label class="chk" style="border-color:var(--danger);background:#FDECEC"><input type="checkbox" id="okexc"><span><b style="color:var(--danger)">Revisé la causa y el motivo, y autorizo esta excepción a la política.</b><br><span class="small muted">Obligatorio para aprobar.</span></span></label>` : ''}
+        ${pistaPolitica(s) ? `<div class="opt-nota" style="margin:0">${pistaPolitica(s)}</div>` : ''}
+        ${(yoAprob.datos_def || []).length ? `<div class="grid2" id="dap">${yoAprob.datos_def.map(d => `<div class="field"><label class="${d.requerido ? 'req' : ''}">${esc(d.label)}</label>
+            <input class="inp" data-dap="${esc(d.key)}" type="${d.tipo === 'numero' ? 'number' : d.tipo === 'fecha' ? 'date' : 'text'}" ${d.min != null ? `min="${d.min}"` : ''} ${d.max != null ? `max="${d.max}"` : ''} step="any" value="${esc(sugerencia(d, s))}"></div>`).join('')}
+            <span class="help span2">Estos datos se incluyen en el correo al solicitante y en el documento final.</span></div>` : ''}
         <div class="field"><label for="com">Comentario <span class="muted">(obligatorio si rechaza: motivo)</span></label><textarea class="inp" id="com" style="min-height:70px"></textarea></div>
         <div><div class="lbl" style="margin-bottom:6px">Firma (obligatoria para aprobar)</div><div id="sig"></div></div>
         <div class="row" style="justify-content:flex-end;gap:10px;flex-wrap:wrap">
-          <button class="btn dan" id="rech">${I.x} Rechazar</button><button class="btn pri" id="aprob">${I.check} Aprobar y firmar</button></div>
+          ${P.pedir_info ? `<button class="btn" id="pinfo">${I.info} Solicitar más información</button>` : ''}<button class="btn dan" id="rech">${I.x} Rechazar</button><button class="btn pri" id="aprob">${I.check} Aprobar y firmar</button></div>
         ${yoAprob.es_final ? '<p class="xs muted" style="margin:0">Al aprobar se avisa por correo al solicitante y a RH; el documento final con todas las firmas queda listo para descargar.</p>' : ''}
       </div></div>` : '';
   shell(activo, `
@@ -1325,7 +1572,7 @@ async function vistaDetalle(id) {
         ${P.modificar ? `<button class="btn ${s.estado === 'rechazada' ? 'pri' : ''}" id="modif">${I.edit} ${s.estado === 'rechazada' ? 'Modificar y reenviar' : 'Modificar'}</button>` : ''}
         ${P.cancelar ? `<button class="btn ghost" id="canc" style="color:var(--danger)">${I.x} Cancelar solicitud</button>` : ''}
       </div></div>
-    ${alertaExc}
+    ${alertaExc}${alertas}${bannerInfo}
     ${s.estado === 'aprobada' && !s.pdf_enviado_en ? `<div class="alert a-warn">${I.warn}<div>La solicitud está aprobada pero el <b>aviso de aprobación aún no se ha enviado</b> por correo. Use <b>Reenviar aviso</b>.</div></div>` : ''}
     ${s.estado === 'rechazada' ? `<div class="alert a-err">${I.x}<div><b>Motivo del rechazo:</b> ${esc(s.motivo_rechazo)}${P.modificar ? '<br><span class="small">Puede corregirla y reenviarla (el flujo inicia de nuevo) o cancelarla definitivamente.</span>' : ''}</div></div>` : ''}
     ${s.estado === 'cancelada' ? `<div class="alert a-info">${I.info}<div>Solicitud cancelada.${s.motivo_rechazo ? ' Motivo: ' + esc(s.motivo_rechazo) : ''}</div></div>` : ''}
@@ -1343,6 +1590,7 @@ async function vistaDetalle(id) {
       </div>
       <div>
         <div class="card"><div class="card-h"><h2>Flujo de aprobación</h2></div><div class="card-b"><ul class="tl">${tl}</ul></div></div>
+        ${docs}${qa}${benef}
         ${(D.versiones || []).length ? `<div class="card" style="margin-top:16px"><div class="card-h"><h2>${I.history.replace('<svg', '<svg style="width:18px;height:18px;vertical-align:-3px;margin-right:6px"')}Versiones anteriores</h2></div><div class="card-b" style="padding-top:4px">
           ${D.versiones.map((v, k) => { const sig = k === 0 ? s.datos : D.versiones[k - 1].datos;
             const camb = (v.formulario || []).filter(f => JSON.stringify(v.datos[f.key] ?? null) !== JSON.stringify(sig[f.key] ?? null)).map(f => f.label);
@@ -1366,11 +1614,13 @@ async function vistaDetalle(id) {
       if (aprobar && s.excepcion && !$('#okexc').checked) { $('#okexc').closest('label').scrollIntoView({ block: 'center' }); return toast('Marque la casilla que confirma que autoriza la EXCEPCIÓN a la política.', 'err'); }
       if (aprobar && firma.vacia()) return toast('Firme en el recuadro para aprobar.', 'err');
       if (!aprobar && !com) { $('#com').focus(); return toast('Escriba el motivo del rechazo en el comentario.', 'err'); }
+      const dap = {}; $$('[data-dap]').forEach(i => dap[i.dataset.dap] = i.value.trim());
+      if (aprobar) { const falta = (yoAprob.datos_def || []).find(d => d.requerido && !dap[d.key]); if (falta) { $(`[data-dap="${falta.key}"]`).focus(); return toast(`Complete "${falta.label}" antes de aprobar.`, 'err'); } }
       if (!await confirmar(aprobar ? 'Confirmar aprobación' : 'Confirmar rechazo',
-          aprobar ? `Va a aprobar <b>${esc(s.folio)}</b> como <b>${esc(yoAprob.paso)}</b>.${s.excepcion ? `<div class="exc-alerta" style="margin:14px 0 0"><div class="ic">${I.warn}</div><div><div class="t">Está autorizando una excepción</div><div class="small">${esc(s.datos[kd + '_excepcion_causa'] || 'La solicitud no cumple la política vigente')}.</div></div></div>` : ''}` : `Va a rechazar <b>${esc(s.folio)}</b>. Se notificará al solicitante con el motivo.`,
+          aprobar ? `Va a aprobar <b>${esc(s.folio)}</b> como <b>${esc(yoAprob.paso)}</b>.${(yoAprob.datos_def || []).length ? `<dl class="dl-ap" style="margin-top:10px">${yoAprob.datos_def.filter(d => dap[d.key]).map(d => `<dt>${esc(d.label)}</dt><dd>${esc(d.tipo === 'fecha' ? fmtISO(dap[d.key]) : dap[d.key])}</dd>`).join('')}</dl>` : ''}${s.excepcion ? `<div class="exc-alerta" style="margin:14px 0 0"><div class="ic">${I.warn}</div><div><div class="t">Está autorizando una excepción</div><div class="small">${esc(EXC.causa || 'La solicitud no cumple la política vigente')}.</div></div></div>` : ''}` : `Va a rechazar <b>${esc(s.folio)}</b>. Se notificará al solicitante con el motivo.`,
           aprobar ? 'Aprobar' : 'Rechazar', aprobar ? 'pri' : 'dan')) return;
       try {
-        const r = await api('rh_resolver', { p_aprobacion_id: yoAprob.id, p_aprobar: aprobar, p_firma: firma.vacia() ? null : firma.png(), p_comentario: com });
+        const r = await api('rh_resolver', { p_aprobacion_id: yoAprob.id, p_aprobar: aprobar, p_firma: firma.vacia() ? null : firma.png(), p_comentario: com, p_datos: dap });
         if (r.final && r.aprobada) toast('Solicitud aprobada. Se avisó por correo al solicitante y a RH; el documento final ya se puede descargar.', 'ok');
         else toast(aprobar ? `Aprobado. Se notificó al siguiente paso: ${r.siguiente}.` : 'Solicitud rechazada y notificada.', 'ok');
         router();
@@ -1378,6 +1628,36 @@ async function vistaDetalle(id) {
     });
     $('#aprob').onclick = e => resolver(true, e.currentTarget);
     $('#rech').onclick = e => resolver(false, e.currentTarget);
+    if ($('#pinfo')) $('#pinfo').onclick = () => modal({ title: 'Solicitar más información', body: `<p style="margin-top:0">La solicitud queda en <b>Información solicitada</b>: el solicitante recibe un correo con su pregunta y, al responder, vuelve a su bandeja en este mismo paso.</p>
+        <div class="field"><label class="req">¿Qué información necesita?</label><textarea class="inp" id="pq" style="min-height:90px" placeholder="Ej.: adjunte el desglose de costos por cuatrimestre"></textarea></div>`,
+      actions: [{ label: 'Cancelar' }, { label: I.send + ' Enviar solicitud de información', cls: 'pri', onClick: ({ close, el, btn }) => ocupado(btn, async () => {
+        const q = $('#pq', el).value.trim(); if (q.length < 5) return toast('Escriba qué información necesita.', 'err');
+        try { await api('rh_pedir_info', { p_aprobacion_id: yoAprob.id, p_pregunta: q }); close(); toast('Se solicitó la información al solicitante.', 'ok'); vistaDetalle(s.id); } catch (err) { toast(err.message, 'err'); }
+      }) }], onOpen: el => $('#pq', el).focus() });
+  }
+  if (P.responder) {
+    enlazarForm($('#panel-resp'));
+    $('#enviar-resp').onclick = e => ocupado(e.currentTarget, async () => {
+      const t = $('#resp').value.trim(); if (t.length < 2) { $('#resp').focus(); return toast('Escriba su respuesta.', 'err'); }
+      try { const adj = await subirLista($('.files[data-k="_resp"]')._files);
+        await api('rh_responder_info', { p_id: s.id, p_respuesta: t, p_adjuntos: adj.map(x => x.id) }); toast('Respuesta enviada. La solicitud volvió a revisión.', 'ok'); vistaDetalle(s.id); }
+      catch (err) { toast(err.message, 'err'); } });
+  }
+  $$('[data-adj]').forEach(b => b.onclick = () => ocupado(b, async () => { try { await descargarAdjunto(+b.dataset.adj, true); } catch (err) { toast(err.message, 'err'); } }));
+  $$('[data-adjd]').forEach(b => b.onclick = () => ocupado(b, async () => { try { await descargarAdjunto(+b.dataset.adjd, false); } catch (err) { toast(err.message, 'err'); } }));
+  if (P.beneficio) {
+    $('#re_add').onclick = e => ocupado(e.currentTarget, async () => {
+      try { await api('rh_reembolso_guardar', { p_solicitud: s.id, p_fecha: $('#re_f').value || null, p_monto: +$('#re_m').value || 0, p_descripcion: $('#re_d').value });
+        toast('Reembolso registrado.', 'ok'); vistaDetalle(s.id); } catch (err) { toast(err.message, 'err'); } });
+    $$('[data-delre]').forEach(b => b.onclick = async () => { if (!await confirmar('Eliminar reembolso', '¿Eliminar este reembolso? Queda registrado en la bitácora.', 'Eliminar', 'dan')) return;
+      try { await api('rh_reembolso_eliminar', { p_id: +b.dataset.delre }); vistaDetalle(s.id); } catch (err) { toast(err.message, 'err'); } });
+    if ($('#ben_fin')) $('#ben_fin').onclick = () => modal({ title: 'Finalizar beneficio', body: `<p style="margin-top:0">El beneficio deja de contar como activo en los indicadores y no se pueden registrar reembolsos con fecha posterior.</p>
+        <div class="grid2"><div class="field"><label class="req">Fecha</label><input class="inp" type="date" id="bf_f" value="${hoy()}"></div>
+        <div class="field"><label class="req">Motivo</label><select class="inp" id="bf_m">${['Salida de la compañía', 'No uso del beneficio (2 períodos)', 'Incumplimiento de requisitos', 'Finalizó los estudios', 'Otro'].map(x => `<option>${x}</option>`).join('')}</select></div></div>`,
+      actions: [{ label: 'Cancelar' }, { label: 'Finalizar', cls: 'dan', onClick: ({ close, el, btn }) => ocupado(btn, async () => {
+        try { await api('rh_beneficio_finalizar', { p_id: s.id, p_fecha: $('#bf_f', el).value, p_motivo: $('#bf_m', el).value }); close(); toast('Beneficio finalizado.', 'ok'); vistaDetalle(s.id); } catch (err) { toast(err.message, 'err'); }
+      }) }] });
+    if ($('#ben_react')) $('#ben_react').onclick = () => ocupado($('#ben_react'), async () => { try { await api('rh_beneficio_finalizar', { p_id: s.id, p_fecha: null, p_motivo: null }); toast('Beneficio reactivado.', 'ok'); vistaDetalle(s.id); } catch (err) { toast(err.message, 'err'); } });
   }
   if (P.pdf) $('#dl').onclick = e => ocupado(e.currentTarget, async () => { try { (await construirPDF(D)).save(s.folio + '.pdf'); } catch (err) { toast(err.message, 'err'); } });
   if (P.reenviar) $('#reenv').onclick = () => modal({ title: 'Reenviar aviso de aprobación', body: `
@@ -1437,9 +1717,10 @@ async function construirPDF(D) {
   doc.setTextColor('#2E6B4E'); doc.setFontSize(9.5); T('APROBADA', W - M - 18, y - 0.4, { align: 'center' });
   if (s.excepcion) {
     const kd = ((s.formulario || []).find(f => f.tipo === 'dias') || {}).key || 'dias';
+    const causa = s.datos._exc_causa || s.datos[kd + '_excepcion_causa'];
     y += 5; doc.setFillColor('#FDECEC'); doc.setDrawColor('#A63D40'); doc.setLineWidth(0.5); doc.roundedRect(M, y, CW, 9, 2, 2, 'FD');
     doc.setTextColor('#A63D40'); doc.setFont('helvetica', 'bold'); doc.setFontSize(9.5);
-    T('EXCEPCION A LA POLITICA APROBADA' + (s.datos[kd + '_excepcion_causa'] ? ' - ' + s.datos[kd + '_excepcion_causa'] : ''), M + 4, y + 6);
+    T(split('EXCEPCION A LA POLITICA APROBADA' + (causa ? ' - ' + causa : ''), CW - 8)[0], M + 4, y + 6);
     y += 9;
   }
   y += 6; doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(GRIS);
@@ -1489,7 +1770,13 @@ async function construirPDF(D) {
 
   seccion('Flujo de aprobación', 48);
   ap.forEach((a, i) => bloqueFirma(a.firma, `${i + 1}. ${a.paso} - ${ESTADOS[a.estado] || a.estado}`, a.resuelto_por_nombre || '-',
-    `${a.resuelto_por_email || ''} · ${fmt(a.resuelto_en)}`, a.comentario ? 'Comentario: ' + a.comentario : ''));
+    `${a.resuelto_por_email || ''} · ${fmt(a.resuelto_en)}`, [a.comentario ? 'Comentario: ' + a.comentario : '', ...datosAprobTxt(a).map(([k, v]) => `${k}: ${v}`)].filter(Boolean).join('  |  ')));
+  if ((s.intercambios || []).length) {
+    seccion('Información adicional solicitada');
+    s.intercambios.forEach(x => { const l = split(`${x.paso} (${x.por_nombre}, ${fmt(x.en)}): ${x.pregunta}`, CW), r = split(`Respuesta (${fmt(x.respondido_en)}): ${x.respuesta || '-'}${(x.adjuntos || []).length ? '  [Adjuntos: ' + x.adjuntos.map(a => a.nombre).join(', ') + ']' : ''}`, CW - 4);
+      espacio((l.length + r.length) * 4.2 + 4); doc.setFontSize(9); doc.setFont('helvetica', 'bold'); doc.setTextColor(TINTA); T(l, M, y); y += l.length * 4.2;
+      doc.setFont('helvetica', 'normal'); doc.setTextColor(GRIS); T(r, M + 4, y); y += r.length * 4.2 + 3; });
+  }
 
   if (s.textos?.msg_aprobado) { const l = split(s.textos.msg_aprobado, CW - 8); espacio(l.length * 4.5 + 8);
     doc.setFillColor('#E9EEF5'); doc.roundedRect(M, y, CW, l.length * 4.5 + 6, 2, 2, 'F');
@@ -1536,7 +1823,7 @@ async function vistaModulo(codigo, tab) {
       catch (err) { toast(err.message, 'err'); }
     });
     $('#prev').onclick = () => { modal({ title: 'Vista previa · ' + ED.nombre, size: 'lg', body: `${ED.textos.intro ? `<div class="alert a-info">${I.shield}<div class="small">${esc(ED.textos.intro)}</div></div>` : ''}<div class="grid2" id="pv">${ED.formulario.map(f => campoHTML(f, valorAuto(f))).join('')}</div>
-        ${ED.textos.declaracion ? `<label class="chk" style="margin-top:16px"><input type="checkbox"><span><b>Declaración.</b> ${esc(ED.textos.declaracion)}</span></label>` : ''}`, onOpen: el => enlazarForm(el) }); };
+        ${ED.textos.declaracion ? `<label class="chk" style="margin-top:16px"><input type="checkbox"><span><b>Declaración.</b> ${esc(ED.textos.declaracion)}</span></label>` : ''}`, onOpen: el => enlazarForm(el, ED.formulario) }); };
     return ({ formulario: edFormulario, flujo: edFlujo, textos: edTextos, general: edGeneral })[tab]();
   }
   if (tab === 'responsables') return tabResponsables(m);
@@ -1574,6 +1861,13 @@ async function tabPolitica(m) {
         <button class="btn pri" id="gdias">${I.check} Guardar</button>
         <span class="small ${fd.max_politica ? '' : 'muted'}" style="padding-bottom:10px">${fd.max_politica ? `Vigente: <b>${fd.max_politica} día(s)</b>` : 'Sin límite definido'}</span>
       </div></div>` : ''}
+    ${m.opciones?.beneficio ? `<div class="card" style="margin-bottom:18px"><div class="card-b row wrap" style="gap:16px;align-items:flex-end">
+        <div class="grow" style="min-width:240px"><h3>Presupuesto anual</h3>
+          <p class="small muted" style="margin:4px 0 0">Base del indicador de presupuesto en <a href="#/reportes/${esc(m.codigo)}/beneficio">Reportes</a>: se compara con lo aprobado (monto que registra el aprobador final) y lo reembolsado.</p>
+          <div class="small" style="margin-top:6px">${Object.entries(m.opciones.beneficio.presupuestos || {}).sort().map(([a, v]) => `<span class="tag">${a}: ${(m.opciones.beneficio.moneda === 'USD' ? 'US$' : '') + Number(v).toLocaleString('es-CR')}</span>`).join(' ') || '<span class="muted">Sin presupuestos definidos</span>'}</div></div>
+        <div class="field" style="width:110px"><label>Año</label><input class="inp" type="number" id="pres_a" value="${hoy().slice(0, 4)}"></div>
+        <div class="field" style="width:170px"><label>Monto (${esc(m.opciones.beneficio.moneda || 'USD')})</label><input class="inp" type="number" min="0" step="100" id="pres_m" placeholder="Vacío = quitar"></div>
+        <button class="btn pri" id="gpres">${I.check} Guardar</button></div></div>` : ''}
     <div class="card" style="margin-bottom:18px"><div class="card-b row wrap" style="gap:16px;align-items:flex-end">
         <div class="grow" style="min-width:240px"><h3>Recordatorios al aprobador</h3>
           <p class="small muted" style="margin:4px 0 0">El <b>solicitante</b> puede enviar un recordatorio cuando un paso lleva estos días sin respuesta (máx. uno cada 24 h). RH puede enviarlo en cualquier momento.</p></div>
@@ -1585,8 +1879,8 @@ async function tabPolitica(m) {
       <form class="card" id="fp"><div class="card-h"><h2>Publicar política</h2></div><div class="card-b stack">
         <div class="field"><label class="req">Título</label><input class="inp" id="pt" placeholder="Ej. P-DRH-15 Política para regular el teletrabajo"></div>
         <div class="field"><label>Versión</label><input class="inp" id="pv" placeholder="Ej. 06"></div>
-        <div class="field"><label class="req">Archivo: PDF, o imágenes JPG/PNG (una por página)</label><input class="inp" id="pf" type="file" multiple accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png">
-          <span class="help">Se convierte en imágenes livianas para que abra rápido en computadora y celular. Si está en Word: Archivo → Guardar como → PDF.</span></div>
+        <div class="field"><label class="req">Archivo de la política (solo PDF)</label><input class="inp" id="pf" type="file" accept=".pdf,application/pdf">
+          <div class="alert a-info" style="margin:6px 0 0;padding:10px 12px">${I.info}<div class="small"><b>Solo se aceptan archivos PDF.</b> Si la política está en Word: <b>Archivo → Guardar como → PDF</b> y suba ese archivo. Se convierte en imágenes livianas para que abra rápido en computadora y celular.</div></div></div>
         <label class="chk"><input type="checkbox" id="pvig" checked><span><b>Publicar como vigente</b><br><span class="small muted">Reemplaza a la vigente actual para las solicitudes nuevas. Las ya enviadas conservan la que aceptaron.</span></span></label>
         <button class="btn pri">${I.book} Publicar</button></div></form>
       <div class="card"><div class="card-h"><h2>Historial de políticas</h2></div>
@@ -1598,6 +1892,9 @@ async function tabPolitica(m) {
             ${p.vigente ? '' : `<button class="btn sm" data-vig="${p.id}">Hacer vigente</button>`}
             ${p.aceptaciones ? '' : `<button class="btn sm ghost icon" data-del="${p.id}" title="Eliminar">${I.trash}</button>`}</td></tr>`).join('')}
         </tbody></table></div>`}</div></div>`;
+  if ($('#gpres')) $('#gpres').onclick = e => ocupado(e.currentTarget, async () => {
+    try { const v = $('#pres_m').value; await api('rh_modulo_presupuesto', { p_modulo: m.codigo, p_anio: +$('#pres_a').value, p_monto: v === '' ? null : +v });
+      toast('Presupuesto guardado.', 'ok'); await cargarBase(true); recargar(); } catch (err) { toast(err.message, 'err'); } });
   $('#grec').onclick = e => ocupado(e.currentTarget, async () => {
     try { const r = await api('rh_dias_recordatorio', { p_modulo: m.codigo, p_dias: +$('#diasrec').value }); toast(`El solicitante podrá recordar tras ${r.dias} día(s) sin respuesta.`, 'ok'); recargar(); }
     catch (err) { toast(err.message, 'err'); } });
@@ -1609,7 +1906,8 @@ async function tabPolitica(m) {
   $('#fp').onsubmit = e => { e.preventDefault(); ocupado($('#fp button.pri'), async () => {
     const files = [...$('#pf').files], btn = $('#fp button.pri');
     if (!$('#pt').value.trim()) return toast('Escriba el título.', 'err');
-    if (!files.length) return toast('Seleccione el archivo.', 'err');
+    if (!files.length) return toast('Seleccione el archivo PDF.', 'err');
+    if (files.some(f => !(/\.pdf$/i.test(f.name) || f.type === 'application/pdf'))) return toast('Solo se aceptan archivos PDF. Si está en Word: Archivo → Guardar como → PDF.', 'err');
     if (files.reduce((a, f) => a + f.size, 0) > 60 * 1024 * 1024) return toast('Los archivos suman más de 60 MB.', 'err');
     try {
       btn.innerHTML = '<span class="spin"></span> Leyendo archivo…';
@@ -1764,10 +2062,23 @@ function edFormulario() {
       <div class="grid3">
         <div class="field"><span class="lbl">Tipo</span><select class="inp" data-p="tipo" ${f.sistema ? 'disabled' : ''}>${Object.entries(TIPOS_CAMPO).map(([k, v]) => `<option value="${k}" ${f.tipo === k ? 'selected' : ''}>${v}</option>`).join('')}</select></div>
         <div class="field"><span class="lbl">Clave interna</span><input class="inp" value="${esc(f.key)}" disabled>${f.sistema ? '<span class="help">Campo del sistema</span>' : ''}</div>
-        <div class="field"><span class="lbl">Valor inicial</span><select class="inp" data-p="auto"><option value="">Vacío</option>${[['hoy', 'Fecha de hoy'], ['nombre', 'Nombre del usuario'], ['departamento', 'Departamento del usuario'], ['puesto', 'Puesto del usuario']].map(([k, v]) => `<option value="${k}" ${f.auto === k ? 'selected' : ''}>${v}</option>`).join('')}</select></div>
+        <div class="field"><span class="lbl">Valor inicial</span><select class="inp" data-p="auto"><option value="">Vacío</option>${[['hoy', 'Fecha de hoy'], ['nombre', 'Nombre del usuario'], ['email', 'Correo del usuario (no editable)'], ['departamento', 'Departamento del usuario'], ['puesto', 'Puesto del usuario']].map(([k, v]) => `<option value="${k}" ${f.auto === k ? 'selected' : ''}>${v}</option>`).join('')}</select></div>
         <div class="field span2"><span class="lbl">Texto de ayuda</span><input class="inp" data-p="ayuda" value="${esc(f.ayuda || '')}"></div>
         <label class="chk" style="align-self:end"><input type="checkbox" data-p="requerido" ${f.requerido ? 'checked' : ''} ${f.key === 'correo_jefatura' ? 'disabled' : ''}><span>Obligatorio</span></label>
+        ${['texto', 'lista', 'opcion', 'fecha', 'numero', 'departamento'].includes(f.tipo) ? `<label class="chk" style="align-self:end"><input type="checkbox" data-p="en_resumen" ${f.en_resumen ? 'checked' : ''}><span>Mostrar en el resumen de los correos</span></label>` : ''}
+        ${f.tipo === 'archivo' ? `<div class="field"><span class="lbl">Máximo de archivos</span><input class="inp" type="number" min="1" max="10" data-p="max_archivos" value="${esc(f.max_archivos || 5)}"></div>` : ''}
+        ${f.tipo === 'fecha' ? `<label class="chk" style="align-self:end"><input type="checkbox" data-p="no_futura" ${f.no_futura ? 'checked' : ''}><span>No permitir fechas futuras</span></label>` : ''}
         ${conOps(f.tipo) ? `<div class="field span2" style="grid-column:1/-1"><span class="lbl">Opciones (una por línea)</span><textarea class="inp" data-p="opciones">${esc((f.opciones || []).join('\n'))}</textarea></div>` : ''}
+        ${['lista', 'opcion'].includes(f.tipo) && (f.opciones || []).length ? `<div class="field" style="grid-column:1/-1"><span class="lbl">Reglas por opción</span>
+          <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Opción</th><th title="Si la eligen, la solicitud es una excepción y pasa por los pasos 'solo si hay excepción'">Excepción</th><th>Nota que ve el solicitante al elegirla</th></tr></thead><tbody>
+          ${f.opciones.map((o, k) => `<tr><td class="small b">${esc(o)}</td><td><input type="checkbox" data-op-exc="${k}" ${(f.excepcion_opciones || []).includes(o) ? 'checked' : ''}></td>
+            <td><input class="inp" data-op-nota="${k}" value="${esc((f.notas_opciones || {})[o] || '')}" placeholder="Opcional"></td></tr>`).join('')}</tbody></table></div>
+          ${(f.excepcion_opciones || []).length ? `<label class="chk" style="margin-top:8px"><input type="checkbox" data-p="excepcion_justificar" ${f.excepcion_justificar ? 'checked' : ''}><span>Pedir una <b>justificación</b> cuando elijan una opción de excepción</span></label>` : ''}
+          <details style="margin-top:8px"><summary class="small" style="cursor:pointer">Avanzado: datos de la política por opción y restricciones (JSON)</summary>
+            <span class="help">Ejemplo: <span class="kbd">{"Idiomas":{"antiguedad_meses":3,"porcentaje":50,"tope":1200,"nota":"…"}}</span>. Con <i>antiguedad_meses</i> se compara contra el campo de fecha de ingreso; <i>porcentaje</i> se sugiere al aprobador.</span>
+            <textarea class="inp mono" data-pj="detalle_opciones" style="min-height:90px;font-size:12px">${esc(f.detalle_opciones ? JSON.stringify(f.detalle_opciones, null, 1) : '')}</textarea>
+            <span class="help">Restricciones: <span class="kbd">{"Fuera de período":{"campo":"tipo_apoyo","valores":["…"],"mensaje":"…"}}</span></span>
+            <textarea class="inp mono" data-pj="restricciones" style="min-height:70px;font-size:12px">${esc(f.restricciones ? JSON.stringify(f.restricciones, null, 1) : '')}</textarea></details></div>` : ''}
         ${f.tipo === 'dias' ? `<div class="field" style="grid-column:1/-1"><span class="lbl">Días disponibles</span><div class="days" data-dias>${DIAS_ORD.map(d => `<button type="button" class="day ${(f.opciones || []).includes(d) ? 'on' : ''}" data-d="${d}">${DIAS[d]}</button>`).join('')}</div></div>
           <div class="field"><span class="lbl">Días permitidos por política (más = excepción)</span><input class="inp" type="number" min="1" max="7" data-p="max_politica" value="${esc(f.max_politica || '')}" placeholder="Sin límite"><span class="help">RH también lo puede cambiar en Políticas.</span></div>
           <div class="field span2"><span class="lbl">Motivos de excepción (uno por línea)</span><textarea class="inp" data-p="motivos" style="min-height:70px">${esc((f.motivos || []).join('\n'))}</textarea></div>` : ''}
@@ -1775,14 +2086,20 @@ function edFormulario() {
     <button class="btn" id="addf" style="margin-top:14px">${I.plus} Agregar campo</button>`;
   const body = $('#edbody');
   body.oninput = body.onchange = e => {
-    const card = e.target.closest('[data-i]'), p = e.target.dataset.p; if (!card || !p) return;
-    const f = F[+card.dataset.i];
-    if (p === 'requerido') f.requerido = e.target.checked;
+    const card = e.target.closest('[data-i]'); if (!card) return;
+    const f = F[+card.dataset.i], t = e.target;
+    if (t.dataset.opExc != null) { const o = f.opciones[+t.dataset.opExc]; f.excepcion_opciones = (f.excepcion_opciones || []).filter(x => x !== o).concat(t.checked ? [o] : []); if (!f.excepcion_opciones.length) delete f.excepcion_opciones; if (e.type === 'change') edFormulario(); return; }
+    if (t.dataset.opNota != null) { const o = f.opciones[+t.dataset.opNota]; f.notas_opciones = { ...(f.notas_opciones || {}) }; if (t.value.trim()) f.notas_opciones[o] = t.value.trim(); else delete f.notas_opciones[o]; return; }
+    if (t.dataset.pj) { const k = t.dataset.pj; if (!t.value.trim()) { delete f[k]; t.style.borderColor = ''; return; } try { f[k] = JSON.parse(t.value); t.style.borderColor = ''; } catch { t.style.borderColor = 'var(--danger)'; } return; }
+    const p = t.dataset.p; if (!p) return;
+    if (['requerido', 'en_resumen', 'no_futura', 'excepcion_justificar'].includes(p)) { if (e.target.checked) f[p] = true; else if (p === 'requerido') f.requerido = false; else delete f[p]; return; }
+    if (p === 'max_archivos') { f.max_archivos = Math.max(1, Math.min(10, +e.target.value || 5)); return; }
     else if (p === 'opciones' || p === 'motivos') f[p] = e.target.value.split('\n').map(x => x.trim()).filter(Boolean);
     else if (p === 'max_politica') { delete f.max; if (+e.target.value > 0) f.max_politica = +e.target.value; else delete f.max_politica; }
     else if (p === 'auto') { if (e.target.value) f.auto = e.target.value; else delete f.auto; }
     else f[p] = e.target.value;
     if (p === 'tipo' && e.type === 'change') { if (f.tipo === 'dias' && !f.opciones?.length) { f.opciones = ['lun', 'mar', 'mie', 'jue', 'vie']; f.motivos = ['Salud', 'Cuido de familiares', 'Otro']; } edFormulario(); }
+    if (p === 'opciones' && e.type === 'change') edFormulario();
   };
   body.onclick = e => {
     const card = e.target.closest('[data-i]'); const i = card ? +card.dataset.i : -1;
@@ -1802,6 +2119,7 @@ function edFormulario() {
       F.push(f); close(); edFormulario(); window.scrollTo(0, document.body.scrollHeight);
     } }], onOpen: el => $('#nl', el).focus() });
 }
+const DATO_NUEVO = new WeakSet();
 function edFlujo() {
   const P = ED.flujo;
   $('#edbody').innerHTML = `<div class="grid2" style="grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);align-items:start">
@@ -1813,22 +2131,34 @@ function edFlujo() {
           <button class="btn icon ghost" data-rm style="color:var(--danger)" ${P.length === 1 ? 'disabled' : ''}>${I.trash}</button></div>
         <div class="grid2">
           <div class="field"><span class="lbl">¿Quién aprueba?</span><select class="inp" data-p="tipo">${Object.entries(TIPOS_APROB).map(([k, v]) => `<option value="${k}" ${p.tipo === k ? 'selected' : ''}>${v}</option>`).join('')}</select></div>
-          <div class="field"><span class="lbl">¿Cuándo aplica?</span><select class="inp" data-p="condicion"><option value="siempre" ${p.condicion !== 'excepcion' ? 'selected' : ''}>Siempre</option><option value="excepcion" ${p.condicion === 'excepcion' ? 'selected' : ''}>Solo si hay excepción (días consecutivos o más días de los permitidos)</option></select></div>
+          <div class="field"><span class="lbl">¿Cuándo aplica?</span><select class="inp" data-p="condicion"><option value="siempre" ${p.condicion !== 'excepcion' ? 'selected' : ''}>Siempre</option><option value="excepcion" ${p.condicion === 'excepcion' ? 'selected' : ''}>Solo si hay excepción (según las reglas del formulario)</option></select></div>
           ${p.tipo === 'correo' ? `<div class="field span2"><span class="lbl req">Correo(s) del aprobador</span><input class="inp" data-p="correos" value="${esc(p.correos || '')}" placeholder="persona@legrand.com" style="${(p.correos || '').trim() ? '' : 'border-color:var(--danger)'}"><span class="help">Si pone varios (separados por coma), cualquiera de ellos puede aprobar.</span></div>`
             : `<div class="span2 small muted">${p.tipo === 'jefatura' ? 'Se usa el correo que el solicitante escribe en el campo <span class="kbd">correo_jefatura</span>.' : `Se usa el responsable definido en <a href="#/modulo/${esc(ED.codigo)}/responsables">Responsables por departamento</a> de este trámite, según el departamento elegido.`}</div>`}
+          <div class="span2"><span class="lbl">Datos que el aprobador completa al aprobar</span>
+            ${(p.datos || []).map((d, k) => `<div class="row" style="gap:6px;margin-top:6px" data-dk="${k}"><input class="inp grow" data-d="label" value="${esc(d.label)}" placeholder="Etiqueta">
+              <select class="inp" data-d="tipo" style="width:120px">${[['numero', 'Número'], ['fecha', 'Fecha'], ['texto', 'Texto'], ['parrafo', 'Párrafo']].map(([v, l]) => `<option value="${v}" ${d.tipo === v ? 'selected' : ''}>${l}</option>`).join('')}</select>
+              <label class="chk" style="padding:6px 8px"><input type="checkbox" data-d="requerido" ${d.requerido ? 'checked' : ''}><span class="xs">Oblig.</span></label>
+              <button class="btn icon ghost" data-drm="${k}" style="color:var(--danger)">${I.trash}</button></div>`).join('')}
+            <button class="btn sm ghost" data-dadd style="margin-top:6px">${I.plus} Agregar dato (ej. monto, porcentaje, fecha)</button></div>
         </div></div>`).join('')}
       <div class="arrow">${I.arrow}</div><div class="step-end">Aprobada → PDF al solicitante y RH</div>
     </div><button class="btn" id="addp" style="margin-top:14px">${I.plus} Agregar paso</button></div>
     <div class="card card-b small stack" style="position:sticky;top:120px">
       <h3>Cómo funciona</h3>
       <p style="margin:0">Los pasos se ejecutan en orden. Cada aprobador recibe un correo, ingresa con su código y firma.</p>
-      <p style="margin:0">Los pasos <b style="color:var(--warn)">“solo si hay excepción”</b> se saltan cuando la solicitud cumple la política (sin días consecutivos y sin pasarse de los días permitidos).</p>
+      <p style="margin:0">Los pasos <b style="color:var(--warn)">“solo si hay excepción”</b> se saltan cuando la solicitud cumple la política. Qué es excepción lo definen las reglas del formulario (días consecutivos, más días de los permitidos, u opciones marcadas como excepción, como "Fuera de período").</p>
+      <p style="margin:0"><b>Datos al aprobar:</b> el aprobador debe completarlos para firmar (ej. monto, porcentaje y fecha); salen en el correo al solicitante y en el documento final.</p>
       <p style="margin:0">El <b>último paso que aplique</b> es la aprobación final: al aprobarlo se avisa por correo al solicitante y a los correos de copia de la pestaña <a href="#/modulo/${esc(ED.codigo)}/general">General</a>.</p>
       <p style="margin:0">Si alguien rechaza, el flujo termina y el solicitante recibe el motivo.</p>
     </div></div>`;
   const body = $('#edbody');
   body.oninput = body.onchange = e => {
-    const card = e.target.closest('[data-i]'), p = e.target.dataset.p; if (!card || !p) return;
+    const card = e.target.closest('[data-i]'); if (!card) return;
+    const dk = e.target.closest('[data-dk]');
+    if (dk && e.target.dataset.d) { const d = P[+card.dataset.i].datos[+dk.dataset.dk], k = e.target.dataset.d;
+      if (k === 'requerido') d.requerido = e.target.checked; else d[k] = e.target.value;
+      if (k === 'label' && DATO_NUEVO.has(d)) d.key = slug(d.label); return; }
+    const p = e.target.dataset.p; if (!p) return;
     P[+card.dataset.i][p] = e.target.value;
     if (e.type === 'change' && (p === 'tipo' || p === 'condicion')) edFlujo();
   };
@@ -1836,6 +2166,8 @@ function edFlujo() {
     const card = e.target.closest('[data-i]'); const i = card ? +card.dataset.i : -1;
     const mv = e.target.closest('[data-mv]'); if (mv && !mv.disabled) { const j = i + +mv.dataset.mv; [P[i], P[j]] = [P[j], P[i]]; return edFlujo(); }
     const rm = e.target.closest('[data-rm]'); if (rm && !rm.disabled) { P.splice(i, 1); return edFlujo(); }
+    if (e.target.closest('[data-dadd]')) { const d = { key: 'dato_' + Date.now().toString(36), label: 'Nuevo dato', tipo: 'numero', requerido: true }; DATO_NUEVO.add(d); (P[i].datos = P[i].datos || []).push(d); ED._sucio = true; return edFlujo(); }
+    const drm = e.target.closest('[data-drm]'); if (drm) { P[i].datos.splice(+drm.dataset.drm, 1); if (!P[i].datos.length) delete P[i].datos; ED._sucio = true; return edFlujo(); }
   };
   $('#addp').onclick = () => { P.push({ id: 'p' + Date.now(), nombre: 'Nuevo paso', tipo: 'correo', correos: '', condicion: 'siempre' }); edFlujo(); };
 }
@@ -1844,19 +2176,37 @@ function edTextos() {
   const campos = [['intro', 'Texto inicial (confidencialidad)', 'Se muestra al inicio del formulario y en el PDF.'],
                   ['declaracion', 'Declaración (casilla obligatoria)', 'El solicitante debe marcarla para poder enviar.'],
                   ['msg_aprobado', 'Mensaje al aprobarse', 'Va en el correo final con el PDF y en el documento.'],
-                  ['msg_rechazado', 'Mensaje al rechazarse', 'Va en el correo de rechazo, antes del motivo.']];
+                  ['msg_rechazado', 'Mensaje al rechazarse', 'Va en el correo de rechazo, antes del motivo.'],
+                  ['msg_info', 'Mensaje al solicitar más información', 'Va en el correo al solicitante, antes de la pregunta del aprobador.']];
   $('#edbody').innerHTML = `<div class="card card-b stack">${campos.map(([k, l, h]) => `<div class="field"><label>${l}</label><textarea class="inp" data-t="${k}">${esc(T[k] || '')}</textarea><span class="help">${h}</span></div>`).join('')}</div>`;
   $('#edbody').oninput = e => { if (e.target.dataset.t) T[e.target.dataset.t] = e.target.value; };
   $('#edbody').onclick = null;
 }
 function edGeneral() {
+  const O = ED.opciones = ED.opciones || {};
   $('#edbody').innerHTML = `<div class="card card-b grid2">
     <div class="field"><label>Nombre del trámite</label><input class="inp" data-g="nombre" value="${esc(ED.nombre)}"></div>
     <div class="field"><label>Prefijo del folio</label><input class="inp" data-g="prefijo" value="${esc(ED.prefijo)}" maxlength="6"><span class="help">Ej. TT → TT-2026-0001</span></div>
     <div class="field span2"><label>Descripción</label><input class="inp" data-g="descripcion" value="${esc(ED.descripcion)}"></div>
     <div class="field span2"><label>Copia del aviso de aprobación (correos de RH)</label><input class="inp" data-g="correos_copia" value="${esc(ED.correos_copia || '')}" placeholder="rrhh@legrand.com, gerente.rh@legrand.com"><span class="help">Reciben el aviso de cada solicitud aprobada de este trámite y pueden entrar a ver y descargar el documento. Vacío = se usa el aprobador del último paso.</span></div>
-    <label class="chk"><input type="checkbox" data-g="activo" ${ED.activo ? 'checked' : ''}><span><b>Trámite activo</b><br><span class="small muted">Si se desactiva, nadie puede crear solicitudes nuevas.</span></span></label></div>`;
-  $('#edbody').oninput = $('#edbody').onchange = e => { const g = e.target.dataset.g; if (g) ED[g] = e.target.type === 'checkbox' ? e.target.checked : e.target.value; };
+    <label class="chk"><input type="checkbox" data-g="activo" ${ED.activo ? 'checked' : ''}><span><b>Trámite activo</b><br><span class="small muted">Si se desactiva, nadie puede crear solicitudes nuevas.</span></span></label>
+    <label class="chk"><input type="checkbox" data-o="pedir_info" ${O.pedir_info ? 'checked' : ''}><span><b>Permitir "Solicitar más información"</b><br><span class="small muted">El aprobador puede devolverle una pregunta al solicitante; al responder, vuelve al mismo paso.</span></span></label>
+    <div class="field span2"><label>Enlace directo al formulario (para COMET o la intranet)</label><div class="copy-box"><input class="inp" id="lnk" readonly value="${esc(location.href.split('#')[0] + '#/nueva/' + ED.codigo)}"><button class="btn" id="cplnk" title="Copiar">${I.copy}</button></div>
+      <span class="help">Quien lo abra entra con su código y llega directo a este formulario. Si no tiene usuario, puede solicitar acceso.</span></div>
+    <div class="span2" style="border-top:1px solid var(--line);padding-top:14px"><label class="chk"><input type="checkbox" id="benon" ${O.beneficio ? 'checked' : ''}><span><b>Este trámite otorga un beneficio con reembolsos</b><br><span class="small muted">Activa el seguimiento de reembolsos y beneficiarios activos en cada solicitud aprobada y la pestaña de presupuesto en Reportes.</span></span></label>
+      ${O.beneficio ? `<div class="grid3" style="margin-top:10px">
+        <div class="field"><label>Vigencia del beneficio (meses)</label><input class="inp" type="number" min="1" max="60" data-b="vigencia_meses" value="${esc(O.beneficio.vigencia_meses || 12)}"></div>
+        <div class="field"><label>Moneda</label><input class="inp" data-b="moneda" value="${esc(O.beneficio.moneda || 'USD')}" maxlength="5"></div>
+        <div class="field"><label>Dato del monto aprobado</label><select class="inp" data-b="campo_monto">${ED.flujo.flatMap(p => p.datos || []).filter(d => d.tipo === 'numero').map(d => `<option value="${esc(d.key)}" ${O.beneficio.campo_monto === d.key ? 'selected' : ''}>${esc(d.label)}</option>`).join('') || '<option value="monto">monto (agregue el dato en el flujo)</option>'}</select></div>
+        <div class="field"><label>Campo "tipo" para los reportes</label><select class="inp" data-b="campo_tipo">${ED.formulario.filter(f => ['lista', 'opcion'].includes(f.tipo)).map(f => `<option value="${esc(f.key)}" ${O.beneficio.campo_tipo === f.key ? 'selected' : ''}>${esc(f.label)}</option>`).join('')}</select></div>
+        <div class="field"><label>Campo "período" para los reportes</label><select class="inp" data-b="campo_periodo">${ED.formulario.filter(f => ['lista', 'opcion'].includes(f.tipo)).map(f => `<option value="${esc(f.key)}" ${O.beneficio.campo_periodo === f.key ? 'selected' : ''}>${esc(f.label)}</option>`).join('')}</select></div>
+      </div>` : ''}</div></div>`;
+  $('#cplnk').onclick = () => { navigator.clipboard?.writeText($('#lnk').value); toast('Enlace copiado.', 'ok'); };
+  $('#benon').onchange = e => { if (e.target.checked) O.beneficio = O.beneficio || { vigencia_meses: 12, moneda: 'USD', campo_monto: 'monto', campo_tipo: '', campo_periodo: '' }; else delete O.beneficio; ED._sucio = true; edGeneral(); };
+  $('#edbody').oninput = $('#edbody').onchange = e => { const g = e.target.dataset.g, o = e.target.dataset.o, bb = e.target.dataset.b;
+    if (g) ED[g] = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+    if (o) O[o] = e.target.checked;
+    if (bb) O.beneficio[bb] = e.target.type === 'number' ? +e.target.value : e.target.value; };
   $('#edbody').onclick = null;
 }
 
