@@ -15,7 +15,7 @@
 const CONFIG = {
   SUPABASE_URL: 'https://iecfgpqnnsxmnmbxnfcp.supabase.co',
   SUPABASE_KEY: 'sb_publishable_Mt2sdPIzEcfbKv15x4-JTQ_Tf6csjiH',
-  VERSION: '1.8'
+  VERSION: '1.9'
 };
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -317,8 +317,8 @@ const ESTADOS = {en_aprobacion:'En aprobación', info_solicitada:'Información s
                  info:'Esperando información', pendiente:'Pendiente', aprobado:'Aprobado', rechazado:'Rechazado', omitido:'Omitido', en_espera:'En espera'};
 const ROLES = {admin:'Administrador', rh:'Recursos Humanos', usuario:'Colaborador'};
 const TIPOS_CAMPO = {texto:'Texto corto', parrafo:'Párrafo', correo:'Correo', fecha:'Fecha', numero:'Número', lista:'Lista desplegable',
-                     opcion:'Opción única', casillas:'Casillas (varias)', si_no:'Casilla Sí/No', departamento:'Departamento (catálogo)', dias:'Días de la semana', archivo:'Archivos adjuntos (PDF/JPG/PNG)'};
-const TIPOS_APROB = {jefatura:'Jefatura inmediata (correo del formulario)', director_departamento:'Responsable del departamento (definido en este trámite)', correo:'Correo(s) específico(s)'};
+                     opcion:'Opción única', casillas:'Casillas (varias)', si_no:'Casilla Sí/No', departamento:'Departamento (catálogo)', dias:'Días de la semana', archivo:'Archivos adjuntos (PDF/JPG/PNG)', periodo:'Período de aplicación (según fechas que define RH)'};
+const TIPOS_APROB = {jefatura:'Jefatura inmediata (correo del formulario)', director_departamento:'Responsable del departamento (Administración → Departamentos)', correo:'Correo(s) específico(s)'};
 const dur = horas => { const x = +horas; if (horas == null || isNaN(x)) return '—'; if (x < 1) return Math.max(1, Math.round(x * 60)) + ' min'; if (x < 24) return (Math.round(x * 10) / 10) + ' h'; const d = Math.round(x / 24 * 10) / 10; return d + (d === 1 ? ' día' : ' días'); };
 const diasDesde = d => d ? Math.floor((Date.now() - new Date(d).getTime()) / 86400000) : 0;
 const badge = e => `<span class="badge s-${esc(e)}">${esc(ESTADOS[e] || e)}</span>`;
@@ -739,9 +739,11 @@ async function vistaInicio() {
     } catch {}
     S.modulos.forEach(m => { const mal = (m.flujo || []).filter(p => p.tipo === 'correo' && !(p.correos || '').trim()); if (mal.length) avisos += `<div class="alert a-warn">${I.warn}<div><b>${esc(m.nombre)}:</b> el flujo tiene pasos sin aprobador (${mal.map(p => esc(p.nombre)).join(', ')}). <a href="#/modulo/${esc(m.codigo)}/flujo">Configurar flujo</a></div></div>`; });
     if (r.sin_responsable) { const md = S.modulos.find(m => (m.flujo || []).some(p => p.tipo === 'director_departamento'));
-      if (md) avisos += `<div class="alert a-warn">${I.warn}<div>Hay <b>${r.sin_responsable}</b> departamento(s) sin responsable para aprobar excepciones. Si alguien de esos departamentos pide una excepción, no podrá enviarla. <a href="#/modulo/${esc(md.codigo)}/responsables">Asignar responsables</a></div></div>`; }
+      if (md) avisos += `<div class="alert a-warn">${I.warn}<div>Hay <b>${r.sin_responsable}</b> departamento(s) sin responsable para aprobar excepciones. Si alguien de esos departamentos pide una excepción, no podrá enviarla. <a href="#/admin/departamentos">Asignar responsables</a></div></div>`; }
   }
   if (esRH()) S.modulos.filter(m => m.activo && !m.politica).forEach(m => { avisos += `<div class="alert a-warn">${I.book}<div><b>${esc(m.nombre)}:</b> no hay política vigente publicada. Los colaboradores no podrán abrirla antes de aceptar la declaración. <a href="#/modulo/${esc(m.codigo)}/politica">Publicar política</a></div></div>`; });
+  if (esRH()) S.modulos.filter(m => m.activo && (m.formulario || []).some(f => f.tipo === 'periodo') && !(m.opciones?.periodos || []).some(x => x.hasta >= hoy())).forEach(m => {
+    avisos += `<div class="alert a-warn">${I.warn}<div><b>${esc(m.nombre)}:</b> no hay períodos de aplicación vigentes ni futuros, así que todas las solicitudes se tramitarán como <b>fuera de período</b> (excepción). <a href="#/modulo/${esc(m.codigo)}/politica">Definir períodos</a></div></div>`; });
   if (esAdmin() && r.prueba) avisos += `<div class="alert a-info">${I.info}<div>Hay <b>${r.prueba} solicitudes de prueba</b> cargadas (folios PRUEBA-xx); también cuentan en los reportes. <a href="#/admin/config">Borrarlas en Configuración general</a></div></div>`;
   if (r.mis_info) avisos = `<div class="alert a-info" style="border-color:var(--acero)">${I.info}<div><b>Le solicitaron información adicional en ${r.mis_info} solicitud(es).</b> Ábrala desde <a href="#/mis">Mis solicitudes</a> y use <b>Responder</b>.</div></div>` + avisos;
   const tiles = [
@@ -761,6 +763,10 @@ async function vistaInicio() {
         <div class="mod-ic">${I[m.icono] || I.doc}</div>
         <div><h3>${esc(m.nombre)}</h3><p class="small muted" style="margin:4px 0 0">${esc(m.descripcion)}</p></div>
         <div class="row small" style="color:var(--pri);font-weight:700;margin-top:auto">${I.plus.replace('<svg', '<svg style="width:15px;height:15px"')} Nueva solicitud</div></a>`).join('')}
+      ${esAdmin() ? S.modulos.filter(m => !m.activo).map(m => `<a class="card mod" href="#/modulo/${esc(m.codigo)}/flujo" style="border-style:dashed">
+        <div class="mod-ic">${I[m.icono] || I.doc}</div>
+        <div><h3>${esc(m.nombre)} <span class="tag">Inactivo</span></h3><p class="small muted" style="margin:4px 0 0">Solo usted lo ve. Complete los correos del flujo, publique la política y actívelo en <b>General</b>.</p></div>
+        <div class="row small" style="color:var(--pri);font-weight:700;margin-top:auto">${I.edit.replace('<svg', '<svg style="width:15px;height:15px"')} Configurar y activar</div></a>`).join('') : ''}
       <div class="card mod soon"><div class="mod-ic">${I.plus}</div><div><h3>Próximos trámites</h3><p class="small muted" style="margin:4px 0 0">Vacaciones, constancias, permisos y más se agregarán como nuevos módulos.</p></div></div>
     </div>`);
 }
@@ -785,6 +791,14 @@ function campoHTML(f, v, deshab = false) {
   switch (f.tipo) {
     case 'parrafo': inner = `<textarea class="inp" id="${id}" data-k="${esc(f.key)}" ${d}>${esc(v)}</textarea>`; break;
     case 'correo': inner = `<input class="inp" id="${id}" type="email" data-k="${esc(f.key)}" value="${esc(f.auto === 'email' ? S.user.email : v)}" placeholder="nombre@empresa.com" ${f.auto === 'email' ? 'readonly style="background:var(--surface-2)"' : ''} ${d}>`; break;
+    case 'periodo': {
+      const per = v ? null : periodoDe(PER_CTX, hoy()), val = v || (per ? per.nombre : 'Fuera de período'), fuera = val === 'Fuera de período';
+      const prox = fuera ? (PER_CTX || []).filter(x => x.desde > hoy()).sort((a, b) => a.desde < b.desde ? -1 : 1)[0] : null;
+      inner = `<div class="opt-nota ${fuera ? 'warn' : ''}" style="margin-top:0" data-k="${esc(f.key)}" data-t="periodo" data-v="${esc(val)}">
+        ${fuera ? `<b>Fuera de período.</b> ${v ? 'La solicitud se envió fuera de los períodos de aplicación' : 'Hoy no hay un período de aplicación abierto'}${prox ? ` (próximo: <b>${esc(prox.nombre)} ${prox.anio}</b>, del ${fmtISO(prox.desde)} al ${fmtISO(prox.hasta)})` : ''}. Se tramita como <b>excepción</b>.`
+          : `<b>${esc(val)}${per ? ' ' + per.anio : ''}</b>${per ? ` · del ${fmtISO(per.desde)} al ${fmtISO(per.hasta)}` : ''}. Su solicitud está dentro del período y se tramita de forma normal.`}</div>`;
+      break;
+    }
     case 'archivo': {
       const max = f.max_archivos || 5;
       inner = `<div class="files" data-k="${esc(f.key)}" data-t="archivo" data-max="${max}"><div class="fl"></div>
@@ -814,13 +828,13 @@ function campoHTML(f, v, deshab = false) {
     default: inner = `<input class="inp" id="${id}" data-k="${esc(f.key)}" value="${esc(v)}" ${d}>`;
   }
   // v1.8: opciones con nota, excepción (con justificación) y detalle según la política
-  if (['lista', 'opcion'].includes(f.tipo) && (f.notas_opciones || f.excepcion_opciones || f.detalle_opciones || f.restricciones)) {
+  if (['lista', 'opcion', 'periodo'].includes(f.tipo) && (f.notas_opciones || f.excepcion_opciones || f.detalle_opciones || f.restricciones || f.excepcion_justificar)) {
     inner += `<div class="opt-nota hidden" data-nota-de="${esc(f.key)}"></div>`;
     if (f.excepcion_justificar) inner += `<div class="exc hidden" data-excop="${esc(f.key)}" style="margin-top:10px">
         <div class="row" style="margin-bottom:8px;color:#6E5418">${I.warn.replace('<svg', '<svg style="width:18px;height:18px"')}<b class="small">Esta opción es una excepción a la política: justifíquela.</b></div>
         <div class="field"><label class="req">Justificación de la excepción</label><textarea class="inp" data-k="${esc(f.key)}_excepcion_detalle" style="min-height:64px" ${d}></textarea></div></div>`;
   }
-  const ancho = ['parrafo', 'casillas', 'opcion', 'dias', 'archivo'].includes(f.tipo) ? 'span2' : '';
+  const ancho = ['parrafo', 'casillas', 'opcion', 'dias', 'archivo', 'periodo'].includes(f.tipo) ? 'span2' : '';
   return `<div class="field ${ancho}">${lab}${inner}${help}</div>`;
 }
 function enlazarForm(root, formulario = []) {
@@ -834,7 +848,7 @@ function enlazarForm(root, formulario = []) {
     refrescar();
   });
   // v1.8: notas, excepciones, restricciones y antigüedad según la opción elegida
-  const conReglas = formulario.filter(f => ['lista', 'opcion'].includes(f.tipo) && (f.notas_opciones || f.excepcion_opciones || f.detalle_opciones || f.restricciones));
+  const conReglas = formulario.filter(f => ['lista', 'opcion', 'periodo'].includes(f.tipo) && (f.notas_opciones || f.excepcion_opciones || f.detalle_opciones || f.restricciones || f.excepcion_justificar));
   const refrescarOpciones = () => {
     const datos = leerForm(root, formulario.filter(f => f.tipo !== 'archivo'));
     conReglas.forEach(f => {
@@ -848,7 +862,7 @@ function enlazarForm(root, formulario = []) {
         partes.push(`<b>Atención:</b> según su fecha de ingreso tiene ${ant} mes(es) de antigüedad y la política pide ${det.antiguedad_meses} para esta opción. RH lo revisará.`); clase = 'warn'; }
       const err = errorRestriccion(f, datos); if (err) { partes.push(esc(err)); clase = 'err'; }
       box.innerHTML = partes.join('<br>'); box.className = 'opt-nota ' + clase + (partes.length ? '' : ' hidden');
-      if (ex) ex.classList.toggle('hidden', !(f.excepcion_opciones || []).includes(v));
+      if (ex) ex.classList.toggle('hidden', !(f.tipo === 'periodo' ? v === 'Fuera de período' : (f.excepcion_opciones || []).includes(v)));
     });
   };
   if (conReglas.length) { root.addEventListener('change', refrescarOpciones); root.addEventListener('input', e => { if (e.target.type === 'date') refrescarOpciones(); }); refrescarOpciones(); }
@@ -870,6 +884,9 @@ function enlazarForm(root, formulario = []) {
     });
   });
 }
+// Período de aplicación vigente en una fecha (los define RH por año)
+let PER_CTX = [];
+const periodoDe = (lista, fecha) => (lista || []).find(x => x.desde <= fecha && fecha <= x.hasta) || null;
 const antiguedadMeses = f => { if (!f || !/^\d{4}-\d{2}-\d{2}$/.test(f)) return null; const [y, m, d] = f.split('-').map(Number), [Y, M, D] = hoy().split('-').map(Number);
   let n = (Y - y) * 12 + (M - m); if (D < d) n--; return Math.max(0, n); };
 function errorRestriccion(f, datos) {
@@ -935,6 +952,8 @@ function leerForm(root, formulario) {
       if (causasExc(sel, f).length) { datos[f.key + '_excepcion_motivo'] = $(`[data-k="${f.key}_excepcion_motivo"]`, root).value; datos[f.key + '_excepcion_detalle'] = $(`[data-k="${f.key}_excepcion_detalle"]`, root).value.trim(); }
     }
     else if (f.tipo === 'archivo') datos[f.key] = [...($(`.files[data-k="${f.key}"]`, root)?._files || [])];
+    else if (f.tipo === 'periodo') { datos[f.key] = $(`[data-k="${f.key}"][data-t="periodo"]`, root)?.dataset.v || '';
+      if (datos[f.key] === 'Fuera de período' && f.excepcion_justificar) datos[f.key + '_excepcion_detalle'] = ($(`[data-k="${f.key}_excepcion_detalle"]`, root)?.value || '').trim(); }
     else datos[f.key] = ($(`[data-k="${f.key}"]`, root)?.value || '').trim();
     if (['lista', 'opcion'].includes(f.tipo) && (f.excepcion_opciones || []).includes(datos[f.key]) && f.excepcion_justificar)
       datos[f.key + '_excepcion_detalle'] = ($(`[data-k="${f.key}_excepcion_detalle"]`, root)?.value || '').trim();
@@ -945,11 +964,12 @@ function validarForm(formulario, datos) {
   for (const f of formulario) {
     const v = datos[f.key];
     const vacio = v == null || v === '' || v === false || (Array.isArray(v) && !v.length);
-    if (f.requerido && vacio) return `Complete el campo: ${f.label}`;
+    if (f.requerido && vacio && f.tipo !== 'periodo') return `Complete el campo: ${f.label}`;
     if (f.tipo === 'correo' && v && !/^[^@\s;,]+@[^@\s;,]+\.[^@\s;,]+$/.test(v)) return `Correo inválido en: ${f.label}`;
     if (f.tipo === 'dias' && causasExc(v, f).length && (!datos[f.key + '_excepcion_motivo'] || !datos[f.key + '_excepcion_detalle'])) return `Su solicitud es una excepción (${causasExc(v, f).join(' y ')}): indique el motivo y el detalle.`;
     if (f.tipo === 'archivo' && (v || []).length > (f.max_archivos || 5)) return `En "${f.label}" se permiten máximo ${f.max_archivos || 5} archivo(s).`;
     if (['lista', 'opcion'].includes(f.tipo) && (f.excepcion_opciones || []).includes(v) && f.excepcion_justificar && !datos[f.key + '_excepcion_detalle']) return `Seleccionó "${v}" (excepción): escriba la justificación.`;
+    if (f.tipo === 'periodo' && v === 'Fuera de período' && f.excepcion_justificar && !datos[f.key + '_excepcion_detalle']) return 'Su solicitud está fuera de los períodos de aplicación: escriba la justificación de la excepción.';
     const er = errorRestriccion(f, datos); if (er) return er;
   }
   if (datos.correo_jefatura && datos.correo_jefatura.toLowerCase() === S.user.email) return 'El correo de la jefatura no puede ser el suyo.';
@@ -1086,6 +1106,7 @@ function vistaNueva(codigo, E) {
   const m = S.modulos.find(x => x.codigo === codigo && x.activo);
   if (!m) { toast('El trámite no está disponible.', 'err'); location.hash = '#/'; return; }
   const t = m.textos || {}, editando = !!E, prev = E ? E.s.datos : null;
+  PER_CTX = m.opciones?.periodos || [];
   const valor = f => editando ? (prev[f.key] ?? (f.tipo === 'casillas' || f.tipo === 'dias' ? [] : '')) : valorAuto(f);
   const flujoTxt = (m.flujo || []).map(p => `<span class="tag ${p.condicion === 'excepcion' ? 'exc' : ''}">${esc(p.nombre)}${p.condicion === 'excepcion' ? ' · si hay excepción' : ''}</span>`).join(' → ');
   let politicaAbierta = !m.politica;
@@ -1267,6 +1288,7 @@ async function vistaReportes(a, b) {
           <div class="kpi"><div class="l">Comprometido (aprobado en ${P.anio})</div><div class="v">${mon(P.comprometido)}</div><div class="s">${pctC}% del presupuesto</div></div>
           <div class="kpi"><div class="l">Ejecutado (reembolsos ${P.anio})</div><div class="v">${mon(P.ejecutado)}</div><div class="s">${pctE}% del presupuesto</div></div>
           <div class="kpi"><div class="l">Disponible</div><div class="v" style="color:${P.monto - P.comprometido < 0 ? 'var(--danger)' : 'var(--ok)'}">${mon(P.monto - P.comprometido)}</div><div class="s">presupuesto − comprometido</div></div></div>
+        <div class="opt-nota ${pctC > 100 ? 'err' : pctC >= 90 ? 'warn' : ''}" style="margin:0 0 12px">Se ha comprometido el <b>${pctC} %</b> del presupuesto ${P.anio}: ${mon(P.comprometido)} de ${mon(P.monto)} en ${P.aprobadas} solicitud(es) aprobada(s)${P.monto - P.comprometido >= 0 ? `; quedan <b>${mon(P.monto - P.comprometido)}</b>` : `; <b>se superó por ${mon(P.comprometido - P.monto)}</b>`}.</div>
         <div class="track" style="height:14px;background:var(--gris-50);border-radius:8px;overflow:hidden;position:relative"><div style="position:absolute;inset:0 auto 0 0;width:${Math.min(100, pctC)}%;background:var(--pri-100)"></div><div style="position:absolute;inset:0 auto 0 0;width:${Math.min(100, pctE)}%;background:var(--pri)"></div></div>
         <div class="leyenda" style="margin-top:8px"><span><i style="background:var(--pri)"></i>Ejecutado</span><span><i style="background:var(--pri-100)"></i>Comprometido</span></div>`}</div></div>
       <div class="grid2" style="align-items:start">
@@ -1453,6 +1475,7 @@ function valorTexto(f, datos) {
   if (f.tipo === 'si_no') return v ? 'Sí' : 'No';
   if (f.tipo === 'fecha') return fmtISO(v);
   if (f.tipo === 'archivo') return (v || []).map(x => x.nombre).join(', ') || '—';
+  if (f.tipo === 'periodo') return (v || '—') + (datos[f.key + '_rango'] ? ` (${datos[f.key + '_rango']})` : '');
   return (v == null || v === '') ? '—' : String(v);
 }
 function filasDatos(s) {
@@ -1464,7 +1487,7 @@ function filasDatos(s) {
       out.push(['Motivo de la excepción', s.datos[f.key + '_excepcion_motivo']]);
       out.push(['Detalle de la excepción', s.datos[f.key + '_excepcion_detalle'] || '—']);
     }
-    if (['lista', 'opcion'].includes(f.tipo) && s.datos[f.key + '_excepcion_detalle']) out.push(['Justificación de la excepción', s.datos[f.key + '_excepcion_detalle']]);
+    if (['lista', 'opcion', 'periodo'].includes(f.tipo) && s.datos[f.key + '_excepcion_detalle']) out.push(['Justificación de la excepción', s.datos[f.key + '_excepcion_detalle']]);
   });
   return out;
 }
@@ -1556,6 +1579,7 @@ async function vistaDetalle(id) {
         ${(yoAprob.datos_def || []).length ? `<div class="grid2" id="dap">${yoAprob.datos_def.map(d => `<div class="field"><label class="${d.requerido ? 'req' : ''}">${esc(d.label)}</label>
             <input class="inp" data-dap="${esc(d.key)}" type="${d.tipo === 'numero' ? 'number' : d.tipo === 'fecha' ? 'date' : 'text'}" ${d.min != null ? `min="${d.min}"` : ''} ${d.max != null ? `max="${d.max}"` : ''} step="any" value="${esc(sugerencia(d, s))}"></div>`).join('')}
             <span class="help span2">Estos datos se incluyen en el correo al solicitante y en el documento final.</span></div>` : ''}
+        ${D.presupuesto ? `<div class="opt-nota" id="presbox" style="margin:0"></div>` : ''}
         <div class="field"><label for="com">Comentario <span class="muted">(obligatorio si rechaza: motivo)</span></label><textarea class="inp" id="com" style="min-height:70px"></textarea></div>
         <div><div class="lbl" style="margin-bottom:6px">Firma (obligatoria para aprobar)</div><div id="sig"></div></div>
         <div class="row" style="justify-content:flex-end;gap:10px;flex-wrap:wrap">
@@ -1627,6 +1651,19 @@ async function vistaDetalle(id) {
       } catch (e) { toast(e.message, 'err'); }
     });
     $('#aprob').onclick = e => resolver(true, e.currentTarget);
+    if (D.presupuesto) {
+      const PR = D.presupuesto, campo = D.opciones?.beneficio?.campo_monto || 'monto', inp = $(`[data-dap="${campo}"]`);
+      const mon = n => (PR.moneda === 'USD' ? 'US$' : PR.moneda + ' ') + Number(n || 0).toLocaleString('es-CR', { maximumFractionDigits: 0 });
+      const pintar = () => {
+        const box = $('#presbox'); if (!box) return;
+        if (PR.monto == null) { box.innerHTML = `No hay presupuesto definido para ${PR.anio}. RH lo define en la configuración del trámite. Comprometido a la fecha: <b>${mon(PR.comprometido)}</b> en ${PR.aprobadas} solicitud(es).`; box.className = 'opt-nota'; return; }
+        const nuevo = +(inp?.value || 0), total = PR.comprometido + nuevo, pct = Math.round(PR.comprometido / PR.monto * 100), pct2 = Math.round(total / PR.monto * 100);
+        box.className = 'opt-nota ' + (pct2 > 100 ? 'err' : pct2 >= 90 ? 'warn' : '');
+        box.innerHTML = `<b>Presupuesto ${PR.anio}: ${mon(PR.monto)}</b>. Ya comprometido: ${mon(PR.comprometido)} (${pct} %) en ${PR.aprobadas} solicitud(es).`
+          + (nuevo > 0 ? `<br>Con este monto quedaría en <b>${mon(total)} (${pct2} %)</b>${pct2 > 100 ? ` · <b>supera el presupuesto por ${mon(total - PR.monto)}</b>` : ` · disponible ${mon(PR.monto - total)}`}.` : '');
+      };
+      inp?.addEventListener('input', pintar); pintar();
+    }
     $('#rech').onclick = e => resolver(false, e.currentTarget);
     if ($('#pinfo')) $('#pinfo').onclick = () => modal({ title: 'Solicitar más información', body: `<p style="margin-top:0">La solicitud queda en <b>Información solicitada</b>: el solicitante recibe un correo con su pregunta y, al responder, vuelve a su bandeja en este mismo paso.</p>
         <div class="field"><label class="req">¿Qué información necesita?</label><textarea class="inp" id="pq" style="min-height:90px" placeholder="Ej.: adjunte el desglose de costos por cuatrimestre"></textarea></div>`,
@@ -1803,8 +1840,9 @@ async function vistaModulo(codigo, tab) {
   const m = S.modulos.find(x => x.codigo === codigo);
   if (!m) { location.hash = '#/'; return; }
   const tabs = [['politica', 'Política y plazos', esRH()], ['formulario', 'Formulario', esAdmin()], ['flujo', 'Flujo de aprobación', esAdmin()],
-                ['responsables', 'Responsables por departamento', esAdmin()], ['textos', 'Textos y mensajes', esAdmin()], ['general', 'General', esAdmin()]]
+                ['textos', 'Textos y mensajes', esAdmin()], ['general', 'General', esAdmin()]]
                .filter(t => t[2]);
+  if (tab === 'responsables') { location.hash = '#/admin/departamentos'; return; }
   if (!tabs.some(t => t[0] === tab)) tab = tabs[0][0];
   const editor = ['formulario', 'flujo', 'textos', 'general'].includes(tab);
   if (editor && (!ED || ED.codigo !== codigo || !ED._sucio)) { ED = JSON.parse(JSON.stringify(m)); ED.textos = ED.textos || {}; ED._sucio = false; }
@@ -1822,7 +1860,7 @@ async function vistaModulo(codigo, tab) {
       try { const { _sucio, ...datos } = ED; await api('rh_admin_guardar_modulo', { p_modulo: datos }); ED._sucio = false; toast('Cambios guardados.', 'ok'); vistaModulo(codigo, tab); }
       catch (err) { toast(err.message, 'err'); }
     });
-    $('#prev').onclick = () => { modal({ title: 'Vista previa · ' + ED.nombre, size: 'lg', body: `${ED.textos.intro ? `<div class="alert a-info">${I.shield}<div class="small">${esc(ED.textos.intro)}</div></div>` : ''}<div class="grid2" id="pv">${ED.formulario.map(f => campoHTML(f, valorAuto(f))).join('')}</div>
+    $('#prev').onclick = () => { PER_CTX = ED.opciones?.periodos || []; modal({ title: 'Vista previa · ' + ED.nombre, size: 'lg', body: `${ED.textos.intro ? `<div class="alert a-info">${I.shield}<div class="small">${esc(ED.textos.intro)}</div></div>` : ''}<div class="grid2" id="pv">${ED.formulario.map(f => campoHTML(f, valorAuto(f))).join('')}</div>
         ${ED.textos.declaracion ? `<label class="chk" style="margin-top:16px"><input type="checkbox"><span><b>Declaración.</b> ${esc(ED.textos.declaracion)}</span></label>` : ''}`, onOpen: el => enlazarForm(el, ED.formulario) }); };
     return ({ formulario: edFormulario, flujo: edFlujo, textos: edTextos, general: edGeneral })[tab]();
   }
@@ -1861,6 +1899,9 @@ async function tabPolitica(m) {
         <button class="btn pri" id="gdias">${I.check} Guardar</button>
         <span class="small ${fd.max_politica ? '' : 'muted'}" style="padding-bottom:10px">${fd.max_politica ? `Vigente: <b>${fd.max_politica} día(s)</b>` : 'Sin límite definido'}</span>
       </div></div>` : ''}
+    ${(m.formulario || []).some(f => f.tipo === 'periodo') ? `<div class="card" style="margin-bottom:18px"><div class="card-h"><h2>Períodos de aplicación</h2><div class="row wrap" style="gap:8px"><button class="btn" id="addanio">${I.plus} Agregar año</button><button class="btn pri" id="gper">${I.check} Guardar períodos</button></div></div>
+      <div class="card-b stack"><p class="small muted" style="margin:0">Solo entre estas fechas la solicitud se tramita de forma <b>normal</b>. Si alguien la envía en otra fecha, queda como <b>fuera de período</b>: debe justificarla, pasa por los pasos de excepción del flujo y el aprobador ve la alerta de excepción.</p>
+        <div id="pers"></div></div></div>` : ''}
     ${m.opciones?.beneficio ? `<div class="card" style="margin-bottom:18px"><div class="card-b row wrap" style="gap:16px;align-items:flex-end">
         <div class="grow" style="min-width:240px"><h3>Presupuesto anual</h3>
           <p class="small muted" style="margin:4px 0 0">Base del indicador de presupuesto en <a href="#/reportes/${esc(m.codigo)}/beneficio">Reportes</a>: se compara con lo aprobado (monto que registra el aprobador final) y lo reembolsado.</p>
@@ -1892,6 +1933,35 @@ async function tabPolitica(m) {
             ${p.vigente ? '' : `<button class="btn sm" data-vig="${p.id}">Hacer vigente</button>`}
             ${p.aceptaciones ? '' : `<button class="btn sm ghost icon" data-del="${p.id}" title="Eliminar">${I.trash}</button>`}</td></tr>`).join('')}
         </tbody></table></div>`}</div></div>`;
+  if ($('#pers')) {
+    const PL = (m.opciones?.periodos || []).map(x => ({ ...x }));
+    const anios = new Set(PL.map(x => x.anio));
+    const pintar = () => {
+      const lista = [...anios].sort();
+      $('#pers').innerHTML = lista.length ? lista.map(a => `<div class="fcard" style="margin-bottom:10px"><div class="row between wrap" style="margin-bottom:8px"><b>${a}</b>
+          <div class="row" style="gap:6px"><button class="btn sm ghost" data-addp="${a}">${I.plus} Agregar período</button><button class="btn sm ghost icon" data-rmanio="${a}" title="Quitar año" style="color:var(--danger)">${I.trash}</button></div></div>
+        ${PL.map((x, k) => [x, k]).filter(([x]) => x.anio === a).map(([x, k]) => `<div class="row wrap" style="gap:8px;margin-top:6px" data-pk="${k}">
+          <input class="inp" data-pp="nombre" value="${esc(x.nombre)}" style="max-width:200px" placeholder="Período 1">
+          <span class="small muted">del</span><input class="inp" type="date" data-pp="desde" value="${esc(x.desde)}" style="max-width:170px">
+          <span class="small muted">al</span><input class="inp" type="date" data-pp="hasta" value="${esc(x.hasta)}" style="max-width:170px">
+          ${x.desde <= hoy() && hoy() <= x.hasta ? '<span class="badge s-aprobada">Abierto hoy</span>' : x.hasta < hoy() ? '<span class="badge s-cancelada">Cerrado</span>' : '<span class="badge s-en_espera">Próximo</span>'}
+          <button class="btn sm ghost icon" data-rmp="${k}" title="Quitar" style="color:var(--danger)">${I.x}</button></div>`).join('') || '<div class="xs muted">Sin períodos en este año.</div>'}</div>`).join('')
+        : '<div class="small muted">No hay períodos definidos: todas las solicitudes se tramitarán como fuera de período. Use <b>Agregar año</b>.</div>';
+    };
+    pintar();
+    $('#pers').oninput = e => { const r = e.target.closest('[data-pk]'); if (r && e.target.dataset.pp) PL[+r.dataset.pk][e.target.dataset.pp] = e.target.value; };
+    $('#pers').onclick = e => {
+      const ap = e.target.closest('[data-addp]'), rp = e.target.closest('[data-rmp]'), ra = e.target.closest('[data-rmanio]');
+      if (ap) { const a = +ap.dataset.addp, n = PL.filter(x => x.anio === a).length + 1; PL.push({ anio: a, nombre: 'Período ' + n, desde: `${a}-01-01`, hasta: `${a}-01-31` }); pintar(); }
+      if (rp) { PL.splice(+rp.dataset.rmp, 1); pintar(); }
+      if (ra) { const a = +ra.dataset.rmanio; for (let k = PL.length - 1; k >= 0; k--) if (PL[k].anio === a) PL.splice(k, 1); anios.delete(a); pintar(); }
+    };
+    $('#addanio').onclick = () => { const a = Math.max(+hoy().slice(0, 4), ...anios) + (anios.size ? 1 : 0);
+      anios.add(a); PL.push({ anio: a, nombre: 'Período 1', desde: `${a}-03-01`, hasta: `${a}-03-31` }, { anio: a, nombre: 'Período 2', desde: `${a}-07-01`, hasta: `${a}-07-31` }); pintar(); };
+    $('#gper').onclick = e => ocupado(e.currentTarget, async () => {
+      try { await api('rh_modulo_periodos', { p_modulo: m.codigo, p_periodos: PL.map(({ nombre, desde, hasta }) => ({ nombre, desde, hasta })) });
+        toast('Períodos guardados.', 'ok'); await cargarBase(); recargar(); } catch (err) { toast(err.message, 'err'); } });
+  }
   if ($('#gpres')) $('#gpres').onclick = e => ocupado(e.currentTarget, async () => {
     try { const v = $('#pres_m').value; await api('rh_modulo_presupuesto', { p_modulo: m.codigo, p_anio: +$('#pres_a').value, p_monto: v === '' ? null : +v });
       toast('Presupuesto guardado.', 'ok'); await cargarBase(true); recargar(); } catch (err) { toast(err.message, 'err'); } });
@@ -2026,13 +2096,23 @@ async function adminAccesos() {
    ===================================================================== */
 async function adminDepartamentos() {
   cargando('departamentos');
-  const deps = await api('rh_admin_departamentos');
-  shell('departamentos', `<div class="page-head"><div><h1>Departamentos</h1><p>Catálogo compartido por todos los trámites y por los usuarios. Quién aprueba en cada departamento se define dentro de cada trámite (pestaña <b>Responsables por departamento</b>).</p></div><button class="btn pri" id="nd">${I.plus} Nuevo departamento</button></div>
-    <div class="card"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Departamento</th><th>Estado</th><th></th></tr></thead><tbody>
-    ${deps.map(d => `<tr><td><b>${esc(d.nombre)}</b></td>
+  const [deps, resp] = await Promise.all([api('rh_admin_departamentos'), api('rh_modulo_responsables', { p_modulo: null })]);
+  const R = Object.fromEntries(resp.map(r => [r.departamento_id, r]));
+  const usan = S.modulos.filter(m => (m.flujo || []).some(p => p.tipo === 'director_departamento'));
+  shell('departamentos', `<div class="page-head"><div><h1>Departamentos y responsables</h1><p>Catálogo compartido por todos los trámites y por los usuarios. El <b>responsable</b> de cada departamento es el mismo para todos los trámites.</p></div>
+      <div class="row wrap"><button class="btn" id="nd">${I.plus} Nuevo departamento</button><button class="btn pri" id="gres">${I.check} Guardar responsables</button></div></div>
+    <div class="alert a-info">${I.info}<div class="small">El responsable aprueba el paso <b>"Responsable del departamento"</b> del flujo ${usan.length ? `(hoy lo usa${usan.length > 1 ? 'n' : ''}: <b>${usan.map(m => esc(nombreCorto(m))).join('</b>, <b>')}</b>)` : '(ningún trámite lo usa por ahora)'}, según el departamento que elija el solicitante. Si pone varios correos separados por coma, cualquiera puede aprobar.</div></div>
+    <div class="card"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Departamento</th><th>Responsable</th><th>Correo(s)</th><th>Estado</th><th></th></tr></thead><tbody>
+    ${deps.map(d => `<tr data-dep="${d.id}" style="${d.activo ? '' : 'opacity:.6'}"><td><b>${esc(d.nombre)}</b></td>
+      <td><input class="inp" data-n value="${esc(R[d.id]?.aprobador_nombre || '')}" placeholder="Ej. Director de Finanzas"></td>
+      <td><input class="inp" data-e type="email" value="${esc(R[d.id]?.aprobador_email || '')}" placeholder="persona@legrand.com" style="${d.activo && usan.length && !R[d.id]?.aprobador_email ? 'border-color:var(--danger)' : ''}"></td>
       <td>${d.activo ? '<span class="badge s-aprobada">Activo</span>' : '<span class="badge s-cancelada">Inactivo</span>'}</td>
       <td style="text-align:right;white-space:nowrap"><button class="btn sm" data-ed="${d.id}">${I.edit} Editar</button> <button class="btn sm ghost icon" data-del="${d.id}" title="Eliminar">${I.trash}</button></td></tr>`).join('')}
     </tbody></table></div></div>`);
+  $('#gres').onclick = e => ocupado(e.currentTarget, async () => {
+    const items = $$('tr[data-dep]').map(tr => ({ departamento_id: +tr.dataset.dep, aprobador_nombre: $('[data-n]', tr).value.trim(), aprobador_email: $('[data-e]', tr).value.trim() }));
+    try { await api('rh_modulo_guardar_responsables', { p_modulo: null, p_items: items }); toast('Responsables guardados para todos los trámites.', 'ok'); adminDepartamentos(); } catch (err) { toast(err.message, 'err'); }
+  });
   const abrir = d => modal({ title: d.id ? 'Editar departamento' : 'Nuevo departamento', body: `<div class="grid2">
       <div class="field span2"><label class="req">Nombre</label><input class="inp" id="dn" value="${esc(d.nombre || '')}"></div>
       <div class="field"><label>Estado</label><select class="inp" id="da"><option value="1" ${d.activo !== false ? 'selected' : ''}>Activo</option><option value="0" ${d.activo === false ? 'selected' : ''}>Inactivo</option></select></div></div>`,
@@ -2043,7 +2123,7 @@ async function adminDepartamentos() {
   $('#nd').onclick = () => abrir({});
   $$('[data-ed]').forEach(b => b.onclick = () => abrir(deps.find(d => d.id === +b.dataset.ed)));
   $$('[data-del]').forEach(b => b.onclick = async () => { const d = deps.find(x => x.id === +b.dataset.del);
-    if (!await confirmar('Eliminar departamento', `¿Eliminar <b>${esc(d.nombre)}</b>? También se borra su responsable en cada trámite. Las solicitudes existentes no se afectan.`, 'Eliminar', 'dan')) return;
+    if (!await confirmar('Eliminar departamento', `¿Eliminar <b>${esc(d.nombre)}</b>? También se borra su responsable. Las solicitudes existentes no se afectan.`, 'Eliminar', 'dan')) return;
     try { await api('rh_admin_eliminar_departamento', { p_id: d.id }); await cargarBase(); adminDepartamentos(); } catch (e) { toast(e.message, 'err'); } });
 }
 
@@ -2133,7 +2213,7 @@ function edFlujo() {
           <div class="field"><span class="lbl">¿Quién aprueba?</span><select class="inp" data-p="tipo">${Object.entries(TIPOS_APROB).map(([k, v]) => `<option value="${k}" ${p.tipo === k ? 'selected' : ''}>${v}</option>`).join('')}</select></div>
           <div class="field"><span class="lbl">¿Cuándo aplica?</span><select class="inp" data-p="condicion"><option value="siempre" ${p.condicion !== 'excepcion' ? 'selected' : ''}>Siempre</option><option value="excepcion" ${p.condicion === 'excepcion' ? 'selected' : ''}>Solo si hay excepción (según las reglas del formulario)</option></select></div>
           ${p.tipo === 'correo' ? `<div class="field span2"><span class="lbl req">Correo(s) del aprobador</span><input class="inp" data-p="correos" value="${esc(p.correos || '')}" placeholder="persona@legrand.com" style="${(p.correos || '').trim() ? '' : 'border-color:var(--danger)'}"><span class="help">Si pone varios (separados por coma), cualquiera de ellos puede aprobar.</span></div>`
-            : `<div class="span2 small muted">${p.tipo === 'jefatura' ? 'Se usa el correo que el solicitante escribe en el campo <span class="kbd">correo_jefatura</span>.' : `Se usa el responsable definido en <a href="#/modulo/${esc(ED.codigo)}/responsables">Responsables por departamento</a> de este trámite, según el departamento elegido.`}</div>`}
+            : `<div class="span2 small muted">${p.tipo === 'jefatura' ? 'Se usa el correo que el solicitante escribe en el campo <span class="kbd">correo_jefatura</span>.' : `Se usa el responsable del departamento elegido, definido en <a href="#/admin/departamentos">Administración → Departamentos</a> (es el mismo para todos los trámites).`}</div>`}
           <div class="span2"><span class="lbl">Datos que el aprobador completa al aprobar</span>
             ${(p.datos || []).map((d, k) => `<div class="row" style="gap:6px;margin-top:6px" data-dk="${k}"><input class="inp grow" data-d="label" value="${esc(d.label)}" placeholder="Etiqueta">
               <select class="inp" data-d="tipo" style="width:120px">${[['numero', 'Número'], ['fecha', 'Fecha'], ['texto', 'Texto'], ['parrafo', 'Párrafo']].map(([v, l]) => `<option value="${v}" ${d.tipo === v ? 'selected' : ''}>${l}</option>`).join('')}</select>
