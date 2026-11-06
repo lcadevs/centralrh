@@ -15,7 +15,7 @@
 const CONFIG = {
   SUPABASE_URL: 'https://iecfgpqnnsxmnmbxnfcp.supabase.co',
   SUPABASE_KEY: 'sb_publishable_Mt2sdPIzEcfbKv15x4-JTQ_Tf6csjiH',
-  VERSION: '1.9'
+  VERSION: '1.9.1'
 };
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -318,7 +318,7 @@ const ESTADOS = {en_aprobacion:'En aprobación', info_solicitada:'Información s
 const ROLES = {admin:'Administrador', rh:'Recursos Humanos', usuario:'Colaborador'};
 const TIPOS_CAMPO = {texto:'Texto corto', parrafo:'Párrafo', correo:'Correo', fecha:'Fecha', numero:'Número', lista:'Lista desplegable',
                      opcion:'Opción única', casillas:'Casillas (varias)', si_no:'Casilla Sí/No', departamento:'Departamento (catálogo)', dias:'Días de la semana', archivo:'Archivos adjuntos (PDF/JPG/PNG)', periodo:'Período de aplicación (según fechas que define RH)'};
-const TIPOS_APROB = {jefatura:'Jefatura inmediata (correo del formulario)', director_departamento:'Responsable del departamento (Administración → Departamentos)', correo:'Correo(s) específico(s)'};
+const TIPOS_APROB = {jefatura:'Jefatura inmediata (correo del formulario)', director_departamento:'Responsable del departamento (Recursos Humanos → Departamentos y responsables)', correo:'Correo(s) específico(s)'};
 const dur = horas => { const x = +horas; if (horas == null || isNaN(x)) return '—'; if (x < 1) return Math.max(1, Math.round(x * 60)) + ' min'; if (x < 24) return (Math.round(x * 10) / 10) + ' h'; const d = Math.round(x / 24 * 10) / 10; return d + (d === 1 ? ' día' : ' días'); };
 const diasDesde = d => d ? Math.floor((Date.now() - new Date(d).getTime()) / 86400000) : 0;
 const badge = e => `<span class="badge s-${esc(e)}">${esc(ESTADOS[e] || e)}</span>`;
@@ -661,12 +661,12 @@ function shell(activo, contenido) {
       ${esRH() ? `<div class="sep"></div><div class="cap">Recursos Humanos</div>
         ${a('#/todas', 'todas', I.list, 'Todas las solicitudes', r.pdf_pendiente)}
         ${a('#/reportes', 'reportes', I.chart, 'Reportes y KPIs')}
+        ${a('#/departamentos', 'departamentos', I.build, 'Departamentos y responsables')}
         <div class="sep"></div><div class="cap">Trámites · configuración</div>
         ${S.modulos.map(m => a('#/modulo/' + m.codigo, 'mod_' + m.codigo, I[m.icono] || I.doc, esc(nombreCorto(m)), pendientesModulo(m))).join('')}` : ''}
       ${esAdmin() ? `<div class="sep"></div><div class="cap">Administración general</div>
         ${a('#/admin/usuarios', 'usuarios', I.users, 'Usuarios')}
         ${a('#/admin/accesos', 'accesos', I.key, 'Solicitudes de acceso', r.accesos)}
-        ${a('#/admin/departamentos', 'departamentos', I.build, 'Departamentos')}
         ${a('#/admin/config', 'config', I.gear, 'Configuración general')}
         ${a('#/admin/correos', 'correos', I.mail, 'Bitácora de correos')}` : ''}
     </nav></aside>
@@ -714,6 +714,8 @@ async function router() {
     if (a === 'reportes' && esRH()) return vistaReportes(b, h[2]);
     if (a === 'solicitud') return vistaDetalle(+b);
     if (a === 'admin' && b === 'modulos' && esAdmin()) { location.hash = '#/modulo/' + (S.modulos[0]?.codigo || '') + '/formulario'; return; }
+    if (a === 'departamentos' && esRH()) return adminDepartamentos();
+    if (a === 'admin' && b === 'departamentos' && esRH()) { location.hash = '#/departamentos'; return; }
     if (a === 'admin' && esAdmin()) return ({ usuarios: adminUsuarios, accesos: adminAccesos, departamentos: adminDepartamentos,
       config: adminConfig, correos: adminCorreos }[b] || adminUsuarios)();
     location.hash = '#/';
@@ -739,7 +741,7 @@ async function vistaInicio() {
     } catch {}
     S.modulos.forEach(m => { const mal = (m.flujo || []).filter(p => p.tipo === 'correo' && !(p.correos || '').trim()); if (mal.length) avisos += `<div class="alert a-warn">${I.warn}<div><b>${esc(m.nombre)}:</b> el flujo tiene pasos sin aprobador (${mal.map(p => esc(p.nombre)).join(', ')}). <a href="#/modulo/${esc(m.codigo)}/flujo">Configurar flujo</a></div></div>`; });
     if (r.sin_responsable) { const md = S.modulos.find(m => (m.flujo || []).some(p => p.tipo === 'director_departamento'));
-      if (md) avisos += `<div class="alert a-warn">${I.warn}<div>Hay <b>${r.sin_responsable}</b> departamento(s) sin responsable para aprobar excepciones. Si alguien de esos departamentos pide una excepción, no podrá enviarla. <a href="#/admin/departamentos">Asignar responsables</a></div></div>`; }
+      if (md) avisos += `<div class="alert a-warn">${I.warn}<div>Hay <b>${r.sin_responsable}</b> departamento(s) sin responsable para aprobar excepciones. Si alguien de esos departamentos pide una excepción, no podrá enviarla. <a href="#/departamentos">Asignar responsables</a></div></div>`; }
   }
   if (esRH()) S.modulos.filter(m => m.activo && !m.politica).forEach(m => { avisos += `<div class="alert a-warn">${I.book}<div><b>${esc(m.nombre)}:</b> no hay política vigente publicada. Los colaboradores no podrán abrirla antes de aceptar la declaración. <a href="#/modulo/${esc(m.codigo)}/politica">Publicar política</a></div></div>`; });
   if (esRH()) S.modulos.filter(m => m.activo && (m.formulario || []).some(f => f.tipo === 'periodo') && !(m.opciones?.periodos || []).some(x => x.hasta >= hoy())).forEach(m => {
@@ -1842,7 +1844,7 @@ async function vistaModulo(codigo, tab) {
   const tabs = [['politica', 'Política y plazos', esRH()], ['formulario', 'Formulario', esAdmin()], ['flujo', 'Flujo de aprobación', esAdmin()],
                 ['textos', 'Textos y mensajes', esAdmin()], ['general', 'General', esAdmin()]]
                .filter(t => t[2]);
-  if (tab === 'responsables') { location.hash = '#/admin/departamentos'; return; }
+  if (tab === 'responsables') { location.hash = '#/departamentos'; return; }
   if (!tabs.some(t => t[0] === tab)) tab = tabs[0][0];
   const editor = ['formulario', 'flujo', 'textos', 'general'].includes(tab);
   if (editor && (!ED || ED.codigo !== codigo || !ED._sucio)) { ED = JSON.parse(JSON.stringify(m)); ED.textos = ED.textos || {}; ED._sucio = false; }
@@ -1880,7 +1882,7 @@ async function tabResponsables(m) {
       <td><input class="inp" data-n value="${esc(r.aprobador_nombre)}" placeholder="Ej. Director de Finanzas"></td>
       <td><input class="inp" data-e type="email" value="${esc(r.aprobador_email)}" placeholder="persona@legrand.com" style="${r.activo && pasos.length && !r.aprobador_email ? 'border-color:var(--danger)' : ''}"></td></tr>`).join('')}
     </tbody></table></div></div>
-    <p class="xs muted" style="margin-top:10px">Para agregar o quitar departamentos use <b>Administración general → Departamentos</b>; el catálogo es el mismo para todos los trámites.</p>`;
+    <p class="xs muted" style="margin-top:10px">Para agregar o quitar departamentos use <b>Recursos Humanos → Departamentos y responsables</b>; el catálogo es el mismo para todos los trámites.</p>`;
   $('#gres').onclick = e => ocupado(e.currentTarget, async () => {
     const items = $$('tr[data-dep]').map(tr => ({ departamento_id: +tr.dataset.dep, aprobador_nombre: $('[data-n]', tr).value.trim(), aprobador_email: $('[data-e]', tr).value.trim() }));
     try { await api('rh_modulo_guardar_responsables', { p_modulo: m.codigo, p_items: items }); toast('Responsables guardados.', 'ok'); router(); } catch (err) { toast(err.message, 'err'); }
@@ -2213,7 +2215,7 @@ function edFlujo() {
           <div class="field"><span class="lbl">¿Quién aprueba?</span><select class="inp" data-p="tipo">${Object.entries(TIPOS_APROB).map(([k, v]) => `<option value="${k}" ${p.tipo === k ? 'selected' : ''}>${v}</option>`).join('')}</select></div>
           <div class="field"><span class="lbl">¿Cuándo aplica?</span><select class="inp" data-p="condicion"><option value="siempre" ${p.condicion !== 'excepcion' ? 'selected' : ''}>Siempre</option><option value="excepcion" ${p.condicion === 'excepcion' ? 'selected' : ''}>Solo si hay excepción (según las reglas del formulario)</option></select></div>
           ${p.tipo === 'correo' ? `<div class="field span2"><span class="lbl req">Correo(s) del aprobador</span><input class="inp" data-p="correos" value="${esc(p.correos || '')}" placeholder="persona@legrand.com" style="${(p.correos || '').trim() ? '' : 'border-color:var(--danger)'}"><span class="help">Si pone varios (separados por coma), cualquiera de ellos puede aprobar.</span></div>`
-            : `<div class="span2 small muted">${p.tipo === 'jefatura' ? 'Se usa el correo que el solicitante escribe en el campo <span class="kbd">correo_jefatura</span>.' : `Se usa el responsable del departamento elegido, definido en <a href="#/admin/departamentos">Administración → Departamentos</a> (es el mismo para todos los trámites).`}</div>`}
+            : `<div class="span2 small muted">${p.tipo === 'jefatura' ? 'Se usa el correo que el solicitante escribe en el campo <span class="kbd">correo_jefatura</span>.' : `Se usa el responsable del departamento elegido, definido en <a href="#/departamentos">Recursos Humanos → Departamentos y responsables</a> (es el mismo para todos los trámites).`}</div>`}
           <div class="span2"><span class="lbl">Datos que el aprobador completa al aprobar</span>
             ${(p.datos || []).map((d, k) => `<div class="row" style="gap:6px;margin-top:6px" data-dk="${k}"><input class="inp grow" data-d="label" value="${esc(d.label)}" placeholder="Etiqueta">
               <select class="inp" data-d="tipo" style="width:120px">${[['numero', 'Número'], ['fecha', 'Fecha'], ['texto', 'Texto'], ['parrafo', 'Párrafo']].map(([v, l]) => `<option value="${v}" ${d.tipo === v ? 'selected' : ''}>${l}</option>`).join('')}</select>
