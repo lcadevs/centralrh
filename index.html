@@ -15,7 +15,7 @@
 const CONFIG = {
   SUPABASE_URL: 'https://iecfgpqnnsxmnmbxnfcp.supabase.co',
   SUPABASE_KEY: 'sb_publishable_Mt2sdPIzEcfbKv15x4-JTQ_Tf6csjiH',
-  VERSION: '1.9.1'
+  VERSION: '1.10'
 };
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -2338,11 +2338,11 @@ async function adminConfig() {
       </div></div>
     <div class="card"><div class="card-h"><h2>Datos de prueba</h2><span class="small" id="dpest">${dp.solicitudes ? `<span class="tag exc">${dp.solicitudes} solicitudes de prueba cargadas</span>` : '<span class="muted">No hay datos de prueba</span>'}</span></div>
       <div class="card-b stack">
-        <p class="small" style="margin:0">Carga <b>10 solicitudes de ejemplo</b> del trámite de Teletrabajo para conocer la app y ver los reportes: aprobadas, una rechazada, varias en aprobación (una ya apta para recordatorio), excepciones, una modificada (versión 2), una cancelada y recordatorios. Usan folios <span class="kbd">PRUEBA-01…10</span> (no gastan la numeración real), personas ficticias <span class="kbd">prueba.…@legrand.com</span> y <b>no envían correos</b> al cargarse.</p>
+        <p class="small" style="margin:0">Carga <b>23 solicitudes de ejemplo</b> para mostrar todas las vistas: <b>12 de Teletrabajo</b> (folios <span class="kbd">PRUEBA-01…12</span>) y <b>11 de Apoyo Educativo</b> (<span class="kbd">PRUEBA-AE-01…11</span>), en todos los estados: aprobadas, rechazadas, canceladas, en aprobación en distintos pasos, con excepción, fuera de período, modificada (versión 2), con información solicitada, con adjuntos, reembolsos, un beneficio finalizado por salida y recordatorios. <b>Todos los pasos de aprobación quedan asignados a usted</b> (las pendientes aparecen en <b>Por aprobar</b>) y algunas las envía usted mismo, para ver la vista del solicitante (responder información, modificar una rechazada, ver su beneficio). Usan personas ficticias <span class="kbd">prueba.…@legrand.com</span>, no gastan la numeración real y <b>no envían correos</b> al cargarse. Si Apoyo Educativo no tiene presupuesto para este año, se define uno de US$15 000 para que se vea la comparación.</p>
         <div class="alert a-info" style="margin:0">${I.info}<div class="small">Si desde las solicitudes de prueba pulsa <b>Recordar</b>, se intenta enviar un correo a esas direcciones ficticias. Para practicar aprobaciones sin molestar a nadie, active el <b>Modo prueba</b> (arriba): los códigos de <span class="kbd">prueba.…</span> le llegarán a usted.</div></div>
         <div class="row wrap"><button class="btn" id="dpcargar" ${dp.solicitudes ? 'disabled' : ''}>${I.plus} Cargar datos de prueba</button>
           <button class="btn dan" id="dpborrar" ${dp.solicitudes || dp.usuarios ? '' : 'disabled'}>${I.trash} Borrar datos de prueba</button></div>
-        <p class="xs muted" style="margin:0">"Borrar" elimina solo lo marcado como prueba (solicitudes PRUEBA-xx con sus aprobaciones, bitácora, tiempos y recordatorios, y las personas ficticias). No toca solicitudes ni usuarios reales.</p>
+        <p class="xs muted" style="margin:0">"Borrar" elimina solo lo marcado como prueba (solicitudes PRUEBA-xx y PRUEBA-AE-xx con sus aprobaciones, bitácora, tiempos, recordatorios, adjuntos y reembolsos, y las personas ficticias). No toca solicitudes ni usuarios reales.</p>
       </div></div></div>`);
   $('#cpy').onclick = () => { navigator.clipboard?.writeText($('[data-c=pa_secreto]').value); toast('Secreto copiado.', 'ok'); };
   $('#gen').onclick = () => { const a = new Uint8Array(18); crypto.getRandomValues(a); $('[data-c=pa_secreto]').value = [...a].map(x => x.toString(16).padStart(2, '0')).join(''); toast('Secreto nuevo generado: guarde y actualícelo en Power Automate.'); };
@@ -2377,10 +2377,10 @@ async function adminConfig() {
       catch (err) { toast(err.message, 'err'); } });
   };
   $('#dpcargar').onclick = e => ocupado(e.currentTarget, async () => {
-    try { const r = await api('rh_admin_datos_prueba', { p_accion: 'cargar' }); toast(`Se cargaron ${r.solicitudes} solicitudes de prueba. Véalas en Todas las solicitudes y en Reportes.`, 'ok'); await cargarBase(); adminConfig(); }
+    try { const r = await api('rh_admin_datos_prueba', { p_accion: 'cargar' }); toast(`Se cargaron ${r.solicitudes} solicitudes de prueba (${r.teletrabajo} de Teletrabajo y ${r.apoyo_educativo || 0} de Apoyo Educativo). Las pendientes están en Por aprobar.`, 'ok'); await cargarBase(); adminConfig(); }
     catch (err) { toast(err.message, 'err'); } });
   $('#dpborrar').onclick = async e => {
-    if (!await confirmar('Borrar datos de prueba', 'Se eliminarán las solicitudes <b>PRUEBA-xx</b> (con sus aprobaciones, bitácora, tiempos y recordatorios) y las personas ficticias <b>prueba.…@legrand.com</b>. Las solicitudes y usuarios reales no se tocan.', 'Borrar', 'dan')) return;
+    if (!await confirmar('Borrar datos de prueba', 'Se eliminarán las solicitudes <b>PRUEBA-xx</b> y <b>PRUEBA-AE-xx</b> (con sus aprobaciones, bitácora, tiempos, recordatorios, adjuntos y reembolsos) y las personas ficticias <b>prueba.…@legrand.com</b>. Las solicitudes y usuarios reales no se tocan.', 'Borrar', 'dan')) return;
     ocupado(e.target.closest('button'), async () => {
       try { const r = await api('rh_admin_datos_prueba', { p_accion: 'borrar' }); toast(`Datos de prueba borrados: ${r.solicitudes} solicitudes y ${r.usuarios} personas.`, 'ok'); adminConfig(); }
       catch (err) { toast(err.message, 'err'); } });
