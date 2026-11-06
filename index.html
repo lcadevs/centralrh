@@ -2,6 +2,10 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
+<!-- v1.7 Seguridad (CSP): la página solo puede hablar con Supabase y cargar librerías verificadas de jsDelivr.
+     Si cambia SUPABASE_URL abajo, cambie también la dirección que aparece aquí en connect-src. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src https://iecfgpqnnsxmnmbxnfcp.supabase.co https://cdn.jsdelivr.net; worker-src blob:; frame-src blob:; object-src blob:; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Central de Solicitudes RH</title>
 <script>
@@ -11,13 +15,13 @@
 const CONFIG = {
   SUPABASE_URL: 'https://iecfgpqnnsxmnmbxnfcp.supabase.co',
   SUPABASE_KEY: 'sb_publishable_Mt2sdPIzEcfbKv15x4-JTQ_Tf6csjiH',
-  VERSION: '1.1'
+  VERSION: '1.7'
 };
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" integrity="sha384-JcnsjUPPylna1s1fvi1u12X5qjY5OL56iySh75FdtrwhO/SWXgMjoVqcKyIIWOLk" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <style>
 :root{
   --pri:#1F3A5F; --pri-600:#2A4A73; --pri-700:#162B47; --pri-50:#E9EEF5; --pri-100:#D2DCE8;
@@ -145,7 +149,15 @@ table.tbl{width:100%;border-collapse:collapse;font-size:14px}
 .s-rechazada,.s-rechazado{background:var(--danger-50);color:var(--danger)}
 .s-cancelada,.s-omitido,.s-en_espera{background:var(--gris-50);color:var(--gris)}
 .tag{display:inline-block;border-radius:6px;padding:2px 8px;font-size:12px;font-weight:600;background:var(--gris-50);color:var(--gris)}
-.tag.adm{background:var(--pri-50);color:var(--pri)} .tag.rh{background:var(--warn-50);color:#6E5418} .tag.exc{background:var(--warn-50);color:#6E5418}
+.tag.adm{background:var(--pri-50);color:var(--pri)} .tag.rh{background:var(--warn-50);color:#6E5418} .tag.exc{background:#FDECEC;color:var(--danger);font-weight:700;border:1px solid #F0C4C5} .tag.prb{background:var(--warn-50);color:#6E5418}
+.exc-alerta{border:2px solid var(--danger);background:#FDECEC;border-radius:14px;padding:14px 18px;margin-bottom:18px;display:flex;gap:14px;align-items:flex-start;box-shadow:0 0 0 4px rgba(166,61,64,.08)}
+.exc-alerta .ic{width:40px;height:40px;border-radius:50%;background:var(--danger);color:#fff;display:grid;place-items:center;flex:none}
+.exc-alerta .ic svg{width:22px;height:22px}
+.exc-alerta .t{color:var(--danger);font-weight:800;font-size:16px;letter-spacing:.02em;text-transform:uppercase}
+.exc-alerta dl{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;margin:8px 0 0;font-size:14px}
+.exc-alerta dt{font-weight:700;color:var(--ink-2)} .exc-alerta dd{margin:0}
+@keyframes pulso{0%,100%{box-shadow:0 0 0 4px rgba(166,61,64,.08)}50%{box-shadow:0 0 0 8px rgba(166,61,64,.18)}}
+.exc-alerta.pulso{animation:pulso 1.6s ease-in-out 3}
 .empty{padding:40px 20px;text-align:center;color:var(--ink-3)}
 .empty svg{width:40px;height:40px;opacity:.5;margin-bottom:8px}
 .mini-steps{display:flex;gap:3px;margin-top:6px}
@@ -720,7 +732,7 @@ async function vistaInicio() {
     `<a class="tile t-pri" href="#/mis"><div class="n">${r.mis_abiertas || 0}</div><div class="t">Mis solicitudes en curso</div></a>`,
     esRH() ? `<a class="tile t-gris" href="#/todas"><div class="n">${r.en_curso || 0}</div><div class="t">Solicitudes en aprobación (todas)</div></a>` : '',
     esAdmin() && r.accesos ? `<a class="tile t-danger" href="#/admin/accesos"><div class="n">${r.accesos}</div><div class="t">Solicitudes de acceso</div></a>` : '',
-    esRH() && r.pdf_pendiente ? `<a class="tile t-danger" href="#/todas"><div class="n">${r.pdf_pendiente}</div><div class="t">Aprobadas sin PDF enviado</div></a>` : ''
+    esRH() && r.pdf_pendiente ? `<a class="tile t-danger" href="#/todas"><div class="n">${r.pdf_pendiente}</div><div class="t">Aprobadas sin aviso enviado</div></a>` : ''
   ].join('');
   shell('inicio', `
     <div class="page-head"><div><h1>Hola, ${esc((S.user.nombre || '').split(' ')[0] || 'bienvenido')}</h1><p>¿Qué necesita gestionar hoy?</p></div></div>
@@ -893,12 +905,25 @@ async function abrirPoliticaArchivo(id, r, alAbrir) {
 }
 /* Conversión al publicar: PDF → una imagen JPG por página (pdf.js, se carga solo cuando RH publica) */
 const POL_ANCHO = 1240;   // 1240 px ≈ A4 a 150 dpi: nítido y liviano
+/* v1.7: librerías externas con huella SRI (si alguien altera el archivo en el CDN, el navegador se niega a ejecutarlo) */
+const LIBS = {
+  pdfjs:       { url: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js',        sri: 'sha384-/1qUCSGwTur9vjf/z9lmu/eCUYbpOTgSjmpbMQZ1/CtX2v/WcAIKqRv+U1DUCG6e' },
+  pdfjsWorker: { url: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js', sri: 'sha384-SnzOobpRMLXZ52iJvZm/C0fYw0OQemTXzTjIsdsfMcrCtCEe9qgzxTd3RSklO5x2' },
+  xlsx:        { url: 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js',           sri: 'sha384-vtjasyidUo0kW94K5MXDXntzOJpQgBKXmE7e2Ga4LG0skTTLeBi97eFAXsqewJjw' }
+};
+function cargarScript(lib, msj) {
+  return new Promise((ok, mal) => { const sc = document.createElement('script');
+    sc.src = lib.url; sc.integrity = lib.sri; sc.crossOrigin = 'anonymous'; sc.referrerPolicy = 'no-referrer';
+    sc.onload = ok; sc.onerror = () => mal(new Error(msj)); document.head.appendChild(sc); });
+}
 async function cargarPdfJs() {
   if (window.pdfjsLib) return window.pdfjsLib;
-  await new Promise((ok, mal) => { const sc = document.createElement('script');
-    sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
-    sc.onload = ok; sc.onerror = () => mal(new Error('No se pudo cargar el convertidor de PDF. Revise su conexión.')); document.head.appendChild(sc); });
-  window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  await cargarScript(LIBS.pdfjs, 'No se pudo cargar el convertidor de PDF. Revise su conexión.');
+  // El worker se descarga verificando su huella (SRI) y se ejecuta desde un blob local
+  const wr = await fetch(LIBS.pdfjsWorker.url, { integrity: LIBS.pdfjsWorker.sri, mode: 'cors', credentials: 'omit', referrerPolicy: 'no-referrer' })
+    .catch(() => { throw new Error('No se pudo verificar el convertidor de PDF. Revise su conexión.'); });
+  if (!wr.ok) throw new Error('No se pudo cargar el convertidor de PDF.');
+  window.pdfjsLib.GlobalWorkerOptions.workerSrc = URL.createObjectURL(new Blob([await wr.text()], { type: 'text/javascript' }));
   return window.pdfjsLib;
 }
 async function fuentesDePolitica(files) {
@@ -906,7 +931,7 @@ async function fuentesDePolitica(files) {
   for (const f of files) {
     if (/\.pdf$/i.test(f.name) || f.type === 'application/pdf') {
       const lib = await cargarPdfJs();
-      const doc = await lib.getDocument({ data: new Uint8Array(await f.arrayBuffer()) }).promise;
+      const doc = await lib.getDocument({ data: new Uint8Array(await f.arrayBuffer()), isEvalSupported: false }).promise;
       for (let i = 1; i <= doc.numPages; i++) fuentes.push({ doc, i });
     } else if (/^image\/(jpeg|png)$/.test(f.type) || /\.(jpe?g|png)$/i.test(f.name)) fuentes.push({ file: f });
     else throw new Error(`"${f.name}" no es PDF, JPG ni PNG. Si la política está en Word, ábrala y use Archivo → Guardar como → PDF.`);
@@ -1003,11 +1028,11 @@ function tablaSolicitudes(rows, opts = {}) {
   if (!rows.length) return `<div class="empty">${I.inbox}<div>${esc(opts.vacio || 'No hay solicitudes.')}</div></div>`;
   return `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Folio</th>${opts.solicitante ? '<th>Solicitante</th>' : '<th>Trámite</th>'}<th>Enviada</th><th>Estado</th><th>${opts.extra || 'Paso actual'}</th></tr></thead><tbody>
     ${rows.map(s => `<tr class="click" data-id="${s.id}">
-      <td><b>${esc(s.folio)}</b>${s.es_prueba ? ' <span class="tag exc">Prueba</span>' : ''}${s.version > 1 ? ` <span class="tag">v${s.version}</span>` : ''}${s.excepcion ? ' <span class="tag exc">Excepción</span>' : ''}</td>
+      <td><b>${esc(s.folio)}</b>${s.es_prueba ? ' <span class="tag prb">Prueba</span>' : ''}${s.version > 1 ? ` <span class="tag">v${s.version}</span>` : ''}${s.excepcion ? ' <span class="tag exc">Excepción</span>' : ''}</td>
       ${opts.solicitante ? `<td>${esc(s.solicitante_nombre)}<div class="xs muted">${esc(s.departamento || '')}</div></td>` : `<td>${esc(s.modulo_nombre)}</td>`}
       <td class="small">${fmt(s.creado_en)}</td>
       <td>${badge(s.estado)}<div class="mini-steps">${(s.pasos || []).map(p => `<i class="${p.estado}" title="${esc(p.paso)}: ${esc(ESTADOS[p.estado])}"></i>`).join('')}</div></td>
-      <td class="small">${opts.celda ? opts.celda(s) : s.paso_actual ? `${esc(s.paso_actual.paso)}<div class="xs muted">${esc((s.paso_actual.aprobadores || []).join(', '))}</div><div class="xs" style="font-weight:600;color:${diasDesde(s.paso_actual.desde) >= (s.dias_recordatorio || 6) ? 'var(--danger)' : 'var(--ink-3)'}">esperando ${dur((Date.now() - new Date(s.paso_actual.desde)) / 3600000)}</div>` : s.estado === 'aprobada' ? (s.pdf_enviado_en ? `PDF enviado ${fmtD(s.pdf_enviado_en)}` : '<span style="color:var(--danger);font-weight:700">PDF sin enviar</span>') : '—'}</td>
+      <td class="small">${opts.celda ? opts.celda(s) : s.paso_actual ? `${esc(s.paso_actual.paso)}<div class="xs muted">${esc((s.paso_actual.aprobadores || []).join(', '))}</div><div class="xs" style="font-weight:600;color:${diasDesde(s.paso_actual.desde) >= (s.dias_recordatorio || 6) ? 'var(--danger)' : 'var(--ink-3)'}">esperando ${dur((Date.now() - new Date(s.paso_actual.desde)) / 3600000)}</div>` : s.estado === 'aprobada' ? (s.pdf_enviado_en ? `Aviso enviado ${fmtD(s.pdf_enviado_en)}` : '<span style="color:var(--danger);font-weight:700">Aviso sin enviar</span>') : '—'}</td>
     </tr>`).join('')}</tbody></table></div>`;
 }
 const clicFilas = () => $$('tr.click[data-id]').forEach(tr => tr.onclick = () => location.hash = '#/solicitud/' + tr.dataset.id);
@@ -1048,8 +1073,10 @@ async function vistaTodas() {
   if (f.texto) { const i = $('#ft'); i.focus(); i.setSelectionRange(i.value.length, i.value.length); }
   $('#csv').onclick = () => {
     const cols = ['folio', 'modulo_nombre', 'solicitante_nombre', 'solicitante_email', 'departamento', 'estado', 'excepcion', 'creado_en', 'finalizado_en', 'pdf_enviado_en'];
-    const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    // v1.7: un texto que empieza con = + - @ se neutraliza para que Excel no lo ejecute como fórmula
+    const q = v => { let t = String(v ?? ''); if (/^[=+\-@\t\r]/.test(t)) t = "'" + t; return `"${t.replace(/"/g, '""')}"`; };
     const csv = '﻿' + [cols.join(';'), ...rows.map(r => cols.map(c => q(c === 'estado' ? ESTADOS[r[c]] : c.endsWith('_en') ? (r[c] ? fmt(r[c]) : '') : r[c])).join(';'))].join('\n');
+    api('rh_registrar_exportacion', { p_tipo: 'csv', p_filas: rows.length, p_detalle: `Todas las solicitudes · texto: ${f.texto || '—'} · estado: ${f.estado || 'todos'} · trámite: ${f.modulo || 'todos'}` }).catch(() => {});
     const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = 'solicitudes_rh.csv'; a.click();
   };
 }
@@ -1141,8 +1168,10 @@ async function vistaReportes(tab) {
         <tr><td><b>Aprobadores</b></td><td class="small">Ranking de tiempos de respuesta y pendientes.</td></tr>
         <tr><td><b>Resumen</b></td><td class="small">Los KPIs del periodo y los filtros usados.</td></tr>
       </tbody></table>
-      <div><button class="btn pri" id="xls">${I.pdf} Descargar Excel</button> <span class="xs muted">No incluye firmas (imágenes).</span></div>
-    </div></div>`;
+      <div><button class="btn pri" id="xls">${I.pdf} Descargar Excel</button> <span class="xs muted">No incluye firmas (imágenes). Cada descarga queda registrada.</span></div>
+    </div></div>
+    <div class="card" style="margin-top:16px"><div class="card-h"><h2>Historial de descargas</h2><span class="xs muted">Últimas 100 · quién descargó datos de RH y cuándo</span></div>
+      <div class="card-b" id="hexp"><span class="muted small">Cargando…</span></div></div>`;
   }
   const avisoPrueba = T.prueba ? `<div class="alert a-info">${I.info}<div class="small">Este periodo incluye <b>${T.prueba} solicitudes de prueba</b> (PRUEBA-xx). Se pueden borrar en <a href="#/admin/config">Configuración general</a>.</div></div>` : '';
   shell('reportes', `<div class="page-head"><div><h1>Reportes y KPIs</h1><p>Indicadores de solicitudes y tiempos de aprobación.</p></div></div>${filtros}${avisoPrueba}${tabs}${cuerpo}`);
@@ -1153,12 +1182,22 @@ async function vistaReportes(tab) {
     guardarF({ modulo: $('#rmod').value, desde: d, hasta: hs }); });
   $$('[data-recp]').forEach(b => b.onclick = () => ocupado(b, async () => {
     try { const r = await api('rh_recordar', { p_aprobacion_id: +b.dataset.recp }); toast('Recordatorio enviado a ' + r.para.join(', '), 'ok'); vistaReportes(tab); } catch (err) { toast(err.message, 'err'); } }));
-  if ($('#xls')) $('#xls').onclick = e => ocupado(e.currentTarget, async () => { try { await descargarExcel(F, R); } catch (err) { toast(err.message, 'err'); } });
+  if ($('#xls')) $('#xls').onclick = e => ocupado(e.currentTarget, async () => { try { await descargarExcel(F, R); historialExport(); } catch (err) { toast(err.message, 'err'); } });
+  if ($('#hexp')) historialExport();
+}
+async function historialExport() {
+  const box = $('#hexp'); if (!box) return;
+  try { const L = await api('rh_exportaciones_lista');
+    box.innerHTML = L.length ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Fecha</th><th>Persona</th><th>Tipo</th><th>Filtro</th><th class="num">Solicitudes</th></tr></thead><tbody>${L.map(x => `<tr>
+        <td class="small">${fmt(x.creado_en)}</td><td><b>${esc(x.usuario_nombre || x.usuario_email)}</b><div class="xs muted">${esc(x.usuario_email)} · ${esc(ROLES[x.rol] || x.rol)}</div></td>
+        <td>${x.tipo === 'csv' ? 'CSV (lista)' : 'Excel'}</td>
+        <td class="small">${x.tipo === 'csv' ? esc(x.detalle) : `${esc(x.modulo || 'Todos los trámites')} · ${esc(x.desde || 'inicio')} a ${esc(x.hasta || 'hoy')}`}</td>
+        <td class="num">${x.filas}</td></tr>`).join('')}</tbody></table></div>` : '<span class="muted small">Todavía no hay descargas registradas.</span>';
+  } catch (err) { box.innerHTML = `<span class="small" style="color:var(--danger)">${esc(err.message)}</span>`; }
 }
 async function cargarXlsx() {
   if (window.XLSX) return window.XLSX;
-  await new Promise((ok, mal) => { const sc = document.createElement('script'); sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
-    sc.onload = ok; sc.onerror = () => mal(new Error('No se pudo cargar el generador de Excel. Revise su conexión.')); document.head.appendChild(sc); });
+  await cargarScript(LIBS.xlsx, 'No se pudo cargar el generador de Excel. Revise su conexión.');
   return window.XLSX;
 }
 async function descargarExcel(F, R) {
@@ -1181,7 +1220,7 @@ async function descargarExcel(F, R) {
     const pa = (s.aprobaciones || []).find(a => a.estado === 'pendiente');
     Object.assign(fila, { 'Paso actual': pa ? pa.paso : '', 'Aprobador actual': pa ? pa.aprobadores.join(', ') : '', 'Esperando desde': pa ? D(pa.asignado_en) : null,
       'Días esperando': pa ? Math.round((Date.now() - new Date(pa.asignado_en)) / 864e5 * 10) / 10 : null, 'Recordatorios': s.recordatorios,
-      'Motivo de rechazo / cancelación': s.motivo_rechazo || '', 'PDF enviado el': D(s.pdf_enviado_en), 'Envíos de PDF': s.pdf_envios });
+      'Motivo de rechazo / cancelación': s.motivo_rechazo || '', 'Aviso de aprobación enviado el': D(s.pdf_enviado_en), 'Avisos enviados': s.pdf_envios });
     return fila;
   });
   const hojaAp = [];
@@ -1258,26 +1297,36 @@ async function vistaDetalle(id) {
             : P.recordar_desde ? `<span class="xs muted">Podrá enviar un recordatorio a partir del ${fmt(P.recordar_desde)} (${P.dias_recordatorio} días sin respuesta).</span>` : '') : ''}
       </div>` : ''}
     </li>`).join('');
-  const panelAprob = yoAprob ? `<div class="card" style="border:2px solid var(--warn);margin-bottom:20px" id="panel-aprob">
-      <div class="card-h" style="background:var(--warn-50);border-radius:14px 14px 0 0"><h2>Su decisión · ${esc(yoAprob.paso)}</h2>${yoAprob.es_final ? '<span class="tag adm">Aprobación final</span>' : ''}</div>
+  const kd = ((s.formulario || []).find(f => f.tipo === 'dias') || {}).key || 'dias';
+  const alertaExc = s.excepcion ? `<div class="exc-alerta ${yoAprob ? 'pulso' : ''}"><div class="ic">${I.warn}</div><div class="grow">
+      <div class="t">Excepción a la política</div>
+      <div class="small" style="margin-top:2px">Esta solicitud <b>no cumple la política vigente</b>${yoAprob ? ' y requiere su aprobación expresa como excepción' : ''}.</div>
+      <dl><dt>Causa</dt><dd>${esc(s.datos[kd + '_excepcion_causa'] || '—')}</dd><dt>Motivo</dt><dd>${esc(s.datos[kd + '_excepcion_motivo'] || '—')}</dd>
+        <dt>Detalle</dt><dd style="white-space:pre-wrap">${esc(s.datos[kd + '_excepcion_detalle'] || '—')}</dd></dl></div></div>` : '';
+  const pasoUnif = yoAprob && yoAprob.paso.includes(' + ');
+  const panelAprob = yoAprob ? `<div class="card" style="border:2px solid ${s.excepcion ? 'var(--danger)' : 'var(--warn)'};margin-bottom:20px" id="panel-aprob">
+      <div class="card-h" style="background:${s.excepcion ? '#FDECEC' : 'var(--warn-50)'};border-radius:14px 14px 0 0"><h2>Su decisión · ${esc(yoAprob.paso)}</h2><div class="row wrap" style="gap:6px">${s.excepcion ? '<span class="tag exc">⚠ Excepción</span>' : ''}${yoAprob.es_final ? '<span class="tag adm">Aprobación final</span>' : ''}</div></div>
       <div class="card-b stack">
+        ${pasoUnif ? `<div class="alert a-info" style="margin:0">${I.info}<div class="small">Usted figura en varios pasos seguidos de este flujo (<b>${esc(yoAprob.paso)}</b>). Se unificaron en <b>una sola aprobación</b>: su firma cuenta para todos ellos.</div></div>` : ''}
+        ${s.excepcion ? `<label class="chk" style="border-color:var(--danger);background:#FDECEC"><input type="checkbox" id="okexc"><span><b style="color:var(--danger)">Revisé la causa y el motivo, y autorizo esta excepción a la política.</b><br><span class="small muted">Obligatorio para aprobar.</span></span></label>` : ''}
         <div class="field"><label for="com">Comentario <span class="muted">(obligatorio si rechaza: motivo)</span></label><textarea class="inp" id="com" style="min-height:70px"></textarea></div>
         <div><div class="lbl" style="margin-bottom:6px">Firma (obligatoria para aprobar)</div><div id="sig"></div></div>
         <div class="row" style="justify-content:flex-end;gap:10px;flex-wrap:wrap">
           <button class="btn dan" id="rech">${I.x} Rechazar</button><button class="btn pri" id="aprob">${I.check} Aprobar y firmar</button></div>
-        ${yoAprob.es_final ? '<p class="xs muted" style="margin:0">Al aprobar se genera el documento final en PDF y se envía al solicitante y a RH.</p>' : ''}
+        ${yoAprob.es_final ? '<p class="xs muted" style="margin:0">Al aprobar se avisa por correo al solicitante y a RH; el documento final con todas las firmas queda listo para descargar.</p>' : ''}
       </div></div>` : '';
   shell(activo, `
     <div class="page-head"><div><a href="javascript:history.back()" class="small" style="text-decoration:none">← Volver</a>
       <h1 style="margin-top:6px">${esc(s.folio)} · ${esc(D.modulo_nombre)}</h1>
-      <p class="row wrap" style="gap:8px">${badge(s.estado)}${s.es_prueba ? '<span class="tag exc">Dato de prueba</span>' : ''}${s.version > 1 ? `<span class="tag">Versión ${s.version}</span>` : ''}${s.excepcion ? '<span class="tag exc">Con excepción</span>' : ''}<span class="small muted">Enviada ${fmt(s.creado_en)}${s.finalizado_en ? ' · Finalizada ' + fmt(s.finalizado_en) : ''}</span></p></div>
+      <p class="row wrap" style="gap:8px">${badge(s.estado)}${s.es_prueba ? '<span class="tag prb">Dato de prueba</span>' : ''}${s.version > 1 ? `<span class="tag">Versión ${s.version}</span>` : ''}${s.excepcion ? '<span class="tag exc">⚠ Excepción a la política</span>' : ''}<span class="small muted">Enviada ${fmt(s.creado_en)}${s.finalizado_en ? ' · Finalizada ' + fmt(s.finalizado_en) : ''}</span></p></div>
       <div class="row wrap">
         ${P.pdf ? `<button class="btn" id="dl">${I.pdf} Descargar PDF</button>` : ''}
-        ${P.reenviar ? `<button class="btn pri" id="reenv">${I.send} ${s.pdf_enviado_en ? 'Reenviar PDF' : 'Enviar PDF'}</button>` : ''}
+        ${P.reenviar ? `<button class="btn pri" id="reenv">${I.send} ${s.pdf_enviado_en ? 'Reenviar aviso' : 'Enviar aviso'}</button>` : ''}
         ${P.modificar ? `<button class="btn ${s.estado === 'rechazada' ? 'pri' : ''}" id="modif">${I.edit} ${s.estado === 'rechazada' ? 'Modificar y reenviar' : 'Modificar'}</button>` : ''}
         ${P.cancelar ? `<button class="btn ghost" id="canc" style="color:var(--danger)">${I.x} Cancelar solicitud</button>` : ''}
       </div></div>
-    ${s.estado === 'aprobada' && !s.pdf_enviado_en ? `<div class="alert a-warn">${I.warn}<div>La solicitud está aprobada pero el documento final <b>aún no se ha enviado</b> por correo.</div></div>` : ''}
+    ${alertaExc}
+    ${s.estado === 'aprobada' && !s.pdf_enviado_en ? `<div class="alert a-warn">${I.warn}<div>La solicitud está aprobada pero el <b>aviso de aprobación aún no se ha enviado</b> por correo. Use <b>Reenviar aviso</b>.</div></div>` : ''}
     ${s.estado === 'rechazada' ? `<div class="alert a-err">${I.x}<div><b>Motivo del rechazo:</b> ${esc(s.motivo_rechazo)}${P.modificar ? '<br><span class="small">Puede corregirla y reenviarla (el flujo inicia de nuevo) o cancelarla definitivamente.</span>' : ''}</div></div>` : ''}
     ${s.estado === 'cancelada' ? `<div class="alert a-info">${I.info}<div>Solicitud cancelada.${s.motivo_rechazo ? ' Motivo: ' + esc(s.motivo_rechazo) : ''}</div></div>` : ''}
     ${s.estado === 'aprobada' && s.textos?.msg_aprobado ? `<div class="alert a-ok">${I.check}<div>${esc(s.textos.msg_aprobado)}</div></div>` : ''}
@@ -1314,18 +1363,16 @@ async function vistaDetalle(id) {
     const firma = new Firma($('#sig'));
     const resolver = (aprobar, btn) => ocupado(btn, async () => {
       const com = $('#com').value.trim();
+      if (aprobar && s.excepcion && !$('#okexc').checked) { $('#okexc').closest('label').scrollIntoView({ block: 'center' }); return toast('Marque la casilla que confirma que autoriza la EXCEPCIÓN a la política.', 'err'); }
       if (aprobar && firma.vacia()) return toast('Firme en el recuadro para aprobar.', 'err');
       if (!aprobar && !com) { $('#com').focus(); return toast('Escriba el motivo del rechazo en el comentario.', 'err'); }
       if (!await confirmar(aprobar ? 'Confirmar aprobación' : 'Confirmar rechazo',
-          aprobar ? `Va a aprobar <b>${esc(s.folio)}</b> como <b>${esc(yoAprob.paso)}</b>.` : `Va a rechazar <b>${esc(s.folio)}</b>. Se notificará al solicitante con el motivo.`,
+          aprobar ? `Va a aprobar <b>${esc(s.folio)}</b> como <b>${esc(yoAprob.paso)}</b>.${s.excepcion ? `<div class="exc-alerta" style="margin:14px 0 0"><div class="ic">${I.warn}</div><div><div class="t">Está autorizando una excepción</div><div class="small">${esc(s.datos[kd + '_excepcion_causa'] || 'La solicitud no cumple la política vigente')}.</div></div></div>` : ''}` : `Va a rechazar <b>${esc(s.folio)}</b>. Se notificará al solicitante con el motivo.`,
           aprobar ? 'Aprobar' : 'Rechazar', aprobar ? 'pri' : 'dan')) return;
       try {
         const r = await api('rh_resolver', { p_aprobacion_id: yoAprob.id, p_aprobar: aprobar, p_firma: firma.vacia() ? null : firma.png(), p_comentario: com });
-        if (r.final && r.aprobada) {
-          toast('Solicitud aprobada. Generando y enviando el documento final…', 'ok');
-          try { await enviarPDF(s.id, false); toast('Documento final enviado al solicitante y a RH.', 'ok'); }
-          catch (e) { toast('La solicitud quedó aprobada, pero el PDF no se pudo enviar: ' + e.message + '. Use "Enviar PDF".', 'err'); }
-        } else toast(aprobar ? `Aprobado. Se notificó al siguiente paso: ${r.siguiente}.` : 'Solicitud rechazada y notificada.', 'ok');
+        if (r.final && r.aprobada) toast('Solicitud aprobada. Se avisó por correo al solicitante y a RH; el documento final ya se puede descargar.', 'ok');
+        else toast(aprobar ? `Aprobado. Se notificó al siguiente paso: ${r.siguiente}.` : 'Solicitud rechazada y notificada.', 'ok');
         router();
       } catch (e) { toast(e.message, 'err'); }
     });
@@ -1333,13 +1380,13 @@ async function vistaDetalle(id) {
     $('#rech').onclick = e => resolver(false, e.currentTarget);
   }
   if (P.pdf) $('#dl').onclick = e => ocupado(e.currentTarget, async () => { try { (await construirPDF(D)).save(s.folio + '.pdf'); } catch (err) { toast(err.message, 'err'); } });
-  if (P.reenviar) $('#reenv').onclick = () => modal({ title: 'Enviar documento final', body: `
-      <p style="margin-top:0">El PDF se genera de nuevo a partir de los registros (no se guarda copia).</p>
+  if (P.reenviar) $('#reenv').onclick = () => modal({ title: 'Reenviar aviso de aprobación', body: `
+      <p style="margin-top:0">Se envía un correo (sin adjunto) avisando que la solicitud fue aprobada, con un botón para entrar a ver y descargar el documento final.</p>
       <label class="chk" style="margin-bottom:8px"><input type="radio" name="dest" value="todos" checked><span><b>Solicitante y RH</b><br><span class="small muted">${esc(s.solicitante_email)} + correos de RH configurados</span></span></label>
       <label class="chk"><input type="radio" name="dest" value="yo"><span><b>Solo a mí</b><br><span class="small muted">${esc(S.user.email)}</span></span></label>`,
     actions: [{ label: 'Cancelar' }, { label: I.send + ' Enviar', cls: 'pri', onClick: ({ close, el, btn }) => ocupado(btn, async () => {
       const yo = $('input[name=dest]:checked', el).value === 'yo';
-      try { const r = await enviarPDF(s.id, yo, D); close(); toast('Enviado a ' + [...r.para, ...r.cc].join(', '), 'ok'); vistaDetalle(s.id); } catch (err) { toast(err.message, 'err'); }
+      try { const r = await api('rh_reenviar_aviso', { p_id: s.id, p_solo_a_mi: yo }); close(); toast('Enviado a ' + [...r.para, ...r.cc].join(', '), 'ok'); vistaDetalle(s.id); } catch (err) { toast(err.message, 'err'); }
     }) }] });
   if (P.modificar) $('#modif').onclick = async () => {
     if (await confirmar('Modificar solicitud', `Los datos enviados están protegidos. Si modifica la solicitud, <b>el flujo de aprobación se reinicia desde el primer paso</b>${ap.some(a => a.estado === 'aprobado') ? ' y se pierden las aprobaciones ya otorgadas' : ''}. Deberá firmar de nuevo.`, 'Entiendo, modificar', 'pri')) location.hash = '#/editar/' + s.id;
@@ -1361,12 +1408,6 @@ async function vistaDetalle(id) {
   $$('[data-recordar]').forEach(b => b.onclick = () => ocupado(b, async () => {
     try { const r = await api('rh_recordar', { p_aprobacion_id: +b.dataset.recordar }); toast('Recordatorio enviado a ' + r.para.join(', '), 'ok'); vistaDetalle(s.id); }
     catch (err) { toast(err.message, 'err'); } }));
-}
-async function enviarPDF(id, soloAMi, D) {
-  D = D || await api('rh_solicitud', { p_id: id });
-  const doc = await construirPDF(D);
-  const b64 = doc.output('datauristring').split(',')[1];
-  return api('rh_enviar_pdf', { p_id: id, p_pdf_base64: b64, p_solo_a_mi: soloAMi });
 }
 
 /* =====================================================================
@@ -1394,6 +1435,13 @@ async function construirPDF(D) {
   doc.setTextColor(TINTA); doc.setFont('helvetica', 'bold'); doc.setFontSize(17); T(D.modulo_nombre, M, y);
   doc.setFillColor('#E6F0EA'); doc.roundedRect(W - M - 36, y - 6, 36, 8.5, 2, 2, 'F');
   doc.setTextColor('#2E6B4E'); doc.setFontSize(9.5); T('APROBADA', W - M - 18, y - 0.4, { align: 'center' });
+  if (s.excepcion) {
+    const kd = ((s.formulario || []).find(f => f.tipo === 'dias') || {}).key || 'dias';
+    y += 5; doc.setFillColor('#FDECEC'); doc.setDrawColor('#A63D40'); doc.setLineWidth(0.5); doc.roundedRect(M, y, CW, 9, 2, 2, 'FD');
+    doc.setTextColor('#A63D40'); doc.setFont('helvetica', 'bold'); doc.setFontSize(9.5);
+    T('EXCEPCION A LA POLITICA APROBADA' + (s.datos[kd + '_excepcion_causa'] ? ' - ' + s.datos[kd + '_excepcion_causa'] : ''), M + 4, y + 6);
+    y += 9;
+  }
   y += 6; doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(GRIS);
   T(`Enviada: ${fmt(s.creado_en)}    Aprobación final: ${fmt(s.finalizado_en)}${s.version > 1 ? '    Versión ' + s.version : ''}`, M, y); y += 7;
   if (s.textos?.intro) { doc.setFont('helvetica', 'italic'); doc.setFontSize(8.5); doc.setTextColor(GRIS); const l = split(s.textos.intro, CW); T(l, M, y); y += l.length * 3.8 + 4; }
@@ -1635,7 +1683,7 @@ function modalUsuario(u, alGuardar) {
       try {
         const r = await api('rh_admin_guardar_usuario', { p_usuario: { id: u.id || null, email: $('#ue', el).value, nombre: $('#un', el).value, departamento: $('#ud', el).value,
           puesto: $('#up', el).value, rol: $('#ur', el).value, activo: $('#ua', el).value === '1', pin: $('#upin', el).value }, p_notificar: $('#unot', el).checked });
-        close(); toast(r.nuevo ? 'Usuario creado.' : 'Usuario actualizado.', 'ok'); alGuardar ? alGuardar() : adminUsuarios();
+        close(); toast((r.nuevo ? 'Usuario creado.' : 'Usuario actualizado.') + (r.sesiones_cerradas ? ` Se cerraron ${r.sesiones_cerradas} sesión(es) abiertas de esta persona: deberá ingresar de nuevo con su nuevo rol.` : ''), 'ok'); alGuardar ? alGuardar() : adminUsuarios();
       } catch (e) { toast(e.message, 'err'); }
     }) }],
     onOpen: el => { $('#ur', el).onchange = () => $('#upin-w', el).classList.toggle('hidden', $('#ur', el).value !== 'admin'); } });
@@ -1775,7 +1823,7 @@ function edFlujo() {
       <h3>Cómo funciona</h3>
       <p style="margin:0">Los pasos se ejecutan en orden. Cada aprobador recibe un correo, ingresa con su código y firma.</p>
       <p style="margin:0">Los pasos <b style="color:var(--warn)">“solo si hay excepción”</b> se saltan cuando la solicitud cumple la política (sin días consecutivos y sin pasarse de los días permitidos).</p>
-      <p style="margin:0">El <b>último paso que aplique</b> es la aprobación final: al aprobarlo se genera el PDF con todas las firmas y se envía al solicitante y a los correos de copia de la pestaña <a href="#/modulo/${esc(ED.codigo)}/general">General</a>.</p>
+      <p style="margin:0">El <b>último paso que aplique</b> es la aprobación final: al aprobarlo se avisa por correo al solicitante y a los correos de copia de la pestaña <a href="#/modulo/${esc(ED.codigo)}/general">General</a>.</p>
       <p style="margin:0">Si alguien rechaza, el flujo termina y el solicitante recibe el motivo.</p>
     </div></div>`;
   const body = $('#edbody');
@@ -1806,7 +1854,7 @@ function edGeneral() {
     <div class="field"><label>Nombre del trámite</label><input class="inp" data-g="nombre" value="${esc(ED.nombre)}"></div>
     <div class="field"><label>Prefijo del folio</label><input class="inp" data-g="prefijo" value="${esc(ED.prefijo)}" maxlength="6"><span class="help">Ej. TT → TT-2026-0001</span></div>
     <div class="field span2"><label>Descripción</label><input class="inp" data-g="descripcion" value="${esc(ED.descripcion)}"></div>
-    <div class="field span2"><label>Copia del PDF final (correos de RH)</label><input class="inp" data-g="correos_copia" value="${esc(ED.correos_copia || '')}" placeholder="rrhh@legrand.com, gerente.rh@legrand.com"><span class="help">Reciben el documento final de cada solicitud aprobada de este trámite. Vacío = se usa el aprobador del último paso.</span></div>
+    <div class="field span2"><label>Copia del aviso de aprobación (correos de RH)</label><input class="inp" data-g="correos_copia" value="${esc(ED.correos_copia || '')}" placeholder="rrhh@legrand.com, gerente.rh@legrand.com"><span class="help">Reciben el aviso de cada solicitud aprobada de este trámite y pueden entrar a ver y descargar el documento. Vacío = se usa el aprobador del último paso.</span></div>
     <label class="chk"><input type="checkbox" data-g="activo" ${ED.activo ? 'checked' : ''}><span><b>Trámite activo</b><br><span class="small muted">Si se desactiva, nadie puede crear solicitudes nuevas.</span></span></label></div>`;
   $('#edbody').oninput = $('#edbody').onchange = e => { const g = e.target.dataset.g; if (g) ED[g] = e.target.type === 'checkbox' ? e.target.checked : e.target.value; };
   $('#edbody').onclick = null;
@@ -1837,10 +1885,25 @@ async function adminConfig() {
       <div class="field span2"><label>URL pública de la app (para los botones de los correos)</label><div class="copy-box"><input class="inp" data-c="app_url" value="${v('app_url')}" placeholder="https://..."><button class="btn" id="usar" title="Usar la dirección actual">Usar actual</button></div><span class="help">Dirección actual: ${esc(urlApp)}</span></div>
     </div></div>
     <div class="card"><div class="card-h"><h2>Seguridad de acceso</h2></div><div class="card-b grid3">
-      <div class="field"><label>Dominios permitidos</label><input class="inp" id="dom" value="${esc(dom)}"><span class="help">Separados por coma. Vacío = cualquier correo.</span></div>
+      <div class="field"><label>Dominios permitidos</label><input class="inp" id="dom" value="${esc(dom)}"><span class="help">Separados por coma, ej. <span class="kbd">legrand.com</span>. Obligatorio: debe incluir su propio dominio. Solo estos correos pueden entrar <b>y recibir correos</b> de la central.</span></div>
       <div class="field"><label>Vigencia del código (minutos)</label><input class="inp" type="number" min="5" max="1440" data-c="minutos_codigo" value="${v('minutos_codigo')}"></div>
       <div class="field"><label>Duración de la sesión (horas)</label><input class="inp" type="number" min="1" max="168" data-c="horas_sesion" value="${v('horas_sesion')}"></div>
     </div></div>
+    <div class="card"><div class="card-h"><h2>Retención de información de RH</h2>${c.ultima_depuracion ? `<span class="xs muted">Última depuración: ${fmt(c.ultima_depuracion.fecha)} por ${esc(c.ultima_depuracion.por)} (${c.ultima_depuracion.solicitudes} solicitudes)</span>` : ''}</div>
+      <div class="card-b stack">
+        <p class="small" style="margin:0">Define cuántos años se conservan las solicitudes <b>terminadas</b> (aprobadas, rechazadas o canceladas). Nada se borra solo: un administrador revisa cuántas hay y confirma. Las solicitudes en aprobación nunca se borran. Cada depuración queda en la bitácora con los folios eliminados.</p>
+        <div class="row wrap" style="gap:12px;align-items:flex-end">
+          <div class="field" style="max-width:220px"><label>Años de retención</label><input class="inp" type="number" min="0" max="50" data-c="anios_retencion" value="${v('anios_retencion') || 0}"><span class="help">0 = conservar todo</span></div>
+          <button class="btn" id="retcontar">${I.info} Revisar qué se borraría</button>
+          <button class="btn dan" id="retdepurar" disabled>${I.trash} Depurar</button></div>
+        <div id="retres" class="small"></div>
+      </div></div>
+    <div class="card" style="border-color:#F0C4C5"><div class="card-h"><h2>Emergencia: cerrar todas las sesiones</h2>${c.ultimo_cierre_sesiones ? `<span class="xs muted">Último cierre: ${fmt(c.ultimo_cierre_sesiones.fecha)} por ${esc(c.ultimo_cierre_sesiones.por)}</span>` : ''}</div>
+      <div class="card-b stack">
+        <p class="small" style="margin:0">Úselo si sospecha un acceso indebido (por ejemplo, un equipo perdido o un correo comprometido). <b>Saca a todas las personas de la central de inmediato</b> y anula los códigos de acceso pendientes; cada quien tendrá que ingresar de nuevo con un código nuevo.</p>
+        <label class="chk" style="max-width:520px"><input type="checkbox" id="cerrarme"><span>Cerrar también <b>mi</b> sesión</span></label>
+        <div><button class="btn dan" id="cerrartodo">${I.out} Cerrar todas las sesiones</button></div>
+      </div></div>
     <div class="card"><div class="card-h"><h2>Datos de prueba</h2><span class="small" id="dpest">${dp.solicitudes ? `<span class="tag exc">${dp.solicitudes} solicitudes de prueba cargadas</span>` : '<span class="muted">No hay datos de prueba</span>'}</span></div>
       <div class="card-b stack">
         <p class="small" style="margin:0">Carga <b>10 solicitudes de ejemplo</b> del trámite de Teletrabajo para conocer la app y ver los reportes: aprobadas, una rechazada, varias en aprobación (una ya apta para recordatorio), excepciones, una modificada (versión 2), una cancelada y recordatorios. Usan folios <span class="kbd">PRUEBA-01…10</span> (no gastan la numeración real), personas ficticias <span class="kbd">prueba.…@legrand.com</span> y <b>no envían correos</b> al cargarse.</p>
@@ -1855,10 +1918,32 @@ async function adminConfig() {
   $('#verurl').onclick = () => { const i = $('[data-c=pa_url]'); i.type = i.type === 'password' ? 'text' : 'password'; $('#verurl').textContent = i.type === 'password' ? 'Ver' : 'Ocultar'; };
   const guardar = async () => {
     const cfg = {}; $$('[data-c]').forEach(i => cfg[i.dataset.c] = i.type === 'number' ? +i.value : i.value.trim());
-    cfg.dominios_permitidos = $('#dom').value.split(/[,;\s]+/).map(x => x.trim().replace(/^@/, '')).filter(Boolean);
+    cfg.dominios_permitidos = $('#dom').value.split(/[,;\s]+/).map(x => x.trim().replace(/^@/, '').toLowerCase()).filter(Boolean);
+    if (!cfg.dominios_permitidos.length) throw new Error('Dominios permitidos: la lista no puede quedar vacía.');
     await api('rh_admin_guardar_config', { p_cfg: cfg });
   };
   $('#gc').onclick = e => ocupado(e.currentTarget, async () => { try { await guardar(); toast('Configuración guardada.', 'ok'); adminConfig(); } catch (err) { toast(err.message, 'err'); } });
+  let retAnios = 0;
+  $('#retcontar').onclick = e => ocupado(e.currentTarget, async () => {
+    const n = +$('[data-c=anios_retencion]').value || 0;
+    if (n < 1) { $('#retres').innerHTML = '<span class="muted">Con 0 años se conserva todo. Indique 1 o más para revisar.</span>'; $('#retdepurar').disabled = true; return; }
+    try { const r = await api('rh_admin_retencion', { p_accion: 'contar', p_anios: n }); retAnios = n;
+      $('#retres').innerHTML = r.solicitudes ? `Se borrarían <b>${r.solicitudes}</b> solicitud(es) terminadas antes del <b>${fmt(r.antes_de)}</b>.` : `No hay solicitudes terminadas antes del ${fmt(r.antes_de)}.`;
+      $('#retdepurar').disabled = !r.solicitudes; } catch (err) { toast(err.message, 'err'); } });
+  $('#retdepurar').onclick = async e => {
+    const btn = e.target.closest('button');
+    if (!await confirmar('Depurar solicitudes', `Se eliminarán <b>definitivamente</b> las solicitudes terminadas hace más de <b>${retAnios} año(s)</b>, con sus firmas, aprobaciones y bitácora. No se puede deshacer. Si RH necesita respaldo, descargue antes el Excel en Reportes.`, 'Depurar', 'dan')) return;
+    ocupado(btn, async () => { try { const r = await api('rh_admin_retencion', { p_accion: 'depurar', p_anios: retAnios }); toast(`Se depuraron ${r.solicitudes} solicitud(es).`, 'ok'); adminConfig(); } catch (err) { toast(err.message, 'err'); } });
+  };
+  $('#cerrartodo').onclick = async e => {
+    const yo = $('#cerrarme').checked, btn = e.target.closest('button');
+    if (!await confirmar('Cerrar todas las sesiones', `Se cerrará la sesión de <b>todas las personas</b>${yo ? ', <b>incluida la suya</b>' : ' (excepto la suya)'}, y se anularán los códigos de acceso pendientes. ¿Continuar?`, 'Cerrar sesiones', 'dan')) return;
+    ocupado(btn, async () => {
+      try { const r = await api('rh_admin_cerrar_sesiones', { p_incluirme: yo });
+        toast(`Se cerraron ${r.sesiones} sesión(es) y se anularon ${r.codigos} código(s).`, 'ok');
+        if (r.me_cerre) { finSesion(); setTimeout(() => { location.hash = ''; vistaLogin(); }, 1200); } else adminConfig(); }
+      catch (err) { toast(err.message, 'err'); } });
+  };
   $('#dpcargar').onclick = e => ocupado(e.currentTarget, async () => {
     try { const r = await api('rh_admin_datos_prueba', { p_accion: 'cargar' }); toast(`Se cargaron ${r.solicitudes} solicitudes de prueba. Véalas en Todas las solicitudes y en Reportes.`, 'ok'); await cargarBase(); adminConfig(); }
     catch (err) { toast(err.message, 'err'); } });
