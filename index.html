@@ -4,9 +4,16 @@
 <meta charset="utf-8">
 <!-- v1.7 Seguridad (CSP): la página solo puede hablar con Supabase y cargar librerías verificadas de jsDelivr.
      Si cambia SUPABASE_URL abajo, cambie también la dirección que aparece aquí en connect-src. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src https://iecfgpqnnsxmnmbxnfcp.supabase.co https://cdn.jsdelivr.net; worker-src blob:; frame-src blob:; object-src blob:; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src https://iecfgpqnnsxmnmbxnfcp.supabase.co https://cdn.jsdelivr.net; worker-src blob:; frame-src blob:; object-src blob:; base-uri 'none'; form-action 'none'; manifest-src blob: data:">
 <meta name="referrer" content="no-referrer">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1F3A5F">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Solicitudes RH">
+<link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAIAAACyr5FlAAAFV0lEQVR42u3dfUzUdRzA8XvynkCU52cBIbCkBhWwoVghOdwBrSxcmHKxlSNirdtYGauV4LA1rQG2yoewWmjLknSeWiFolBJGWCKKBiooTMhJPHrg9V8NOuNrhrX7vl//+j2E+7z9/n7343enMiQxWwE4ouIpAHGAOEAcIA4QB4gDxAHiAHGAOADiAHGAOEAcIA4QB4gDxAHiAHEAxAHiAHGAOEAcIA4QB4gDxAHiAIgDxAHiAHGAOEAcIA4QB4gDxAHiAIgDxAHiAHGAOEAcIA4QB4gDxAEQB4gDxAHiAHGAOEAcIA4QB4gDUGj+w797e/mLCbFz/tljR8fGbLaxoZGRK30DvZd/6+zqbe/sbm4919T8S9ely7fy24t64KmRq7Yb/eL+Ph7ffb5+0mXWmobcwnIZ47ip71ut1qjVBr3WY8b0sGC/e++67Y8/Ot1+wVrTsMNa197Rzb9+DivjRIQG5JszqivXbijKmxXgzYyJ4y8/mEppSo7b/9GapWkLGDNxOKDXaV9flZO3Ip1JE4djBSuXmJLjGDZxOLamwOzmamTexOHATDeXnKWLmDdxOJZpSlIqlYzcqa5zTLjKpFIpjQa9l7tb5OzAhfNi0lMSjHqdyNcJ8PWMCg9qOX2eqTvtznHtmr1/YKi9o3v/wR9eKNny4LKXfj55VvCxd0dHMHKJDiudXb1PFqwfGBwWWRwa6MPI5TrnuNR7ZduuWpGVnu5ujFy6E9JD9cdFlhkNOkYuXRwdXT0iy4ZHrjJy6eIQPOfo6x9k5NLF4WrUC20wF3sYuXRxhAb5iixrOtHGyKWLIyk+WuTQc4w4FBLcCaYYf8vdY6akSZdVfXl4Kk5ITx7YyM7xPxUS6FOxzmLQa/9+mc02unn7PjYDJ985VCqlQa/zcne7PSI4ZX6sKTl+0jIUCsW7H1vPnL3IvJ0tjpvft7+u+/GtzTsZNr+yn2hf7dG8l98eHRtj2DKekF735cnQ8Jubdm7atpcxE8e4V607rHWlFVU9v/YxY+L405HGFkvxxs6uXqbLOcdECbFzqivXvvJclotBz4CJYyKddlpO5qI9W1fPnuXHjDmsKBxeH/v0ncIlK4vbznffsltcFf/qG6nZOaaQx4zpW96wuLoY2Aac/O5zpVLpYtT7e7vHRoc/unh+fEyUyMPDgn1XW5Zbit5j2M68c9jt9v6Bodb2C5/sPpSZV5JbWD44PCLywEdSExck3MmwJTqsWGsazJZ1NtuoyOLXnl+m0aiZt0TnHPVNp4rKKsUOLn6PZ9zPvOU6If3ws+rvj50SWZlvTtfrtIxcojjsdntxqdDm4eM5M+shNg/JXso2nWjbW3tUZOXTWYu10zRMXa7rHKXvV4ks8/N2F7mhEE4VR3Pruepvm0RW5j5h0qh52SLZFdKyii9ElgX5ez2cmsjg5Yqj8fiZuoZmkZXPLE9Tq/joZsl+tyK4eYQF+6alxDN7ueI43NgieM0jb0U6HwEl3W9lyyp2iSyLDAtMve8exi9XHAeP/CT4hthns/nkWvnu5yjfKrR5zI0MWTgvhgLkiuOrbxoFPzIw38zmIVkcdru9/IPdIitj7ghPiptLBHLdJrjnQL3gO2PzzRlEcD3KkMRsngXwf7yBOEAcIA4QB4gDxAHiAHGAOADiAHGAOEAcIA4QB4gDxAHigIKPmpxyr67K56m/sWespIydAxxWQBxQ8L4VsHOAOADiAHGAOEAcIA4QB4gDxAHiAHGAOADiAHGAOEAcIA4QB4gDxAHiAHEAxAHiAHGAOEAcIA4QB4gDxAHiAIgDxAHiAHGAOEAcIA4QB4gDkvgdg1FOpvAVOiUAAAAASUVORK5CYII=">
+<link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAIAAACyr5FlAAAFV0lEQVR42u3dfUzUdRzA8XvynkCU52cBIbCkBhWwoVghOdwBrSxcmHKxlSNirdtYGauV4LA1rQG2yoewWmjLknSeWiFolBJGWCKKBiooTMhJPHrg9V8NOuNrhrX7vl//+j2E+7z9/n7343enMiQxWwE4ouIpAHGAOEAcIA4QB4gDxAHiAHGAOADiAHGAOEAcIA4QB4gDxAHiAHEAxAHiAHGAOEAcIA4QB4gDxAHiAIgDxAHiAHGAOEAcIA4QB4gDxAHiAIgDxAHiAHGAOEAcIA4QB4gDxAEQB4gDxAHiAHGAOEAcIA4QB4gDUGj+w797e/mLCbFz/tljR8fGbLaxoZGRK30DvZd/6+zqbe/sbm4919T8S9ely7fy24t64KmRq7Yb/eL+Ph7ffb5+0mXWmobcwnIZ47ip71ut1qjVBr3WY8b0sGC/e++67Y8/Ot1+wVrTsMNa197Rzb9+DivjRIQG5JszqivXbijKmxXgzYyJ4y8/mEppSo7b/9GapWkLGDNxOKDXaV9flZO3Ip1JE4djBSuXmJLjGDZxOLamwOzmamTexOHATDeXnKWLmDdxOJZpSlIqlYzcqa5zTLjKpFIpjQa9l7tb5OzAhfNi0lMSjHqdyNcJ8PWMCg9qOX2eqTvtznHtmr1/YKi9o3v/wR9eKNny4LKXfj55VvCxd0dHMHKJDiudXb1PFqwfGBwWWRwa6MPI5TrnuNR7ZduuWpGVnu5ujFy6E9JD9cdFlhkNOkYuXRwdXT0iy4ZHrjJy6eIQPOfo6x9k5NLF4WrUC20wF3sYuXRxhAb5iixrOtHGyKWLIyk+WuTQc4w4FBLcCaYYf8vdY6akSZdVfXl4Kk5ITx7YyM7xPxUS6FOxzmLQa/9+mc02unn7PjYDJ985VCqlQa/zcne7PSI4ZX6sKTl+0jIUCsW7H1vPnL3IvJ0tjpvft7+u+/GtzTsZNr+yn2hf7dG8l98eHRtj2DKekF735cnQ8Jubdm7atpcxE8e4V607rHWlFVU9v/YxY+L405HGFkvxxs6uXqbLOcdECbFzqivXvvJclotBz4CJYyKddlpO5qI9W1fPnuXHjDmsKBxeH/v0ncIlK4vbznffsltcFf/qG6nZOaaQx4zpW96wuLoY2Aac/O5zpVLpYtT7e7vHRoc/unh+fEyUyMPDgn1XW5Zbit5j2M68c9jt9v6Bodb2C5/sPpSZV5JbWD44PCLywEdSExck3MmwJTqsWGsazJZ1NtuoyOLXnl+m0aiZt0TnHPVNp4rKKsUOLn6PZ9zPvOU6If3ws+rvj50SWZlvTtfrtIxcojjsdntxqdDm4eM5M+shNg/JXso2nWjbW3tUZOXTWYu10zRMXa7rHKXvV4ks8/N2F7mhEE4VR3Pruepvm0RW5j5h0qh52SLZFdKyii9ElgX5ez2cmsjg5Yqj8fiZuoZmkZXPLE9Tq/joZsl+tyK4eYQF+6alxDN7ueI43NgieM0jb0U6HwEl3W9lyyp2iSyLDAtMve8exi9XHAeP/CT4hthns/nkWvnu5yjfKrR5zI0MWTgvhgLkiuOrbxoFPzIw38zmIVkcdru9/IPdIitj7ghPiptLBHLdJrjnQL3gO2PzzRlEcD3KkMRsngXwf7yBOEAcIA4QB4gDxAHiAHGAOADiAHGAOEAcIA4QB4gDxAHigIKPmpxyr67K56m/sWespIydAxxWQBxQ8L4VsHOAOADiAHGAOEAcIA4QB4gDxAHiAHGAOADiAHGAOEAcIA4QB4gDxAHiAHEAxAHiAHGAOEAcIA4QB4gDxAHiAIgDxAHiAHGAOEAcIA4QB4gDkvgdg1FOpvAVOiUAAAAASUVORK5CYII=">
 <title>Central de Solicitudes RH</title>
 <script>
 /* =====================================================================
@@ -15,7 +22,7 @@
 const CONFIG = {
   SUPABASE_URL: 'https://iecfgpqnnsxmnmbxnfcp.supabase.co',
   SUPABASE_KEY: 'sb_publishable_Mt2sdPIzEcfbKv15x4-JTQ_Tf6csjiH',
-  VERSION: '1.10'
+  VERSION: '1.12'
 };
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -73,7 +80,7 @@ textarea.inp{min-height:84px;resize:vertical}
 .grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
 .grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
 .span2{grid-column:1/-1}
-@media (max-width:720px){.grid2,.grid3{grid-template-columns:1fr}}
+@media (max-width:720px){.grid2,.grid3{grid-template-columns:minmax(0,1fr)}.grid2>*,.grid3>*{min-width:0}}
 .chk{display:flex;gap:10px;align-items:flex-start;cursor:pointer;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fff}
 .chk input{width:18px;height:18px;margin:2px 0 0;accent-color:var(--pri);flex:none}
 .chk:has(input:checked){border-color:var(--pri);background:var(--pri-50)}
@@ -101,7 +108,7 @@ textarea.inp{min-height:84px;resize:vertical}
 .pill{margin-left:auto;background:var(--danger);color:#fff;border-radius:999px;font-size:11.5px;padding:1px 8px;font-weight:700}
 .main{padding:26px clamp(16px,3vw,36px) 60px;max-width:1180px;width:100%}
 @media (max-width:900px){
-  .layout{grid-template-columns:1fr}
+  .layout{grid-template-columns:minmax(0,1fr)}
   .side{position:sticky;top:58px;z-index:20;height:auto;padding:8px 10px;border-right:0;border-bottom:1px solid var(--line);overflow-x:auto}
   .nav{display:flex;gap:4px;white-space:nowrap}
   .nav a{margin:0;padding:8px 12px}
@@ -161,6 +168,52 @@ table.tbl{width:100%;border-collapse:collapse;font-size:14px}
 .qa{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:10px} .qa .q{font-weight:600} .qa .a{margin-top:8px;padding-top:8px;border-top:1px dashed var(--line)}
 .dl-ap{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;font-size:12.5px;margin-top:6px} .dl-ap dt{color:var(--ink-3)} .dl-ap dd{margin:0;font-weight:600}
 .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+/* ===== v1.11 Celular ===== */
+.tabbar,.barra-aprob,.menu-velo{display:none}
+.res-clave{border:1px solid var(--line);border-radius:12px;background:var(--surface-2);padding:10px 12px}
+.res-clave dl{display:grid;grid-template-columns:fit-content(42%) minmax(0,1fr);gap:4px 12px;margin:0;font-size:13.5px} .res-clave dt{color:var(--ink-3)} .res-clave dd{margin:0;font-weight:600;word-break:break-word}
+.res-clave .lnk{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;font-size:13px;font-weight:600}
+.sig-full .sigpad canvas{height:min(62vh,420px)}
+@media (max-width:760px){
+  html{-webkit-text-size-adjust:100%}
+  body{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
+  .topbar{height:54px;padding:0 12px;padding-top:env(safe-area-inset-top)}
+  .side{position:fixed!important;top:0!important;left:0;bottom:0;width:min(84vw,310px);height:100%!important;z-index:90;background:var(--surface);
+        border-right:1px solid var(--line)!important;border-bottom:0!important;padding:18px 12px!important;overflow-y:auto!important;transform:translateX(-105%);transition:transform .2s;box-shadow:var(--shadow-lg)}
+  .side .nav{display:block!important;white-space:normal!important} .side .nav .sep,.side .nav .cap{display:block!important} .side .nav a{padding:12px!important;margin-bottom:2px!important}
+  body.menu-abierto .side{transform:none}
+  body.menu-abierto .menu-velo{display:block;position:fixed;inset:0;background:rgba(15,22,33,.45);z-index:85}
+  .tabbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:80;background:var(--surface);border-top:1px solid var(--line);padding:4px 4px calc(4px + env(safe-area-inset-bottom));box-shadow:0 -4px 16px rgba(15,22,33,.06)}
+  .tabbar a,.tabbar button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border:0;background:none;color:var(--ink-3);font:600 11px/1.2 inherit;text-decoration:none;position:relative;border-radius:10px}
+  .tabbar svg{width:22px;height:22px} .tabbar .on{color:var(--pri);background:var(--pri-50)}
+  .tabbar span:not(.pill){white-space:nowrap;font-size:10.5px;letter-spacing:-.1px;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+  .tbl.cards tr:hover td{background:none!important} .tbl.cards tr.click:active{background:var(--surface-2)}
+  .tabbar .pill{position:absolute;top:2px;left:calc(50% + 6px);margin:0;font-size:10.5px;padding:0 6px}
+  body.con-barra .tabbar{display:none}
+  .barra-aprob{display:flex;gap:8px;position:fixed;left:0;right:0;bottom:0;z-index:81;background:var(--surface);border-top:1px solid var(--line);padding:10px 12px calc(10px + env(safe-area-inset-bottom));box-shadow:0 -6px 20px rgba(15,22,33,.12);transition:transform .2s}
+  .barra-aprob .btn{flex:1;justify-content:center;padding:13px 10px;font-size:15px} .barra-aprob .btn.pri{flex:1.6}
+  .barra-aprob.oculta{transform:translateY(110%)}
+  .main{padding:16px 14px 28px}
+  .page-head{margin-bottom:14px} .page-head h1{font-size:21px;line-height:1.25}
+  .inp,select.inp,textarea.inp{font-size:16px}
+  .btn{min-height:42px}
+  .tiles{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:16px} .tile{padding:10px 10px} .tile .n{font-size:22px} .tile .t{font-size:11px;line-height:1.25}
+  .card-b{padding:14px} .card-h{padding:12px 14px}
+  .tbl.cards thead{display:none} .tbl.cards,.tbl.cards tbody{display:block}
+  .tbl.cards tr{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 10px;padding:12px 14px;border-bottom:1px solid var(--line)}
+  .tbl.cards td{display:block;padding:0!important;border:0!important}
+  .tbl.cards td:nth-child(1){grid-column:1;grid-row:1} .tbl.cards td:nth-child(2){grid-column:1;grid-row:2;font-size:13.5px}
+  .tbl.cards td:nth-child(3){grid-column:2;grid-row:1;text-align:right;font-size:12px;color:var(--ink-3)} .tbl.cards td:nth-child(4){grid-column:2;grid-row:2;justify-self:end;text-align:right}
+  .tbl.cards td:nth-child(5){grid-column:1/-1;grid-row:3;margin-top:4px;padding-top:6px!important;border-top:1px dashed var(--line)!important}
+  .tbl.cards td:nth-child(5):empty{display:none}
+  .modal-bg{align-items:flex-end!important;padding:0!important} .modal{max-width:none;border-radius:18px 18px 0 0;max-height:92vh;overflow:auto}
+  .modal-f{border-radius:0;padding-bottom:calc(14px + env(safe-area-inset-bottom))} .modal-f .btn{flex:1;justify-content:center}
+  #toasts{left:12px;right:12px;bottom:calc(76px + env(safe-area-inset-bottom));max-width:none} .toast{max-width:none}
+  dl.kv{grid-template-columns:1fr} dl.kv dt{border:0;padding-bottom:0} dl.kv dd{padding-left:0}
+  .det>div{min-width:0}
+  .tabs{overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none;-webkit-overflow-scrolling:touch;max-width:100%} .tabs::-webkit-scrollbar{display:none} .tabs a{white-space:nowrap;flex:none}
+  .kpis{grid-template-columns:repeat(2,minmax(0,1fr))!important} .kpi .v{font-size:20px}
+}
 .mod-pick{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
 .tag{display:inline-block;border-radius:6px;padding:2px 8px;font-size:12px;font-weight:600;background:var(--gris-50);color:var(--gris)}
 .tag.adm{background:var(--pri-50);color:var(--pri)} .tag.rh{background:var(--warn-50);color:#6E5418} .tag.exc{background:#FDECEC;color:var(--danger);font-weight:700;border:1px solid #F0C4C5} .tag.prb{background:var(--warn-50);color:#6E5418}
@@ -180,7 +233,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:14px}
 
 /* Detalle */
 .det{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:20px;align-items:start}
-@media (max-width:1000px){.det{grid-template-columns:1fr}}
+@media (max-width:1000px){.det{grid-template-columns:minmax(0,1fr)}}
 dl.kv{display:grid;grid-template-columns:minmax(140px,36%) 1fr;margin:0}
 dl.kv dt{color:var(--ink-2);font-size:13.5px;padding:10px 0;border-bottom:1px solid var(--line)}
 dl.kv dd{margin:0;padding:10px 0 10px 12px;border-bottom:1px solid var(--line);font-weight:600;white-space:pre-wrap;word-break:break-word}
@@ -397,7 +450,7 @@ const api = (fn, args = {}) => rpc(fn, { p_token: S.token, ...args });
 /* =====================================================================
    ESTADO
    ===================================================================== */
-const S = { token: store.get('token'), user: null, app: 'Central de Solicitudes RH', empresa: 'Legrand',
+const S = { token: store.get('token'), user: null, app: 'Central de Solicitudes RH', empresa: '',
             modulos: [], departamentos: [], resumen: {}, publico: null };
 
 /* =====================================================================
@@ -442,7 +495,7 @@ async function ocupado(btn, fn) {
 class Firma {
   constructor(host) {
     host.innerHTML = `<div class="sigpad"><canvas></canvas><div class="line"></div><div class="ph">${I.pen.replace('<svg', '<svg style="width:18px;height:18px;margin-right:6px;vertical-align:-3px"')}Firme aquí con el mouse o el dedo</div></div>
-      <div class="sig-tools"><span class="xs muted">Su firma quedará en el documento final.</span><button type="button" class="btn sm ghost" data-clear>Borrar firma</button></div>`;
+      <div class="sig-tools"><span class="xs muted">Su firma quedará en el documento final.</span><span class="row" style="gap:4px"><button type="button" class="btn sm ghost" data-grande>${I.pen.replace('<svg', '<svg style="width:15px;height:15px"')} Firmar en grande</button><button type="button" class="btn sm ghost" data-clear>Borrar firma</button></span></div>`;
     this.wrap = $('.sigpad', host); this.c = $('canvas', host); this.ctx = this.c.getContext('2d');
     this.trazos = 0; this.dibujando = false;
     this.ajustar(); this._ro = new ResizeObserver(() => this.ajustar()); this._ro.observe(this.c);
@@ -452,6 +505,7 @@ class Firma {
     const fin = () => { this.dibujando = false; };
     this.c.addEventListener('pointerup', fin); this.c.addEventListener('pointercancel', fin);
     $('[data-clear]', host).onclick = () => this.limpiar();
+    if (host.id === 'sigfull') $('[data-grande]', host).remove(); else $('[data-grande]', host).onclick = () => this.ampliar();
   }
   ajustar() {
     const r = this.c.getBoundingClientRect(); if (!r.width) return;
@@ -464,6 +518,19 @@ class Firma {
     if (prev) { const img = new Image(); img.onload = () => this.ctx.drawImage(img, 0, 0, r.width, r.height); img.src = prev; }
   }
   limpiar() { this.ctx.clearRect(0, 0, this.c.width, this.c.height); this.trazos = 0; this.wrap.classList.remove('has'); }
+  cargar(url) { // v1.11: firma hecha en pantalla completa
+    const img = new Image(); img.onload = () => { const r = this.c.getBoundingClientRect(); this.limpiar();
+      const k = Math.min(r.width / img.width, r.height / img.height), w = img.width * k, h = img.height * k;
+      const tmp = document.createElement('canvas'); tmp.width = img.width; tmp.height = img.height; const tx = tmp.getContext('2d'); tx.drawImage(img, 0, 0);
+      const d = tx.getImageData(0, 0, tmp.width, tmp.height); for (let i = 0; i < d.data.length; i += 4) { if (d.data[i] > 235 && d.data[i + 1] > 235 && d.data[i + 2] > 235) d.data[i + 3] = 0; } tx.putImageData(d, 0, 0);
+      this.ctx.drawImage(tmp, (r.width - w) / 2, (r.height - h) / 2, w, h); this.trazos = 20; this.wrap.classList.add('has'); };
+    img.src = url;
+  }
+  ampliar() {
+    modal({ title: 'Firma', size: 'sig-full', body: `<p class="small muted" style="margin:0 0 8px">Firme con el dedo. Si gira el teléfono tendrá más espacio.</p><div id="sigfull"></div>`,
+      actions: [{ label: 'Cancelar' }, { label: I.check + ' Usar esta firma', cls: 'pri', onClick: ({ close }) => { if (this._g.vacia()) return toast('Firme en el recuadro.', 'err'); this.cargar(this._g.png()); close(); } }],
+      onOpen: el => { this._g = new Firma($('#sigfull', el)); } });
+  }
   vacia() { return this.trazos < 4; }
   png() { // recorta y normaliza a 600x200 sobre fondo blanco (≈10–25 KB)
     const W = 600, H = 200, o = document.createElement('canvas'); o.width = W; o.height = H;
@@ -489,6 +556,13 @@ async function cargarBase() {
   const [m, r] = await Promise.all([api('rh_modulos'), api('rh_resumen')]);
   S.modulos = m.modulos || []; S.departamentos = m.departamentos || []; S.resumen = r || {};
 }
+// v1.11: "Agregar a pantalla de inicio" (Android/Chrome); en iPhone usa las etiquetas apple-* del encabezado
+(function () { try {
+  const icono = 'data:image/png;base64,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';
+  const m = { name: 'Central de Solicitudes RH', short_name: 'Solicitudes RH', start_url: location.href.split('#')[0], scope: location.href.split('#')[0],
+              display: 'standalone', background_color: '#F3F5F8', theme_color: '#1F3A5F', icons: [{ src: icono, sizes: '512x512', type: 'image/png', purpose: 'any maskable' }] };
+  const l = document.createElement('link'); l.rel = 'manifest'; l.href = URL.createObjectURL(new Blob([JSON.stringify(m)], { type: 'application/manifest+json' })); document.head.appendChild(l);
+} catch {} })();
 async function iniciar() {
   if (S.token) {
     try {
@@ -528,11 +602,11 @@ async function vistaLogin(paso = 'correo', ctx = {}) {
   if (paso === 'codigo') form = `
     <h1>Revise su correo</h1><p class="muted" style="margin:6px 0 24px">Enviamos un código de 6 dígitos a <b>${esc(ctx.email)}</b>. Vence en ${esc(ctx.minutos || 60)} minutos.</p>
     <form id="f" class="stack">
-      <div class="otp">${[0,1,2,3,4,5].map(i => `<input inputmode="numeric" maxlength="1" data-i="${i}" aria-label="Dígito ${i + 1}">`).join('')}</div>
+      <div class="otp">${[0,1,2,3,4,5].map(i => `<input inputmode="numeric" pattern="[0-9]*" ${i === 0 ? 'autocomplete="one-time-code"' : 'autocomplete="off"'} maxlength="${i === 0 ? 6 : 1}" data-i="${i}" aria-label="Dígito ${i + 1}">`).join('')}</div>
       <button class="btn pri" style="width:100%;padding:12px">Verificar</button>
+      ${ctx.pin ? `<button type="button" class="btn" style="width:100%" data-pin>${I.key} Ingresar con PIN de respaldo</button>` : ''}
       <div class="row between"><button type="button" class="btn ghost sm" data-back>Usar otro correo</button><button type="button" class="btn ghost sm" data-resend>Reenviar código</button></div>
       <p class="xs muted">¿No llega? Revise la carpeta de correo no deseado.</p>
-      ${ctx.pin ? `<button type="button" class="btn" style="width:100%" data-pin>${I.key} Ingresar con PIN de respaldo</button>` : ''}
     </form>`;
   if (paso === 'no_registrado') form = `
     <h1>Solicitar acceso</h1><p class="muted" style="margin:6px 0 20px"><b>${esc(ctx.email)}</b> aún no tiene usuario. Complete sus datos y un administrador lo habilitará.</p>
@@ -553,7 +627,7 @@ async function vistaLogin(paso = 'correo', ctx = {}) {
 
   $('#app').innerHTML = `<div class="login">
     <section class="login-art">
-      <div class="brand"><div class="brand-mark">RH</div><div>${esc(S.empresa)}<small>Recursos Humanos</small></div></div>
+      <div class="brand"><div class="brand-mark">RH</div><div>${esc(S.empresa || 'Recursos Humanos')}${S.empresa ? '<small>Recursos Humanos</small>' : ''}</div></div>
       <div><h1>${esc(S.app)}</h1><p>Envíe, firme y dé seguimiento a sus solicitudes de Recursos Humanos en un solo lugar.</p>
         <ul><li>${I.pen}Firma digital en cada paso</li><li>${I.flow}Flujo de aprobación con avisos por correo</li><li>${I.doc}Documento final en PDF con todas las firmas</li></ul></div>
       <div class="xs" style="opacity:.6">v${CONFIG.VERSION}</div>
@@ -591,7 +665,10 @@ async function vistaLogin(paso = 'correo', ctx = {}) {
   if (paso === 'codigo') {
     const ins = $$('.otp input'); ins[0].focus();
     ins.forEach((inp, i) => {
-      inp.addEventListener('input', () => { inp.value = inp.value.replace(/\D/g, '').slice(-1); if (inp.value && ins[i + 1]) ins[i + 1].focus(); if (ins.every(x => x.value)) f.requestSubmit(); });
+      inp.addEventListener('input', () => { const d = inp.value.replace(/\D/g, '');
+        if (d.length > 1) { d.slice(0, 6).split('').forEach((c, j) => ins[i + j] && (ins[i + j].value = c)); (ins[Math.min(5, i + d.length)] || ins[5]).focus(); }  // código autocompletado
+        else { inp.value = d; if (d && ins[i + 1]) ins[i + 1].focus(); }
+        if (ins.every(x => x.value)) f.requestSubmit(); });
       inp.addEventListener('keydown', e => { if (e.key === 'Backspace' && !inp.value && ins[i - 1]) ins[i - 1].focus(); });
       inp.addEventListener('paste', e => { const t = (e.clipboardData.getData('text') || '').replace(/\D/g, '').slice(0, 6); if (t.length) { e.preventDefault(); t.split('').forEach((c, j) => ins[j] && (ins[j].value = c)); (ins[t.length] || ins[5]).focus(); if (t.length === 6) f.requestSubmit(); } });
     });
@@ -650,7 +727,7 @@ function shell(activo, contenido) {
   const a = (href, key, ic, txt, n) => `<a href="${href}" class="${activo === key ? 'on' : ''}">${ic}<span>${txt}</span>${n ? `<span class="pill">${n}</span>` : ''}</a>`;
   $('#app').innerHTML = `
   <header class="topbar">
-    <div class="brand grow"><div class="brand-mark">RH</div><div>${esc(S.app)}<small>${esc(S.empresa)}</small></div></div>
+    <div class="brand grow"><div class="brand-mark">RH</div><div>${esc(S.app)}<small>${esc(S.empresa || 'Recursos Humanos')}</small></div></div>
     <button class="user-chip" id="userchip" title="${esc(S.user.email)}"><div class="avatar">${esc(iniciales(S.user.nombre || S.user.email))}</div><span class="small">${esc((S.user.nombre || S.user.email).split(' ')[0])}</span></button>
   </header>
   <div class="layout">
@@ -671,8 +748,19 @@ function shell(activo, contenido) {
         ${a('#/admin/correos', 'correos', I.mail, 'Bitácora de correos')}` : ''}
     </nav></aside>
     <main class="main" id="main">${contenido}</main>
-  </div>`;
+  </div>
+  <div class="menu-velo" id="velo"></div>
+  <nav class="tabbar" aria-label="Navegación">
+    <a href="#/" class="${activo === 'inicio' ? 'on' : ''}">${I.home}<span>Inicio</span></a>
+    ${r.soy_aprobador || r.por_aprobar || esRH() ? `<a href="#/aprobar" class="${activo === 'aprobar' ? 'on' : ''}">${I.inbox}<span>Por aprobar</span>${r.por_aprobar ? `<span class="pill">${r.por_aprobar}</span>` : ''}</a>` : ''}
+    <a href="#/mis" class="${activo === 'mis' ? 'on' : ''}">${I.doc}<span>Mis solicitudes</span>${r.mis_info ? `<span class="pill">${r.mis_info}</span>` : ''}</a>
+    <button type="button" id="abrirmenu">${I.list}<span>Menú</span></button>
+  </nav>`;
+  document.body.classList.remove('menu-abierto', 'con-barra');
   $('#userchip').onclick = menuUsuario;
+  $('#abrirmenu').onclick = () => document.body.classList.add('menu-abierto');
+  $('#velo').onclick = () => document.body.classList.remove('menu-abierto');
+  $$('.side .nav a').forEach(x => x.addEventListener('click', () => document.body.classList.remove('menu-abierto')));
 }
 const nombreCorto = m => (m.nombre || m.codigo).replace(/^solicitud(es)? de /i, '').replace(/^./, c => c.toUpperCase());
 // Cosas por resolver en la configuración de un trámite (se muestran como globito en el menú)
@@ -755,10 +843,15 @@ async function vistaInicio() {
     esAdmin() && r.accesos ? `<a class="tile t-danger" href="#/admin/accesos"><div class="n">${r.accesos}</div><div class="t">Solicitudes de acceso</div></a>` : '',
     esRH() && r.pdf_pendiente ? `<a class="tile t-danger" href="#/todas"><div class="n">${r.pdf_pendiente}</div><div class="t">Aprobadas sin aviso enviado</div></a>` : ''
   ].join('');
+  let pend = '';
+  if (r.por_aprobar) { try { const P = await api('rh_pendientes');
+    pend = `<div class="card" style="margin-bottom:18px;border-color:var(--acero)"><div class="card-h"><h2>Esperan su firma (${P.pendientes.length})</h2>${P.pendientes.length > 5 ? '<a class="small" href="#/aprobar">Ver todas →</a>' : ''}</div>
+      ${tablaSolicitudes(P.pendientes.slice(0, 5), { solicitante: true, extra: 'Su paso', celda: s => `<b>${esc(s.mi_paso)}</b><div class="xs muted">esperando desde ${fmt(s.paso_actual?.desde)}</div>` })}</div>`; } catch {} }
   shell('inicio', `
     <div class="page-head"><div><h1>Hola, ${esc((S.user.nombre || '').split(' ')[0] || 'bienvenido')}</h1><p>¿Qué necesita gestionar hoy?</p></div></div>
-    ${avisos}
     <div class="tiles">${tiles}</div>
+    ${pend}
+    ${avisos}
     <p class="sec-title">Trámites disponibles</p>
     <div class="mods">
       ${S.modulos.filter(m => m.activo).map(m => `<a class="card mod" href="#/nueva/${esc(m.codigo)}">
@@ -771,6 +864,7 @@ async function vistaInicio() {
         <div class="row small" style="color:var(--pri);font-weight:700;margin-top:auto">${I.edit.replace('<svg', '<svg style="width:15px;height:15px"')} Configurar y activar</div></a>`).join('') : ''}
       <div class="card mod soon"><div class="mod-ic">${I.plus}</div><div><h3>Próximos trámites</h3><p class="small muted" style="margin:4px 0 0">Vacaciones, constancias, permisos y más se agregarán como nuevos módulos.</p></div></div>
     </div>`);
+  clicFilas();
 }
 
 /* =====================================================================
@@ -1179,7 +1273,7 @@ async function vistaEditar(id) {
    ===================================================================== */
 function tablaSolicitudes(rows, opts = {}) {
   if (!rows.length) return `<div class="empty">${I.inbox}<div>${esc(opts.vacio || 'No hay solicitudes.')}</div></div>`;
-  return `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Folio</th>${opts.solicitante ? '<th>Solicitante</th>' : '<th>Trámite</th>'}<th>Enviada</th><th>Estado</th><th>${opts.extra || 'Paso actual'}</th></tr></thead><tbody>
+  return `<div class="tbl-wrap"><table class="tbl cards"><thead><tr><th>Folio</th>${opts.solicitante ? '<th>Solicitante</th>' : '<th>Trámite</th>'}<th>Enviada</th><th>Estado</th><th>${opts.extra || 'Paso actual'}</th></tr></thead><tbody>
     ${rows.map(s => `<tr class="click" data-id="${s.id}">
       <td><b>${esc(s.folio)}</b>${s.es_prueba ? ' <span class="tag prb">Prueba</span>' : ''}${s.version > 1 ? ` <span class="tag">v${s.version}</span>` : ''}${s.excepcion ? ' <span class="tag exc">Excepción</span>' : ''}</td>
       ${opts.solicitante ? `<td>${esc(s.solicitante_nombre)}<div class="xs muted">${esc(s.departamento || '')}</div></td>` : `<td>${esc(s.modulo_nombre)}</td>`}
@@ -1493,6 +1587,14 @@ function filasDatos(s) {
   });
   return out;
 }
+// v1.11: lo esencial de la solicitud, arriba del panel de decisión (pensado para el celular)
+function resumenClave(s, D) {
+  const f = (s.formulario || []), filas = [['Solicitante', `${s.solicitante_nombre}${s.datos.departamento ? ' · ' + s.datos.departamento : ''}`]];
+  f.filter(x => x.tipo === 'dias' || x.en_resumen).forEach(x => filas.push([x.tipo === 'dias' ? 'Días de teletrabajo' : x.label, valorTexto(x, s.datos)]));
+  const nDocs = f.filter(x => x.tipo === 'archivo').reduce((n, x) => n + (s.datos[x.key] || []).length, 0);
+  return `<div class="res-clave"><dl>${filas.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('')}</dl>
+    <div class="lnk"><a href="#det-datos" data-ancla>Ver todos los datos ↓</a>${nDocs ? `<a href="#docs" data-ancla>${I.clip.replace('<svg', '<svg style="width:14px;height:14px;vertical-align:-2px"')} ${nDocs} documento(s) ↓</a>` : ''}</div></div>`;
+}
 // Datos que registró el aprobador (monto, porcentaje, fecha…)
 const datosAprobTxt = a => (a.datos_def || []).filter(d => a.datos && a.datos[d.key] != null && a.datos[d.key] !== '')
   .map(d => [d.label, d.tipo === 'fecha' ? fmtISO(a.datos[d.key]) : d.tipo === 'numero' ? Number(a.datos[d.key]).toLocaleString('es-CR', { maximumFractionDigits: 2 }) : String(a.datos[d.key])]);
@@ -1552,7 +1654,7 @@ async function vistaDetalle(id) {
       ${x.respuesta ? `<div class="a"><div class="xs muted">Respuesta · ${fmt(x.respondido_en)}</div><div class="small" style="white-space:pre-wrap">${esc(x.respuesta)}</div>
         ${(x.adjuntos || []).map(f => `<button class="btn sm ghost" data-adj="${f.id}">${I.clip} ${esc(f.nombre)}</button>`).join('')}</div>` : '<div class="a xs muted">Sin respuesta todavía</div>'}</div>`).join('')}</div></div>` : '';
   const camposArch = (s.formulario || []).filter(f => f.tipo === 'archivo');
-  const docs = camposArch.length ? `<div class="card" style="margin-top:16px"><div class="card-h"><h2>${I.clip.replace('<svg', '<svg style="width:18px;height:18px;vertical-align:-3px;margin-right:6px"')}Documentos adjuntos</h2></div><div class="card-b stack" style="gap:12px">
+  const docs = camposArch.length ? `<div class="card" style="margin-top:16px" id="docs"><div class="card-h"><h2>${I.clip.replace('<svg', '<svg style="width:18px;height:18px;vertical-align:-3px;margin-right:6px"')}Documentos adjuntos</h2></div><div class="card-b stack" style="gap:12px">
       ${camposArch.map(f => `<div><div class="small b">${esc(f.label)}</div>${(s.datos[f.key] || []).length ? (s.datos[f.key] || []).map(x => `<div class="file-it" style="margin-top:6px">${I.clip.replace('<svg', '<svg style="width:15px;height:15px;flex:none"')}<span class="nm">${esc(x.nombre)}</span><span class="sz">${kb(x.tamano)}</span>
           <button class="btn sm" data-adj="${x.id}">Abrir</button><button class="btn sm ghost icon" data-adjd="${x.id}" title="Descargar">${I.pdf}</button></div>`).join('') : '<div class="xs muted">—</div>'}</div>`).join('')}</div></div>` : '';
   const B = D.beneficio, R$ = n => n == null ? '—' : (B?.moneda === 'USD' ? 'US$' : (B?.moneda || '') + ' ') + Number(n).toLocaleString('es-CR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -1575,6 +1677,7 @@ async function vistaDetalle(id) {
   const panelAprob = yoAprob ? `<div class="card" style="border:2px solid ${s.excepcion ? 'var(--danger)' : 'var(--warn)'};margin-bottom:20px" id="panel-aprob">
       <div class="card-h" style="background:${s.excepcion ? '#FDECEC' : 'var(--warn-50)'};border-radius:14px 14px 0 0"><h2>Su decisión · ${esc(yoAprob.paso)}</h2><div class="row wrap" style="gap:6px">${s.excepcion ? '<span class="tag exc">⚠ Excepción</span>' : ''}${yoAprob.es_final ? '<span class="tag adm">Aprobación final</span>' : ''}</div></div>
       <div class="card-b stack">
+        ${resumenClave(s, D)}
         ${pasoUnif ? `<div class="alert a-info" style="margin:0">${I.info}<div class="small">Usted figura en varios pasos seguidos de este flujo (<b>${esc(yoAprob.paso)}</b>). Se unificaron en <b>una sola aprobación</b>: su firma cuenta para todos ellos.</div></div>` : ''}
         ${s.excepcion ? `<label class="chk" style="border-color:var(--danger);background:#FDECEC"><input type="checkbox" id="okexc"><span><b style="color:var(--danger)">Revisé la causa y el motivo, y autorizo esta excepción a la política.</b><br><span class="small muted">Obligatorio para aprobar.</span></span></label>` : ''}
         ${pistaPolitica(s) ? `<div class="opt-nota" style="margin:0">${pistaPolitica(s)}</div>` : ''}
@@ -1584,7 +1687,7 @@ async function vistaDetalle(id) {
         ${D.presupuesto ? `<div class="opt-nota" id="presbox" style="margin:0"></div>` : ''}
         <div class="field"><label for="com">Comentario <span class="muted">(obligatorio si rechaza: motivo)</span></label><textarea class="inp" id="com" style="min-height:70px"></textarea></div>
         <div><div class="lbl" style="margin-bottom:6px">Firma (obligatoria para aprobar)</div><div id="sig"></div></div>
-        <div class="row" style="justify-content:flex-end;gap:10px;flex-wrap:wrap">
+        <div class="row" style="justify-content:flex-end;gap:10px;flex-wrap:wrap" id="acc-aprob">
           ${P.pedir_info ? `<button class="btn" id="pinfo">${I.info} Solicitar más información</button>` : ''}<button class="btn dan" id="rech">${I.x} Rechazar</button><button class="btn pri" id="aprob">${I.check} Aprobar y firmar</button></div>
         ${yoAprob.es_final ? '<p class="xs muted" style="margin:0">Al aprobar se avisa por correo al solicitante y a RH; el documento final con todas las firmas queda listo para descargar.</p>' : ''}
       </div></div>` : '';
@@ -1606,7 +1709,7 @@ async function vistaDetalle(id) {
     <div class="det">
       <div>
         ${panelAprob}
-        <div class="card"><div class="card-h"><h2>Detalle de la solicitud</h2></div><div class="card-b">
+        <div class="card" id="det-datos"><div class="card-h"><h2>Detalle de la solicitud</h2></div><div class="card-b">
           <dl class="kv">${filasDatos(s).map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('')}
             <dt>Correo del solicitante</dt><dd>${esc(s.solicitante_email)}</dd></dl>
           ${s.politica_id ? `<div class="pol ok" style="margin-top:16px"><div class="ic">${I.book}</div><div class="grow"><div class="small b">Política aceptada: ${esc(s.politica_titulo)}${s.politica_version ? ' · v' + esc(s.politica_version) : ''}</div><div class="xs muted">${fmt(s.politica_aceptada_en)}</div></div><button class="btn sm" data-pol="${s.politica_id}">Ver</button></div>` : ''}
@@ -1653,6 +1756,18 @@ async function vistaDetalle(id) {
       } catch (e) { toast(e.message, 'err'); }
     });
     $('#aprob').onclick = e => resolver(true, e.currentTarget);
+    // v1.11: barra fija en celular (Aprobar / Rechazar siempre a mano)
+    const barra = document.createElement('div'); barra.className = 'barra-aprob';
+    barra.innerHTML = `<button class="btn dan" data-b="r">${I.x} Rechazar</button><button class="btn pri" data-b="a">${I.check} Aprobar y firmar</button>`;
+    $('#main').appendChild(barra); document.body.classList.add('con-barra');
+    const ir = (el, msj) => { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); if (msj) toast(msj, 'err'); };
+    $('[data-b="a"]', barra).onclick = () => {
+      if (s.excepcion && !$('#okexc').checked) return ir($('#okexc').closest('label'), 'Marque que autoriza la excepción.');
+      const falta = (yoAprob.datos_def || []).find(d => d.requerido && !$(`[data-dap="${d.key}"]`).value.trim()); if (falta) return ir($(`[data-dap="${falta.key}"]`), `Complete "${falta.label}".`);
+      if (firma.vacia()) return ir($('#sig'), 'Firme en el recuadro (o use "Firmar en grande").');
+      $('#aprob').click(); };
+    $('[data-b="r"]', barra).onclick = () => { if (!$('#com').value.trim()) { ir($('#com')); $('#com').focus(); return toast('Escriba el motivo del rechazo.', 'err'); } $('#rech').click(); };
+    if ('IntersectionObserver' in window) new IntersectionObserver(([en]) => barra.classList.toggle('oculta', en.isIntersecting)).observe($('#acc-aprob'));
     if (D.presupuesto) {
       const PR = D.presupuesto, campo = D.opciones?.beneficio?.campo_monto || 'monto', inp = $(`[data-dap="${campo}"]`);
       const mon = n => (PR.moneda === 'USD' ? 'US$' : PR.moneda + ' ') + Number(n || 0).toLocaleString('es-CR', { maximumFractionDigits: 0 });
@@ -1682,6 +1797,7 @@ async function vistaDetalle(id) {
         await api('rh_responder_info', { p_id: s.id, p_respuesta: t, p_adjuntos: adj.map(x => x.id) }); toast('Respuesta enviada. La solicitud volvió a revisión.', 'ok'); vistaDetalle(s.id); }
       catch (err) { toast(err.message, 'err'); } });
   }
+  $$('[data-ancla]').forEach(a => a.onclick = e => { e.preventDefault(); $(a.getAttribute('href'))?.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
   $$('[data-adj]').forEach(b => b.onclick = () => ocupado(b, async () => { try { await descargarAdjunto(+b.dataset.adj, true); } catch (err) { toast(err.message, 'err'); } }));
   $$('[data-adjd]').forEach(b => b.onclick = () => ocupado(b, async () => { try { await descargarAdjunto(+b.dataset.adjd, false); } catch (err) { toast(err.message, 'err'); } }));
   if (P.beneficio) {
@@ -1746,7 +1862,7 @@ async function construirPDF(D) {
 
   // Encabezado
   doc.setFillColor(AZUL); doc.rect(0, 0, W, 30, 'F');
-  doc.setTextColor('#FFFFFF'); doc.setFont('helvetica', 'bold'); doc.setFontSize(16); T(S.empresa, M, 13);
+  doc.setTextColor('#FFFFFF'); doc.setFont('helvetica', 'bold'); doc.setFontSize(16); T(S.empresa || 'Recursos Humanos', M, 13);
   doc.setFont('helvetica', 'normal'); doc.setFontSize(9); T(S.app + ' · Recursos Humanos', M, 19.5);
   doc.setFont('helvetica', 'bold'); doc.setFontSize(12); T(s.folio, W - M, 13, { align: 'right' });
   doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); T('Documento final', W - M, 19.5, { align: 'right' });
@@ -2270,7 +2386,7 @@ function edGeneral() {
     <div class="field"><label>Nombre del trámite</label><input class="inp" data-g="nombre" value="${esc(ED.nombre)}"></div>
     <div class="field"><label>Prefijo del folio</label><input class="inp" data-g="prefijo" value="${esc(ED.prefijo)}" maxlength="6"><span class="help">Ej. TT → TT-2026-0001</span></div>
     <div class="field span2"><label>Descripción</label><input class="inp" data-g="descripcion" value="${esc(ED.descripcion)}"></div>
-    <div class="field span2"><label>Copia del aviso de aprobación (correos de RH)</label><input class="inp" data-g="correos_copia" value="${esc(ED.correos_copia || '')}" placeholder="rrhh@legrand.com, gerente.rh@legrand.com"><span class="help">Reciben el aviso de cada solicitud aprobada de este trámite y pueden entrar a ver y descargar el documento. Vacío = se usa el aprobador del último paso.</span></div>
+    <div class="field span2"><label>Copia del aviso de aprobación (correos de RH)</label><input class="inp" data-g="correos_copia" value="${esc(ED.correos_copia || '')}" placeholder="rrhh@empresa.com, gerente.rh@empresa.com"><span class="help">Reciben el aviso de cada solicitud aprobada de este trámite y pueden entrar a ver y descargar el documento. Vacío = se usa el aprobador del último paso.</span></div>
     <label class="chk"><input type="checkbox" data-g="activo" ${ED.activo ? 'checked' : ''}><span><b>Trámite activo</b><br><span class="small muted">Si se desactiva, nadie puede crear solicitudes nuevas.</span></span></label>
     <label class="chk"><input type="checkbox" data-o="pedir_info" ${O.pedir_info ? 'checked' : ''}><span><b>Permitir "Solicitar más información"</b><br><span class="small muted">El aprobador puede devolverle una pregunta al solicitante; al responder, vuelve al mismo paso.</span></span></label>
     <div class="field span2"><label>Enlace directo al formulario (para COMET o la intranet)</label><div class="copy-box"><input class="inp" id="lnk" readonly value="${esc(location.href.split('#')[0] + '#/nueva/' + ED.codigo)}"><button class="btn" id="cplnk" title="Copiar">${I.copy}</button></div>
@@ -2313,7 +2429,7 @@ async function adminConfig() {
     </div></div>
     <div class="card"><div class="card-h"><h2>Aplicación</h2></div><div class="card-b grid2">
       <div class="field"><label>Nombre de la app</label><input class="inp" data-c="nombre_app" value="${v('nombre_app')}"></div>
-      <div class="field"><label>Empresa</label><input class="inp" data-c="nombre_empresa" value="${v('nombre_empresa')}"></div>
+      <div class="field"><label>Nombre de la empresa <span class="muted">(opcional)</span></label><input class="inp" data-c="nombre_empresa" value="${v('nombre_empresa')}"><span class="help">Si lo deja vacío, la app no muestra ningún nombre de empresa.</span></div>
       <div class="field span2"><label>URL pública de la app (para los botones de los correos)</label><div class="copy-box"><input class="inp" data-c="app_url" value="${v('app_url')}" placeholder="https://..."><button class="btn" id="usar" title="Usar la dirección actual">Usar actual</button></div><span class="help">Dirección actual: ${esc(urlApp)}</span></div>
     </div></div>
     <div class="card"><div class="card-h"><h2>Seguridad de acceso</h2></div><div class="card-b grid3">
