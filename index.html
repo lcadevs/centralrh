@@ -22,7 +22,7 @@
 const CONFIG = {
   SUPABASE_URL: 'https://iecfgpqnnsxmnmbxnfcp.supabase.co',
   SUPABASE_KEY: 'sb_publishable_Mt2sdPIzEcfbKv15x4-JTQ_Tf6csjiH',
-  VERSION: '1.12'
+  VERSION: '1.13'
 };
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -383,6 +383,7 @@ const store = {
 const slug = s => { let k = String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 40); if (!/^[a-z]/.test(k)) k = 'c_' + k; return k; };
 // Causas de excepción del campo de días: consecutivos y/o más días de los permitidos por la política
 const causasExc = (arr, f) => { const c = []; if (consecutivos(arr)) c.push('días consecutivos');
+  else if ((f?.vie_lun_consecutivos === true || f?.vie_lun_consecutivos === 'true') && (arr || []).includes('lun') && (arr || []).includes('vie')) c.push('lunes y viernes (cuentan como consecutivos)');
   const mx = +(f?.max_politica || 0); if (mx > 0 && (arr || []).length > mx) c.push(`${arr.length} días (la política permite ${mx})`); return c; };
 const consecutivos = arr => { const ix = (arr || []).map(d => DIAS_ORD.indexOf(d)).sort((a, b) => a - b); return ix.some((v, i) => i > 0 && v - ix[i - 1] === 1); };
 
@@ -912,13 +913,14 @@ function campoHTML(f, v, deshab = false) {
     case 'si_no': return `<div class="field span2"><label class="chk"><input type="checkbox" data-k="${esc(f.key)}" data-t="si_no" ${v ? 'checked' : ''} ${d}><span><b class="${req}">${esc(f.label)}</b>${f.ayuda ? `<br><span class="help">${esc(f.ayuda)}</span>` : ''}</span></label></div>`;
     case 'dias': {
       const sel = v || [];
-      inner = `<div class="days" data-k="${esc(f.key)}" data-t="dias" data-maxpol="${esc(f.max_politica || '')}">${(ops.length ? ops : ['lun','mar','mie','jue','vie']).map(o => `<button type="button" class="day ${sel.includes(o) ? 'on' : ''}" data-d="${o}" ${d}>${DIAS[o] || o}</button>`).join('')}</div>
+      inner = `<div class="days" data-k="${esc(f.key)}" data-t="dias" data-maxpol="${esc(f.max_politica || '')}" data-vielun="${f.vie_lun_consecutivos ? 'true' : ''}">${(ops.length ? ops : ['lun','mar','mie','jue','vie']).map(o => `<button type="button" class="day ${sel.includes(o) ? 'on' : ''}" data-d="${o}" ${d}>${DIAS[o] || o}</button>`).join('')}</div>
         <div class="exc hidden" data-exc="${esc(f.key)}">
           <div class="row" style="margin-bottom:10px;color:#6E5418">${I.warn.replace('<svg', '<svg style="width:18px;height:18px"')}<b class="small" data-exc-txt>Esta solicitud es una excepción a la política: indique el motivo.</b></div>
           <div class="grid2"><div class="field"><label class="req">Motivo de la excepción</label><select class="inp" data-k="${esc(f.key)}_excepcion_motivo" ${d}><option value="">Seleccione…</option>${(f.motivos || ['Salud', 'Cuido', 'Otro']).map(o => `<option>${esc(o)}</option>`).join('')}</select></div>
           <div class="field span2"><label class="req">Detalle de la excepción</label><textarea class="inp" data-k="${esc(f.key)}_excepcion_detalle" style="min-height:64px" ${d}></textarea><span class="help">La excepción agrega al flujo la aprobación del director del departamento y de RH.</span></div></div>
         </div>
-        ${f.max_politica ? `<span class="help"><b>La política permite hasta ${esc(f.max_politica)} día(s) por semana.</b> Más días o días consecutivos se tramitan como excepción.</span>` : ''}`;
+        ${f.max_politica ? `<span class="help"><b>La política permite hasta ${esc(f.max_politica)} día(s) por semana.</b> Más días o días consecutivos se tramitan como excepción.</span>` : ''}
+        ${f.vie_lun_consecutivos ? `<span class="help">Lunes y viernes juntos también cuentan como días consecutivos.</span>` : ''}`;
       break;
     }
     default: inner = `<input class="inp" id="${id}" data-k="${esc(f.key)}" value="${esc(v)}" ${d}>`;
@@ -936,7 +938,7 @@ function campoHTML(f, v, deshab = false) {
 function enlazarForm(root, formulario = []) {
   $$('.days', root).forEach(box => {
     const key = box.dataset.k, exc = $(`[data-exc="${key}"]`, root);
-    const refrescar = () => { const sel = $$('.day.on', box).map(b => b.dataset.d), c = causasExc(sel, { max_politica: box.dataset.maxpol });
+    const refrescar = () => { const sel = $$('.day.on', box).map(b => b.dataset.d), c = causasExc(sel, { max_politica: box.dataset.maxpol, vie_lun_consecutivos: box.dataset.vielun });
       if (!exc) return; exc.classList.toggle('hidden', !c.length);
       const t = $('[data-exc-txt]', exc); if (t && c.length) t.textContent = `Excepción a la política por ${c.join(' y ')}. Indique el motivo.`; };
     box.addEventListener('click', e => { const b = e.target.closest('.day'); if (!b || b.disabled) return;
@@ -2012,8 +2014,10 @@ async function tabPolitica(m) {
   $('#edbody').innerHTML = `
     ${fd ? `<div class="card" style="margin-bottom:18px"><div class="card-b row wrap" style="gap:16px;align-items:flex-end">
         <div class="grow" style="min-width:240px"><h3>Días por semana que permite la política</h3>
-          <p class="small muted" style="margin:4px 0 0">Si alguien pide más días, o días consecutivos, la solicitud es una <b>excepción</b>: debe justificarla y pasa por los pasos de excepción del flujo.</p></div>
+          <p class="small muted" style="margin:4px 0 0">Si alguien pide más días, o días consecutivos, la solicitud es una <b>excepción</b>: debe justificarla y pasa por los pasos de excepción del flujo.</p>
+          <p class="small" style="margin:6px 0 0">${fd.vie_lun_consecutivos ? 'Hoy: <b>lunes + viernes sí cuentan como consecutivos.</b>' : 'Hoy: lunes + viernes <b>no</b> cuentan como consecutivos.'}</p></div>
         <div class="field" style="width:150px"><label>Días permitidos</label><input class="inp" type="number" min="0" max="7" id="diaspol" value="${esc(fd.max_politica || '')}" placeholder="Sin límite"></div>
+        <label class="chk" style="max-width:300px"><input type="checkbox" id="vielun" ${fd.vie_lun_consecutivos ? 'checked' : ''}><span><b>Lunes y viernes juntos cuentan como consecutivos</b><br><span class="xs muted">Por el fin de semana de por medio.</span></span></label>
         <button class="btn pri" id="gdias">${I.check} Guardar</button>
         <span class="small ${fd.max_politica ? '' : 'muted'}" style="padding-bottom:10px">${fd.max_politica ? `Vigente: <b>${fd.max_politica} día(s)</b>` : 'Sin límite definido'}</span>
       </div></div>` : ''}
@@ -2088,8 +2092,8 @@ async function tabPolitica(m) {
     catch (err) { toast(err.message, 'err'); } });
   if (fd) $('#gdias').onclick = e => ocupado(e.currentTarget, async () => {
     const v = $('#diaspol').value;
-    try { const r = await api('rh_dias_politica', { p_modulo: m.codigo, p_dias: v === '' ? 0 : +v });
-      toast(r.dias ? `Política: hasta ${r.dias} día(s); más días se tramitan como excepción.` : 'Sin límite de días.', 'ok'); recargar(); }
+    try { const r = await api('rh_dias_politica', { p_modulo: m.codigo, p_dias: v === '' ? 0 : +v, p_vie_lun: $('#vielun').checked });
+      toast((r.dias ? `Política: hasta ${r.dias} día(s).` : 'Sin límite de días.') + (r.vie_lun ? ' Lunes y viernes cuentan como consecutivos.' : ' Lunes y viernes no cuentan como consecutivos.'), 'ok'); recargar(); }
     catch (err) { toast(err.message, 'err'); } });
   $('#fp').onsubmit = e => { e.preventDefault(); ocupado($('#fp button.pri'), async () => {
     const files = [...$('#pf').files], btn = $('#fp button.pri');
@@ -2279,6 +2283,7 @@ function edFormulario() {
             <textarea class="inp mono" data-pj="restricciones" style="min-height:70px;font-size:12px">${esc(f.restricciones ? JSON.stringify(f.restricciones, null, 1) : '')}</textarea></details></div>` : ''}
         ${f.tipo === 'dias' ? `<div class="field" style="grid-column:1/-1"><span class="lbl">Días disponibles</span><div class="days" data-dias>${DIAS_ORD.map(d => `<button type="button" class="day ${(f.opciones || []).includes(d) ? 'on' : ''}" data-d="${d}">${DIAS[d]}</button>`).join('')}</div></div>
           <div class="field"><span class="lbl">Días permitidos por política (más = excepción)</span><input class="inp" type="number" min="1" max="7" data-p="max_politica" value="${esc(f.max_politica || '')}" placeholder="Sin límite"><span class="help">RH también lo puede cambiar en Políticas.</span></div>
+          <label class="chk" style="align-self:end"><input type="checkbox" data-p="vie_lun_consecutivos" ${f.vie_lun_consecutivos ? 'checked' : ''}><span>Lunes y viernes juntos cuentan como consecutivos</span></label>
           <div class="field span2"><span class="lbl">Motivos de excepción (uno por línea)</span><textarea class="inp" data-p="motivos" style="min-height:70px">${esc((f.motivos || []).join('\n'))}</textarea></div>` : ''}
       </div></div>`).join('')}</div>
     <button class="btn" id="addf" style="margin-top:14px">${I.plus} Agregar campo</button>`;
@@ -2290,7 +2295,7 @@ function edFormulario() {
     if (t.dataset.opNota != null) { const o = f.opciones[+t.dataset.opNota]; f.notas_opciones = { ...(f.notas_opciones || {}) }; if (t.value.trim()) f.notas_opciones[o] = t.value.trim(); else delete f.notas_opciones[o]; return; }
     if (t.dataset.pj) { const k = t.dataset.pj; if (!t.value.trim()) { delete f[k]; t.style.borderColor = ''; return; } try { f[k] = JSON.parse(t.value); t.style.borderColor = ''; } catch { t.style.borderColor = 'var(--danger)'; } return; }
     const p = t.dataset.p; if (!p) return;
-    if (['requerido', 'en_resumen', 'no_futura', 'excepcion_justificar'].includes(p)) { if (e.target.checked) f[p] = true; else if (p === 'requerido') f.requerido = false; else delete f[p]; return; }
+    if (['requerido', 'en_resumen', 'no_futura', 'excepcion_justificar', 'vie_lun_consecutivos'].includes(p)) { if (e.target.checked) f[p] = true; else if (p === 'requerido') f.requerido = false; else delete f[p]; return; }
     if (p === 'max_archivos') { f.max_archivos = Math.max(1, Math.min(10, +e.target.value || 5)); return; }
     else if (p === 'opciones' || p === 'motivos') f[p] = e.target.value.split('\n').map(x => x.trim()).filter(Boolean);
     else if (p === 'max_politica') { delete f.max; if (+e.target.value > 0) f.max_politica = +e.target.value; else delete f.max_politica; }
