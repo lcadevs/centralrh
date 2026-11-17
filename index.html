@@ -22,7 +22,7 @@
 const CONFIG = {
   SUPABASE_URL: 'https://iecfgpqnnsxmnmbxnfcp.supabase.co',
   SUPABASE_KEY: 'sb_publishable_Mt2sdPIzEcfbKv15x4-JTQ_Tf6csjiH',
-  VERSION: '1.13'
+  VERSION: '1.14'
 };
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -441,6 +441,7 @@ async function rpc(fn, args = {}) {
   if (!r.ok) {
     const msg = (data && (data.message || data.hint)) || txt || ('Error ' + r.status);
     if (String(msg).includes('SESION_EXPIRADA')) { finSesion(); throw new Error('Su sesión expiró. Ingrese de nuevo.'); }
+    if (String(msg).includes('MODO_EMERGENCIA')) { S.emergencia = true; setTimeout(vistaEmergencia, 0); throw new Error('Modo emergencia: solo puede revisar el estado de los correos.'); }
     if (r.status === 404 && /function|could not find/i.test(msg)) throw new Error('Falta instalar el esquema en Supabase (función ' + fn + ').');
     throw new Error(msg);
   }
@@ -552,7 +553,7 @@ class Firma {
 /* =====================================================================
    SESIÓN Y ARRANQUE
    ===================================================================== */
-function finSesion() { S.token = null; S.user = null; store.set('token', null); }
+function finSesion() { S.token = null; S.user = null; S.emergencia = false; store.set('token', null); }
 async function cargarBase() {
   const [m, r] = await Promise.all([api('rh_modulos'), api('rh_resumen')]);
   S.modulos = m.modulos || []; S.departamentos = m.departamentos || []; S.resumen = r || {};
@@ -569,6 +570,7 @@ async function iniciar() {
     try {
       const s = await rpc('rh_sesion', { p_token: S.token });
       S.user = s.usuario; S.app = s.app; S.empresa = s.empresa; document.title = s.app;
+      if (s.emergencia) { S.emergencia = true; return vistaEmergencia(); }
       await cargarBase();
     } catch (e) { finSesion(); }
   }
@@ -576,7 +578,7 @@ async function iniciar() {
   if (S.user.pin_temporal) return forzarCambioPin();
   router();
 }
-window.addEventListener('hashchange', () => { if (S.user) router(); });
+window.addEventListener('hashchange', () => { if (S.emergencia) return vistaEmergencia(); if (S.user) router(); });
 
 /* =====================================================================
    LOGIN
@@ -593,7 +595,8 @@ async function vistaLogin(paso = 'correo', ctx = {}) {
       ${dom ? `<p class="xs muted" style="text-align:center">Solo correos ${esc(dom)}</p>` : ''}
     </form>`;
   if (paso === 'pin') form = `
-    <h1>Hola${ctx.nombre ? ', ' + esc(ctx.nombre.split(' ')[0]) : ''}</h1><p class="muted" style="margin:6px 0 20px">Ingreso con PIN de respaldo (solo administradores).</p>
+    <h1>Hola${ctx.nombre ? ', ' + esc(ctx.nombre.split(' ')[0]) : ''}</h1><p class="muted" style="margin:6px 0 14px">Ingreso con PIN de emergencia (solo administradores).</p>
+    <div class="alert a-warn" style="margin-bottom:14px">${I.shield}<div class="small">Si los correos ya están configurados, el PIN abre un <b>modo de emergencia de solo lectura</b> por 1 hora: solo permite revisar por qué no llegan los correos y enviar un correo de prueba. Los demás administradores reciben una alerta. Para usar la central, ingrese con el código del correo.</div></div>
     ${ctx.aviso ? `<div class="alert a-info">${I.info}<div class="small">${esc(ctx.aviso)}</div></div>` : ''}
     <form id="f" class="stack">
       <div class="field"><label for="pin">PIN</label><input class="inp" id="pin" type="password" inputmode="numeric" autocomplete="current-password" maxlength="8" style="font-size:22px;letter-spacing:8px;text-align:center" required></div>
@@ -605,7 +608,7 @@ async function vistaLogin(paso = 'correo', ctx = {}) {
     <form id="f" class="stack">
       <div class="otp">${[0,1,2,3,4,5].map(i => `<input inputmode="numeric" pattern="[0-9]*" ${i === 0 ? 'autocomplete="one-time-code"' : 'autocomplete="off"'} maxlength="${i === 0 ? 6 : 1}" data-i="${i}" aria-label="Dígito ${i + 1}">`).join('')}</div>
       <button class="btn pri" style="width:100%;padding:12px">Verificar</button>
-      ${ctx.pin ? `<button type="button" class="btn" style="width:100%" data-pin>${I.key} Ingresar con PIN de respaldo</button>` : ''}
+      ${ctx.pin ? `<button type="button" class="btn" style="width:100%" data-pin>${I.key} Ingresar con PIN de emergencia</button>` : ''}
       <div class="row between"><button type="button" class="btn ghost sm" data-back>Usar otro correo</button><button type="button" class="btn ghost sm" data-resend>Reenviar código</button></div>
       <p class="xs muted">¿No llega? Revise la carpeta de correo no deseado.</p>
     </form>`;
@@ -697,9 +700,53 @@ async function vistaLogin(paso = 'correo', ctx = {}) {
 }
 async function entrar(r) {
   S.token = r.token; S.user = r.usuario; store.set('token', r.token);
+  if (r.emergencia) { S.emergencia = true; return vistaEmergencia(); }
   await cargarBase();
   if (S.user.pin_temporal) return forzarCambioPin();
   router();
+}
+/* v1.14: MODO EMERGENCIA (ingreso con PIN con los correos configurados): solo lectura del estado de correos */
+async function vistaEmergencia() {
+  $('#app').innerHTML = `<div style="min-height:100vh;background:var(--bg)">
+    <header style="background:#7A1F24;color:#fff;padding:14px 18px;padding-top:calc(14px + env(safe-area-inset-top))"><div style="max-width:980px;margin:0 auto" class="row between wrap">
+      <div class="row" style="gap:10px">${I.shield.replace('<svg', '<svg style="width:22px;height:22px"')}<div><b>Modo emergencia · solo lectura</b><div class="xs" style="opacity:.85">Ingresó con el PIN. Solo puede revisar el estado de los correos.</div></div></div>
+      <button class="btn sm" id="em-salir" style="background:#fff;color:#7A1F24">Salir</button></div></header>
+    <main style="max-width:980px;margin:0 auto;padding:18px 14px 40px" id="em-main"><div class="loading-row"><span class="spin"></span> Cargando…</div></main></div>`;
+  $('#em-salir').onclick = async () => { try { await rpc('rh_logout', { p_token: S.token }); } catch {} finSesion(); location.hash = '#/'; vistaLogin(); };
+  let E;
+  try { E = await api('rh_emergencia_estado'); } catch (err) { if (!S.token) return vistaLogin(); $('#em-main').innerHTML = `<div class="alert a-err">${esc(err.message)}</div>`; return; }
+  if (!E.emergencia) { S.emergencia = false; return router(); }
+  const C = E.config, ok = x => x ? `<span class="badge s-aprobada">Sí</span>` : `<span class="badge s-rechazada">No</span>`;
+  const estadoTxt = c => c.http ? (c.http >= 200 && c.http < 300 ? `<span class="badge s-aprobada">HTTP ${c.http}</span>` : `<span class="badge s-rechazada">HTTP ${c.http}</span>`)
+                       : c.error ? '<span class="badge s-rechazada">Error</span>' : `<span class="badge s-en_espera">${esc(c.estado || 'sin respuesta')}</span>`;
+  $('#em-main').innerHTML = `
+    <div class="alert a-warn">${I.info}<div class="small">Sesión de emergencia de <b>${esc(E.usuario.nombre || E.usuario.email)}</b>, vence ${fmt(E.expira)}. Desde aquí <b>no se puede</b> ver solicitudes, aprobar ni cambiar configuración (tampoco la URL de los correos): eso evita que alguien con el PIN tome control de la central. Los demás administradores fueron alertados.</div></div>
+    <div class="grid2" style="margin-bottom:16px">
+      <div class="card"><div class="card-h"><h2>Configuración de correo</h2></div><div class="card-b"><dl class="kv">
+        <dt>URL de Power Automate</dt><dd>${ok(C.url_configurada)}${C.servidor ? ` <span class="xs muted">${esc(C.servidor)}</span>` : ''}</dd>
+        <dt>Secreto compartido</dt><dd>${ok(C.secreto_configurado)}</dd>
+        <dt>Extensión pg_net</dt><dd>${ok(C.pg_net)}</dd>
+        <dt>Modo prueba</dt><dd>${C.modo_prueba ? `<span class="badge s-en_espera">Activo</span> <span class="xs muted">todo va a ${esc(C.modo_prueba)}</span>` : 'Apagado'}</dd>
+        <dt>Correos última hora / 24 h</dt><dd>${E.resumen.ultima_hora} / ${E.resumen.ultimas_24h}</dd></dl></div></div>
+      <div class="card"><div class="card-h"><h2>Probar el envío</h2></div><div class="card-b stack">
+        <p class="small" style="margin:0">Envía un correo corto <b>solo a usted</b> (${esc(E.usuario.email)}). Máximo 3 cada 15 minutos.</p>
+        <button class="btn pri" id="em-probar">${I.send} Enviar correo de prueba</button>
+        <button class="btn" id="em-act">Actualizar estado</button>
+        <p class="xs muted" style="margin:0">El estado HTTP aparece unos segundos después del envío: <b>202/200</b> = Power Automate lo recibió. <b>401</b> = secreto distinto. <b>404</b> = URL o flujo eliminado. <b>429</b> = límite de envíos. Error de tiempo = el flujo no respondió.</p></div></div>
+    </div>
+    <div class="card" style="margin-bottom:16px"><div class="card-h"><h2>Qué revisar</h2></div><div class="card-b small stack">
+      <div>1. En Power Automate, que el flujo esté <b>activado</b> y revise su <b>historial de ejecuciones</b>: si no hay ejecuciones, el problema está antes (URL o pg_net); si fallan, abra la ejecución para ver el error.</div>
+      <div>2. Que la conexión del conector de correo del flujo siga válida (a veces vence y hay que volver a iniciar sesión).</div>
+      <div>3. Si el flujo se recreó y cambió la URL, se corrige <b>desde Supabase</b> (no desde aquí, por seguridad): SQL Editor → <span class="kbd">update public.rh_config set valor = to_jsonb('PEGUE_LA_URL_NUEVA'::text) where clave = 'pa_url';</span></div>
+      <div>4. Cuando el correo de prueba llegue, pulse <b>Salir</b> e ingrese normalmente con el código.</div></div></div>
+    <div class="card"><div class="card-h"><h2>Últimos correos</h2></div>
+      ${E.correos.length ? `<div class="tbl-wrap"><table class="tbl cards"><thead><tr><th>Asunto</th><th>Para</th><th>Fecha</th><th>Estado</th><th>Detalle</th></tr></thead><tbody>
+      ${E.correos.slice(0, 20).map(c => `<tr><td><b class="small">${esc(c.asunto || '')}</b><div class="xs muted">${esc(c.tipo || '')}</div></td><td class="small">${esc(c.para || '')}</td><td class="small">${fmt(c.creado_en)}</td><td>${estadoTxt(c)}</td><td class="xs muted">${esc(c.error || '')}</td></tr>`).join('')}
+      </tbody></table></div>` : '<div class="empty">No hay correos registrados.</div>'}</div>`;
+  $('#em-act').onclick = () => vistaEmergencia();
+  $('#em-probar').onclick = e => ocupado(e.currentTarget, async () => {
+    try { const r = await api('rh_emergencia_probar'); toast('Correo de prueba enviado a ' + r.para + '. Actualice en unos segundos.', 'ok'); setTimeout(vistaEmergencia, 4000); }
+    catch (err) { toast(err.message, 'err'); } });
 }
 function forzarCambioPin() {
   $('#app').innerHTML = `<div class="login-form" style="min-height:100vh"><div class="login-card card card-b">
