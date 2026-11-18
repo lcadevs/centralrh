@@ -2269,7 +2269,7 @@ const ETIQ_CONTRATO = { empresa_nombre: 'razón social', empresa_corto: 'nombre 
   rep_nombre: 'representante legal', rep_nombre_mayus: 'representante legal', rep_calidades: 'calidades del representante', rep_condicion: 'condición del representante',
   uso_inicial: 'plazo de uso inicial', nombre: 'nombre del colaborador', nombre_mayus: 'nombre del colaborador', cedula: 'cédula', direccion: 'dirección',
   direccion_teletrabajo: 'dirección de teletrabajo', puesto: 'puesto', departamento: 'departamento', fecha_ingreso: 'fecha de ingreso', estado_civil: 'estado civil',
-  profesion: 'profesión', tipo_apoyo: 'tipo de apoyo', programa: 'programa', institucion: 'institución', estudios: 'estudios y tipo de apoyo', tope: 'tope anual',
+  profesion: 'profesión (puesto)', tipo_apoyo: 'tipo de apoyo', programa: 'programa', institucion: 'institución', estudios: 'estudios y tipo de apoyo', tope: 'tope anual',
   porcentaje: 'porcentaje', fecha_aprobacion: 'fecha de aprobación', dias: 'días', dias_n: 'cantidad de días', fecha_contrato: 'fecha del contrato', folio: 'folio' };
 async function cargarJSZip() {
   if (window.JSZip) return window.JSZip;
@@ -2305,7 +2305,7 @@ function llenarXml(xml, V, faltan) {
 // v1.16: la empresa y la cédula jurídica cambian según la persona: se eligen (o escriben) al generar; en blanco quedan para llenar en Word
 async function elegirEmpresaContrato(id) {
   const [C, Pc] = await Promise.all([api('rh_contrato_config'), api('rh_contrato_colaborador', { p_id: id })]), E = C.config?.entidades || [];
-  const faltan = ['cedula', 'fecha_ingreso', 'estado_civil', 'profesion'].filter(k => !Pc[k]);
+  const faltan = ['cedula', 'fecha_ingreso', 'estado_civil'].filter(k => !Pc[k]);
   const fp = (k, l, html) => `<div class="field"><label>${l}${!Pc[k] ? ' <span class="tag" style="background:var(--warn-50);color:var(--warn)">falta</span>' : ''}</label>${html}</div>`;
   return new Promise(res => modal({ title: 'Generar contrato (Word)', body: `
     <p style="margin-top:0">¿Con qué <b>entidad</b> se firma este contrato? El representante legal (${esc(C.config?.rep_nombre || 'sin configurar')}) es el mismo para todas.</p>
@@ -2318,12 +2318,13 @@ async function elegirEmpresaContrato(id) {
     </div>
     <p class="xs muted">Las entidades que use quedan como sugerencia para los próximos contratos. Se administran en Recursos Humanos → Contratos.</p>
     <div style="border-top:1px solid var(--line);padding-top:12px"><b>Datos de ${esc(Pc.nombre || 'la persona')}</b>
-      <p class="xs muted" style="margin:4px 0 10px">${faltan.length ? 'Complete lo que falta; lo que deje vacío queda resaltado para llenarlo en Word.' : 'Tomados de su perfil y sus solicitudes. Puede corregirlos solo para este contrato.'} La cédula y la fecha de ingreso que complete se guardan en su perfil si no las tenía.</p>
+      <p class="xs muted" style="margin:4px 0 10px">${faltan.length ? 'Complete lo que falta; lo que deje vacío queda resaltado para llenarlo en Word.' : 'Tomados de su perfil y de esta solicitud. Puede corregirlos solo para este contrato.'} La cédula y la fecha de ingreso que complete se guardan en su perfil si no las tenía.</p>
       <div class="grid2">
         ${fp('cedula', 'Cédula', `<input class="inp" id="cp_c" value="${esc(Pc.cedula || '')}" placeholder="1-0000-0000">`)}
         ${fp('fecha_ingreso', 'Fecha de ingreso', `<input class="inp" type="date" id="cp_f" value="${esc(Pc.fecha_ingreso || '')}" max="${hoy()}">`)}
-        ${fp('estado_civil', 'Estado civil', `<select class="inp" id="cp_e"><option value="">—</option>${(Pc.estados_civiles || []).map(o => `<option ${o === Pc.estado_civil ? 'selected' : ''}>${esc(o)}</option>`).join('')}${Pc.estado_civil && !(Pc.estados_civiles || []).includes(Pc.estado_civil) ? `<option selected>${esc(Pc.estado_civil)}</option>` : ''}</select>`)}
-        ${fp('profesion', 'Profesión u oficio', `<input class="inp" id="cp_p" value="${esc(Pc.profesion || '')}" placeholder="Ej. Administrador de Empresas">`)}
+        ${fp('estado_civil', 'Estado civil', `<select class="inp" id="cp_e"><option value="">—</option>${(Pc.estados_civiles || []).map(o => `<option ${o === Pc.estado_civil ? 'selected' : ''}>${esc(o)}</option>`).join('')}${Pc.estado_civil && !(Pc.estados_civiles || []).includes(Pc.estado_civil) ? `<option selected>${esc(Pc.estado_civil)}</option>` : ''}</select>
+          <span class="help">${Pc.estado_civil ? 'Lo indicó la persona en la solicitud.' : 'Esta solicitud no lo trae (las nuevas lo piden en el formulario). Si no lo sabe, déjelo vacío.'}</span>`)}
+        <div class="field"><label>Profesión (puesto)</label><div class="inp" style="background:var(--surface-2)">${esc(Pc.puesto || '—')}</div><span class="help">En el contrato la profesión es el puesto.</span></div>
       </div></div>`,
     onOpen: el => $$('input[name=ent]', el).forEach(r => r.onchange = () => { $('#ent_o', el).style.display = r.value === 'otra' && r.checked ? '' : 'none'; if (r.value === 'otra') $('#ent_n', el).focus(); }),
     actions: [{ label: 'Cancelar', onClick: ({ close }) => { close(); res(false); } },
@@ -2334,7 +2335,7 @@ async function elegirEmpresaContrato(id) {
         if (v === 'otra') { emp = { nombre: $('#ent_n', el).value.trim(), cedula: $('#ent_c', el).value.trim() };
           if (!emp.nombre) return toast('Escriba la razón social (o elija "Dejar en blanco").', 'err'); }
         else if (v !== 'blanco') emp = E[+v];
-        const per = { cedula: $('#cp_c', el).value.trim(), fecha_ingreso: $('#cp_f', el).value, estado_civil: $('#cp_e', el).value, profesion: $('#cp_p', el).value.trim() };
+        const per = { cedula: $('#cp_c', el).value.trim(), fecha_ingreso: $('#cp_f', el).value, estado_civil: $('#cp_e', el).value };
         try { await generarContrato(id, emp, per); close(); res(true); } catch (err) { toast(err.message, 'err'); } }) }] }));
 }
 async function generarContrato(id, empresa, persona) {
