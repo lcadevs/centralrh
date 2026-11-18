@@ -22,7 +22,7 @@
 const CONFIG = {
   SUPABASE_URL: 'https://iecfgpqnnsxmnmbxnfcp.supabase.co',
   SUPABASE_KEY: 'sb_publishable_Mt2sdPIzEcfbKv15x4-JTQ_Tf6csjiH',
-  VERSION: '1.14'
+  VERSION: '1.15'
 };
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -345,6 +345,11 @@ dl.kv dd{margin:0;padding:10px 0 10px 12px;border-bottom:1px solid var(--line);f
 .mini-bar{display:inline-block;height:8px;border-radius:4px;background:var(--pri);vertical-align:middle;margin-right:6px}
 .lento td{background:#FBF4F4}
 .dot-st{width:9px;height:9px;border-radius:50%;display:inline-block}
+/* v1.15 */
+.tbl tr.sel td{background:var(--pri-50)}
+.chips-personas{display:flex;flex-wrap:wrap;gap:6px}
+.chips-personas .tag{font-weight:500}
+.det-ben td{padding:14px 16px}
 </style>
 </head>
 <body>
@@ -576,9 +581,10 @@ async function iniciar() {
   }
   if (!S.user) return vistaLogin();
   if (S.user.pin_temporal) return forzarCambioPin();
+  if (!S.user.perfil_completo) return vistaPerfil();
   router();
 }
-window.addEventListener('hashchange', () => { if (S.emergencia) return vistaEmergencia(); if (S.user) router(); });
+window.addEventListener('hashchange', () => { if (S.emergencia) return vistaEmergencia(); if (S.user && !S.user.perfil_completo) return vistaPerfil(); if (S.user) router(); });
 
 /* =====================================================================
    LOGIN
@@ -612,15 +618,20 @@ async function vistaLogin(paso = 'correo', ctx = {}) {
       <div class="row between"><button type="button" class="btn ghost sm" data-back>Usar otro correo</button><button type="button" class="btn ghost sm" data-resend>Reenviar código</button></div>
       <p class="xs muted">¿No llega? Revise la carpeta de correo no deseado.</p>
     </form>`;
+  // v1.15: autorregistro (correo de un dominio permitido + sus datos + código al correo)
   if (paso === 'no_registrado') form = `
-    <h1>Solicitar acceso</h1><p class="muted" style="margin:6px 0 20px"><b>${esc(ctx.email)}</b> aún no tiene usuario. Complete sus datos y un administrador lo habilitará.</p>
+    <h1>Crear su usuario</h1><p class="muted" style="margin:6px 0 18px"><b>${esc(ctx.email)}</b> aún no tiene usuario. Complete sus datos: le enviaremos un código a ese correo para confirmar que es suyo.</p>
+    <form id="f" class="stack">${camposPerfil(ctx.datos || {})}
+      <button class="btn pri" style="width:100%;padding:12px">Enviarme el código</button>
+      <button type="button" class="btn ghost" style="width:100%" data-back>Usar otro correo</button>
+    </form>`;
+  if (paso === 'registro_codigo') form = `
+    <h1>Confirme su correo</h1><p class="muted" style="margin:6px 0 24px">Enviamos un código de 6 dígitos a <b>${esc(ctx.email)}</b>. Vence en ${esc(ctx.minutos || 10)} minutos. Al confirmarlo se crea su usuario.</p>
     <form id="f" class="stack">
-      <div class="field"><label class="req" for="an">Nombre completo</label><input class="inp" id="an" required></div>
-      <div class="field"><label for="ad">Departamento</label><select class="inp" id="ad"><option value="">Seleccione…</option>${(S.publico.departamentos || []).map(d => `<option>${esc(d)}</option>`).join('')}</select></div>
-      <div class="field"><label for="ap">Puesto</label><input class="inp" id="ap"></div>
-      <div class="field"><label for="ac">Comentario (opcional)</label><textarea class="inp" id="ac" style="min-height:60px"></textarea></div>
-      <button class="btn pri" style="width:100%;padding:12px">Enviar solicitud de acceso</button>
-      <button type="button" class="btn ghost" style="width:100%" data-back>Volver</button>
+      <div class="otp">${[0,1,2,3,4,5].map(i => `<input inputmode="numeric" pattern="[0-9]*" ${i === 0 ? 'autocomplete="one-time-code"' : 'autocomplete="off"'} maxlength="${i === 0 ? 6 : 1}" data-i="${i}" aria-label="Dígito ${i + 1}">`).join('')}</div>
+      <button class="btn pri" style="width:100%;padding:12px">Confirmar y crear usuario</button>
+      <div class="row between"><button type="button" class="btn ghost sm" data-editar>Corregir mis datos</button><button type="button" class="btn ghost sm" data-resend>Reenviar código</button></div>
+      <p class="xs muted">¿No llega? Revise la carpeta de correo no deseado.</p>
     </form>`;
   if (paso === 'pendiente' || paso === 'enviada') form = `
     <div class="alert a-info">${I.info}<div><b>${paso === 'enviada' ? 'Solicitud enviada.' : 'Su solicitud de acceso está en revisión.'}</b><br>Un administrador la revisará y recibirá un correo cuando su usuario esté listo.</div></div>
@@ -633,7 +644,7 @@ async function vistaLogin(paso = 'correo', ctx = {}) {
     <section class="login-art">
       <div class="brand"><div class="brand-mark">RH</div><div>${esc(S.empresa || 'Recursos Humanos')}${S.empresa ? '<small>Recursos Humanos</small>' : ''}</div></div>
       <div><h1>${esc(S.app)}</h1><p>Envíe, firme y dé seguimiento a sus solicitudes de Recursos Humanos en un solo lugar.</p>
-        <ul><li>${I.pen}Firma digital en cada paso</li><li>${I.flow}Flujo de aprobación con avisos por correo</li><li>${I.doc}Documento final en PDF con todas las firmas</li></ul></div>
+        <ul><li>${I.pen}Firma digital en cada paso</li><li>${I.flow}Flujo de aprobación con avisos por correo</li><li>${I.doc}Contrato en Word listo para firmar</li></ul></div>
       <div class="xs" style="opacity:.6">v${CONFIG.VERSION}</div>
     </section>
     <section class="login-form"><div class="login-card">${form}<p id="msg" class="small" style="color:var(--danger);min-height:20px;margin-top:12px"></p></div></section>
@@ -666,7 +677,7 @@ async function vistaLogin(paso = 'correo', ctx = {}) {
       catch (err) { msg(err.message); }
     });
   }
-  if (paso === 'codigo') {
+  if (paso === 'codigo' || paso === 'registro_codigo') {
     const ins = $$('.otp input'); ins[0].focus();
     ins.forEach((inp, i) => {
       inp.addEventListener('input', () => { const d = inp.value.replace(/\D/g, '');
@@ -677,10 +688,18 @@ async function vistaLogin(paso = 'correo', ctx = {}) {
       inp.addEventListener('paste', e => { const t = (e.clipboardData.getData('text') || '').replace(/\D/g, '').slice(0, 6); if (t.length) { e.preventDefault(); t.split('').forEach((c, j) => ins[j] && (ins[j].value = c)); (ins[t.length] || ins[5]).focus(); if (t.length === 6) f.requestSubmit(); } });
     });
     f.onsubmit = e => { e.preventDefault(); ocupado($('button.pri', f), async () => {
-      try { const r = await rpc('rh_login_codigo', { p_email: ctx.email, p_codigo: ins.map(x => x.value).join('') });
-        if (!r.ok) { ins.forEach(x => x.value = ''); ins[0].focus(); return msg(r.error); } entrar(r); }
+      try { const r = await rpc(paso === 'codigo' ? 'rh_login_codigo' : 'rh_registro_confirmar', { p_email: ctx.email, p_codigo: ins.map(x => x.value).join('') });
+        if (!r.ok) { ins.forEach(x => x.value = ''); ins[0].focus(); return msg(r.error); }
+        if (paso === 'registro_codigo') toast('¡Listo! Su usuario quedó creado.', 'ok');
+        entrar(r); }
       catch (err) { msg(err.message); }
     }); };
+    if (paso === 'registro_codigo') {
+      $('[data-editar]').onclick = () => vistaLogin('no_registrado', ctx);
+      $('[data-resend]').onclick = e => ocupado(e.currentTarget, async () => {
+        try { await rpc('rh_registro_inicio', { p_email: ctx.email, p_datos: ctx.datos }); msg(''); toast('Le enviamos un código nuevo.', 'ok'); } catch (err) { msg(err.message); } });
+      return;
+    }
     $('[data-resend]').onclick = e => ocupado(e.currentTarget, async () => {
       try { const r = await rpc('rh_login_inicio', { p_email: ctx.email }); if (!r.ok) return msg(r.error);
         if (r.modo === 'pin') return vistaLogin('pin', { ...ctx, aviso: r.aviso });
@@ -690,10 +709,11 @@ async function vistaLogin(paso = 'correo', ctx = {}) {
     const bp = $('[data-pin]'); if (bp) bp.onclick = () => vistaLogin('pin', { ...ctx, aviso: null });
   }
   if (paso === 'no_registrado') {
-    $('#an').focus();
+    $('[data-pf="nombre"]').focus();
     f.onsubmit = e => { e.preventDefault(); ocupado($('button.pri', f), async () => {
-      try { await rpc('rh_solicitar_acceso', { p_email: ctx.email, p_nombre: $('#an').value, p_departamento: $('#ad').value, p_puesto: $('#ap').value, p_comentario: $('#ac').value });
-        vistaLogin('enviada', ctx); }
+      const datos = leerPerfil(f), falta = faltaPerfil(datos); if (falta) return msg(falta);
+      try { const r = await rpc('rh_registro_inicio', { p_email: ctx.email, p_datos: datos });
+        vistaLogin('registro_codigo', { ...ctx, datos, minutos: r.minutos }); }
       catch (err) { msg(err.message); }
     }); };
   }
@@ -703,7 +723,37 @@ async function entrar(r) {
   if (r.emergencia) { S.emergencia = true; return vistaEmergencia(); }
   await cargarBase();
   if (S.user.pin_temporal) return forzarCambioPin();
+  if (!S.user.perfil_completo) return vistaPerfil();
   router();
+}
+/* v1.15: datos obligatorios del perfil (al registrarse y, para usuarios existentes, hasta completarlos) */
+const PERFIL = [['nombre', 'Nombre completo', 'text'], ['departamento', 'Departamento', 'dep'], ['puesto', 'Puesto', 'text'],
+                ['cedula', 'Número de cédula', 'text', 'Ej. 1-0850-0143'], ['direccion', 'Dirección física', 'area', 'Provincia, cantón, distrito y otras señas'],
+                ['fecha_ingreso', 'Fecha de ingreso a la compañía', 'date']];
+function camposPerfil(v = {}, fijos = {}) {
+  const deps = S.publico?.departamentos || S.departamentos || [];
+  return PERFIL.map(([k, l, t, ph]) => { const ro = fijos[k] ? 'disabled' : '', val = v[k] ?? '';
+    const inp = t === 'dep' ? `<select class="inp" data-pf="${k}" ${ro}><option value="">Seleccione…</option>${(deps.includes(val) || !val ? deps : [val, ...deps]).map(d => `<option ${d === val ? 'selected' : ''}>${esc(d)}</option>`).join('')}</select>`
+      : t === 'area' ? `<textarea class="inp" data-pf="${k}" style="min-height:60px" placeholder="${esc(ph || '')}" ${ro}>${esc(val)}</textarea>`
+      : `<input class="inp" data-pf="${k}" type="${t}" value="${esc(val)}" placeholder="${esc(ph || '')}" ${t === 'date' ? `max="${hoy()}"` : ''} ${ro}>`;
+    return `<div class="field"><label class="req">${l}</label>${inp}</div>`; }).join('');
+}
+const leerPerfil = root => Object.fromEntries($$('[data-pf]', root).filter(i => !i.disabled).map(i => [i.dataset.pf, i.value.trim()]));
+const faltaPerfil = d => { for (const [k, l] of PERFIL) if (k in d && !d[k]) return `Complete: ${l}.`; return null; };
+async function vistaPerfil() {
+  if (!S.publico) { try { S.publico = await rpc('rh_publico'); } catch { S.publico = { departamentos: S.departamentos || [] }; } }
+  const u = S.user, fijos = Object.fromEntries(PERFIL.map(([k]) => [k, !!u[k]]));
+  $('#app').innerHTML = `<div class="login-form" style="min-height:100vh"><div class="login-card card card-b" style="max-width:560px">
+    <div class="alert a-info">${I.users}<div><b>Complete sus datos para continuar.</b><br><span class="small">Se usan para prellenar sus solicitudes y preparar los contratos. Solo se piden una vez.${Object.values(fijos).some(Boolean) ? ' Los datos en gris ya están registrados; si alguno está mal, avise a Recursos Humanos.' : ''}</span></div></div>
+    <form id="fpf" class="stack">${camposPerfil(u, fijos)}
+      <button class="btn pri" style="width:100%">${I.check} Guardar y continuar</button>
+      <button type="button" class="btn ghost sm" id="pfsalir">${I.out} Salir</button>
+      <p id="msg" class="small" style="color:var(--danger);min-height:18px;margin:0"></p></form></div></div>`;
+  $('#pfsalir').onclick = salir;
+  $('#fpf').onsubmit = e => { e.preventDefault(); ocupado($('#fpf button.pri'), async () => {
+    const d = leerPerfil($('#fpf')), falta = faltaPerfil(d); if (falta) return $('#msg').textContent = falta;
+    try { const r = await api('rh_perfil_completar', { p_datos: d }); S.user = r.usuario; await cargarBase(); toast('Datos guardados. ¡Gracias!', 'ok'); router(); }
+    catch (err) { $('#msg').textContent = err.message; } }); };
 }
 /* v1.14: MODO EMERGENCIA (ingreso con PIN con los correos configurados): solo lectura del estado de correos */
 async function vistaEmergencia() {
@@ -732,7 +782,7 @@ async function vistaEmergencia() {
         <p class="small" style="margin:0">Envía un correo corto <b>solo a usted</b> (${esc(E.usuario.email)}). Máximo 3 cada 15 minutos.</p>
         <button class="btn pri" id="em-probar">${I.send} Enviar correo de prueba</button>
         <button class="btn" id="em-act">Actualizar estado</button>
-        <p class="xs muted" style="margin:0">El estado HTTP aparece unos segundos después del envío: <b>202/200</b> = Power Automate lo recibió. <b>401</b> = secreto distinto. <b>404</b> = URL o flujo eliminado. <b>429</b> = límite de envíos. Error de tiempo = el flujo no respondió.</p></div></div>
+        <p class="xs muted" style="margin:0">El estado HTTP aparece unos segundos después del envío: <b>202/200</b> = Power Automate lo recibió (si el secreto no coincide, la ejecución del flujo termina en <i>Rechazar_llamada</i>). <b>404</b> = URL o flujo eliminado. <b>429</b> = límite de envíos. Error de tiempo = el flujo no respondió.</p></div></div>
     </div>
     <div class="card" style="margin-bottom:16px"><div class="card-h"><h2>Qué revisar</h2></div><div class="card-b small stack">
       <div>1. En Power Automate, que el flujo esté <b>activado</b> y revise su <b>historial de ejecuciones</b>: si no hay ejecuciones, el problema está antes (URL o pg_net); si fallan, abra la ejecución para ver el error.</div>
@@ -759,7 +809,7 @@ function forzarCambioPin() {
     </form></div></div>`;
   $('#f').onsubmit = e => { e.preventDefault(); ocupado($('#f button'), async () => {
     if ($('#p1').value !== $('#p2').value) return $('#msg').textContent = 'Los PIN no coinciden.';
-    try { await api('rh_cambiar_pin', { p_pin_actual: '', p_pin_nuevo: $('#p1').value }); S.user.pin_temporal = false; S.user.tiene_pin = true; toast('PIN actualizado.', 'ok'); router(); }
+    try { await api('rh_cambiar_pin', { p_pin_actual: '', p_pin_nuevo: $('#p1').value }); S.user.pin_temporal = false; S.user.tiene_pin = true; toast('PIN actualizado.', 'ok'); S.user.perfil_completo ? router() : vistaPerfil(); }
     catch (err) { $('#msg').textContent = err.message; }
   }); };
 }
@@ -786,13 +836,17 @@ function shell(activo, contenido) {
       ${esRH() ? `<div class="sep"></div><div class="cap">Recursos Humanos</div>
         ${a('#/todas', 'todas', I.list, 'Todas las solicitudes', r.pdf_pendiente)}
         ${a('#/reportes', 'reportes', I.chart, 'Reportes y KPIs')}
+        ${r.con_beneficio ? a('#/beneficios', 'beneficios', I.birrete, 'Control de beneficios') : ''}
+        ${a('#/contratos', 'contratos', I.doc, 'Contratos', r.sin_contrato)}
+        ${a('#/personas', 'personas', I.users, 'Personas')}
         ${a('#/departamentos', 'departamentos', I.build, 'Departamentos y responsables')}
         <div class="sep"></div><div class="cap">Trámites · configuración</div>
         ${S.modulos.map(m => a('#/modulo/' + m.codigo, 'mod_' + m.codigo, I[m.icono] || I.doc, esc(nombreCorto(m)), pendientesModulo(m))).join('')}` : ''}
       ${esAdmin() ? `<div class="sep"></div><div class="cap">Administración general</div>
-        ${a('#/admin/usuarios', 'usuarios', I.users, 'Usuarios')}
-        ${a('#/admin/accesos', 'accesos', I.key, 'Solicitudes de acceso', r.accesos)}
+        ${a('#/admin/usuarios', 'usuarios', I.users, 'Usuarios y roles')}
+        ${r.accesos ? a('#/admin/accesos', 'accesos', I.key, 'Solicitudes de acceso', r.accesos) : ''}
         ${a('#/admin/config', 'config', I.gear, 'Configuración general')}
+        ${a('#/admin/consumo', 'consumo', I.chart, 'Consumo de la base')}
         ${a('#/admin/correos', 'correos', I.mail, 'Bitácora de correos')}` : ''}
     </nav></aside>
     <main class="main" id="main">${contenido}</main>
@@ -822,6 +876,9 @@ function menuUsuario() {
   modal({ title: 'Mi cuenta', body: `
     <div class="row" style="margin-bottom:14px"><div class="avatar" style="width:46px;height:46px;font-size:16px;background:var(--pri);color:#fff">${esc(iniciales(S.user.nombre || S.user.email))}</div>
     <div><div class="b">${esc(S.user.nombre || '—')}</div><div class="small muted">${esc(S.user.email)}</div><span class="tag ${S.user.rol === 'admin' ? 'adm' : S.user.rol === 'rh' ? 'rh' : ''}">${esc(ROLES[S.user.rol])}</span></div></div>
+    <dl class="kv" style="margin-bottom:12px"><dt>Departamento</dt><dd>${esc(S.user.departamento || '—')}</dd><dt>Puesto</dt><dd>${esc(S.user.puesto || '—')}</dd>
+      <dt>Cédula</dt><dd>${esc(S.user.cedula || '—')}</dd><dt>Dirección</dt><dd>${esc(S.user.direccion || '—')}</dd><dt>Fecha de ingreso</dt><dd>${fmtISO(S.user.fecha_ingreso)}</dd></dl>
+    <p class="xs muted" style="margin:0 0 12px">Si algún dato está mal, avise a Recursos Humanos.</p>
     ${esAdmin() ? `<form id="fp" class="stack" style="border-top:1px solid var(--line);padding-top:14px"><h3>${S.user.tiene_pin ? 'Cambiar' : 'Crear'} PIN de respaldo</h3>
       <p class="xs muted" style="margin:0">Se usa solo si los correos con el código no llegan.</p>
       <div class="grid3"><input class="inp ${S.user.tiene_pin ? '' : 'hidden'}" id="q0" type="password" inputmode="numeric" maxlength="8" placeholder="PIN actual"><input class="inp" id="q1" type="password" inputmode="numeric" maxlength="8" placeholder="Nuevo PIN"><input class="inp" id="q2" type="password" inputmode="numeric" maxlength="8" placeholder="Confirmar"></div>
@@ -851,9 +908,12 @@ async function router() {
     if (a === 'solicitud') return vistaDetalle(+b);
     if (a === 'admin' && b === 'modulos' && esAdmin()) { location.hash = '#/modulo/' + (S.modulos[0]?.codigo || '') + '/formulario'; return; }
     if (a === 'departamentos' && esRH()) return adminDepartamentos();
+    if (a === 'personas' && esRH()) return vistaPersonas();
+    if (a === 'beneficios' && esRH()) return vistaBeneficios(b);
+    if (a === 'contratos' && esRH()) return vistaContratos();
     if (a === 'admin' && b === 'departamentos' && esRH()) { location.hash = '#/departamentos'; return; }
     if (a === 'admin' && esAdmin()) return ({ usuarios: adminUsuarios, accesos: adminAccesos, departamentos: adminDepartamentos,
-      config: adminConfig, correos: adminCorreos }[b] || adminUsuarios)();
+      config: adminConfig, correos: adminCorreos, consumo: adminConsumo }[b] || adminUsuarios)();
     location.hash = '#/';
   } catch (e) {
     if (!S.user) return vistaLogin();
@@ -889,7 +949,8 @@ async function vistaInicio() {
     `<a class="tile t-pri" href="#/mis"><div class="n">${r.mis_abiertas || 0}</div><div class="t">Mis solicitudes en curso</div></a>`,
     esRH() ? `<a class="tile t-gris" href="#/todas"><div class="n">${r.en_curso || 0}</div><div class="t">Solicitudes en aprobación (todas)</div></a>` : '',
     esAdmin() && r.accesos ? `<a class="tile t-danger" href="#/admin/accesos"><div class="n">${r.accesos}</div><div class="t">Solicitudes de acceso</div></a>` : '',
-    esRH() && r.pdf_pendiente ? `<a class="tile t-danger" href="#/todas"><div class="n">${r.pdf_pendiente}</div><div class="t">Aprobadas sin aviso enviado</div></a>` : ''
+    esRH() && r.pdf_pendiente ? `<a class="tile t-danger" href="#/todas"><div class="n">${r.pdf_pendiente}</div><div class="t">Aprobadas sin aviso enviado</div></a>` : '',
+    esRH() && r.sin_contrato ? `<a class="tile t-gris" href="#/contratos"><div class="n">${r.sin_contrato}</div><div class="t">Aprobadas sin contrato firmado</div></a>` : ''
   ].join('');
   let pend = '';
   if (r.por_aprobar) { try { const P = await api('rh_pendientes');
@@ -924,6 +985,7 @@ function valorAuto(f) {
   if (f.auto === 'departamento') return S.user.departamento || '';
   if (f.auto === 'puesto') return S.user.puesto || '';
   if (f.auto === 'email') return S.user.email || '';
+  if (['cedula', 'direccion', 'fecha_ingreso'].includes(f.auto)) return S.user[f.auto] || '';   // v1.15: del perfil
   return '';
 }
 function campoHTML(f, v, deshab = false) {
@@ -947,7 +1009,7 @@ function campoHTML(f, v, deshab = false) {
       const max = f.max_archivos || 5;
       inner = `<div class="files" data-k="${esc(f.key)}" data-t="archivo" data-max="${max}"><div class="fl"></div>
         <label class="btn sm" ${d ? 'style="display:none"' : ''}>${I.clip} Adjuntar archivo<input type="file" hidden multiple accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"></label>
-        <span class="xs muted" style="margin-left:8px">PDF, JPG o PNG · máx. 5 MB c/u · hasta ${max}</span></div>`;
+        <span class="xs muted" style="margin-left:8px">PDF, JPG o PNG · máx. 10 MB c/u · hasta ${max}</span></div>`;
       break;
     }
     case 'fecha': inner = `<input class="inp" id="${id}" type="date" data-k="${esc(f.key)}" value="${esc(v)}" ${d}>`; break;
@@ -975,8 +1037,8 @@ function campoHTML(f, v, deshab = false) {
   // v1.8: opciones con nota, excepción (con justificación) y detalle según la política
   if (['lista', 'opcion', 'periodo'].includes(f.tipo) && (f.notas_opciones || f.excepcion_opciones || f.detalle_opciones || f.restricciones || f.excepcion_justificar)) {
     inner += `<div class="opt-nota hidden" data-nota-de="${esc(f.key)}"></div>`;
-    if (f.excepcion_justificar) inner += `<div class="exc hidden" data-excop="${esc(f.key)}" style="margin-top:10px">
-        <div class="row" style="margin-bottom:8px;color:#6E5418">${I.warn.replace('<svg', '<svg style="width:18px;height:18px"')}<b class="small">Esta opción es una excepción a la política: justifíquela.</b></div>
+    if (f.excepcion_justificar || f.detalle_opciones) inner += `<div class="exc hidden" data-excop="${esc(f.key)}" style="margin-top:10px">
+        <div class="row" style="margin-bottom:8px;color:#6E5418">${I.warn.replace('<svg', '<svg style="width:18px;height:18px"')}<b class="small" data-excop-txt>Esta opción es una excepción a la política: justifíquela.</b></div>
         <div class="field"><label class="req">Justificación de la excepción</label><textarea class="inp" data-k="${esc(f.key)}_excepcion_detalle" style="min-height:64px" ${d}></textarea></div></div>`;
   }
   const ancho = ['parrafo', 'casillas', 'opcion', 'dias', 'archivo', 'periodo'].includes(f.tipo) ? 'span2' : '';
@@ -1002,12 +1064,13 @@ function enlazarForm(root, formulario = []) {
       let clase = '';
       if (v && (f.notas_opciones || {})[v]) partes.push(esc(f.notas_opciones[v]));
       if (det?.nota) partes.push(esc(det.nota));
-      const ant = antiguedadMeses(datos[f.antiguedad_campo || 'fecha_ingreso']);
-      if (det && det.antiguedad_meses != null && ant != null && ant < det.antiguedad_meses) {
-        partes.push(`<b>Atención:</b> según su fecha de ingreso tiene ${ant} mes(es) de antigüedad y la política pide ${det.antiguedad_meses} para esta opción. RH lo revisará.`); clase = 'warn'; }
-      const err = errorRestriccion(f, datos); if (err) { partes.push(esc(err)); clase = 'err'; }
+      const faltaAnt = antiguedadCorta(f, datos);
+      if (faltaAnt) { partes.push(`<b>Excepción por antigüedad:</b> según su fecha de ingreso tiene ${faltaAnt.tiene} mes(es) y la política pide ${faltaAnt.pide} para esta opción. Puede enviarla, pero se tramita como <b>excepción</b> y debe justificarla.`); clase = 'warn'; }
+      const err = errorRestriccion(f, datos); if (err) { partes.push(esc(err) + ' <b>Se tramita como excepción.</b>'); clase = 'warn'; }
       box.innerHTML = partes.join('<br>'); box.className = 'opt-nota ' + clase + (partes.length ? '' : ' hidden');
-      if (ex) ex.classList.toggle('hidden', !(f.tipo === 'periodo' ? v === 'Fuera de período' : (f.excepcion_opciones || []).includes(v)));
+      if (ex) { const esExc = f.tipo === 'periodo' ? v === 'Fuera de período' : (f.excepcion_opciones || []).includes(v) && f.excepcion_justificar;
+        ex.classList.toggle('hidden', !(esExc || faltaAnt));
+        const tx = $('[data-excop-txt]', ex); if (tx) tx.textContent = faltaAnt && !esExc ? 'No cumple la antigüedad mínima: justifique la excepción.' : 'Esta opción es una excepción a la política: justifíquela.'; }
     });
   };
   if (conReglas.length) { root.addEventListener('change', refrescarOpciones); root.addEventListener('input', e => { if (e.target.type === 'date') refrescarOpciones(); }); refrescarOpciones(); }
@@ -1032,6 +1095,9 @@ function enlazarForm(root, formulario = []) {
 // Período de aplicación vigente en una fecha (los define RH por año)
 let PER_CTX = [];
 const periodoDe = (lista, fecha) => (lista || []).find(x => x.desde <= fecha && fecha <= x.hasta) || null;
+// v1.15: antigüedad menor a la que pide la política para la opción elegida → excepción con justificación
+const antiguedadCorta = (f, datos) => { const det = (f.detalle_opciones || {})[datos[f.key]]; if (!det || det.antiguedad_meses == null) return null;
+  const ant = antiguedadMeses(datos[f.antiguedad_campo || 'fecha_ingreso']); return ant != null && ant < det.antiguedad_meses ? { tiene: ant, pide: det.antiguedad_meses } : null; };
 const antiguedadMeses = f => { if (!f || !/^\d{4}-\d{2}-\d{2}$/.test(f)) return null; const [y, m, d] = f.split('-').map(Number), [Y, M, D] = hoy().split('-').map(Number);
   let n = (Y - y) * 12 + (M - m); if (D < d) n--; return Math.max(0, n); };
 function errorRestriccion(f, datos) {
@@ -1039,17 +1105,18 @@ function errorRestriccion(f, datos) {
   const otro = datos[r.campo]; if (!otro) return null;
   return (r.valores || []).includes(otro) ? null : (r.mensaje || `"${datos[f.key]}" no aplica para la opción elegida.`);
 }
-// Imágenes grandes se comprimen a JPG; PDF se sube tal cual (máx. 5 MB)
+// v1.15: fotos y escaneos en imagen se reducen (1800 px, JPG) para cuidar el espacio; PDF se sube tal cual (máx. 10 MB)
 async function prepararArchivo(file) {
   let blob = file, nombre = file.name, mime = file.type || (/\.pdf$/i.test(file.name) ? 'application/pdf' : /\.png$/i.test(file.name) ? 'image/png' : 'image/jpeg');
-  if (mime.startsWith('image/') && file.size > 900 * 1024) {
+  if (mime.startsWith('image/') && file.size > 350 * 1024) {
     const img = await new Promise((ok, mal) => { const im = new Image(); im.onload = () => ok(im); im.onerror = () => mal(new Error(`No se pudo leer la imagen "${file.name}".`)); im.src = URL.createObjectURL(file); });
-    const esc2 = Math.min(1, 2000 / Math.max(img.width, img.height)), cv = document.createElement('canvas');
+    const esc2 = Math.min(1, 1800 / Math.max(img.width, img.height)), cv = document.createElement('canvas');
     cv.width = Math.round(img.width * esc2); cv.height = Math.round(img.height * esc2);
     const cx = cv.getContext('2d'); cx.fillStyle = '#fff'; cx.fillRect(0, 0, cv.width, cv.height); cx.drawImage(img, 0, 0, cv.width, cv.height);
-    blob = await new Promise(ok => cv.toBlob(ok, 'image/jpeg', 0.82)); mime = 'image/jpeg'; nombre = nombre.replace(/\.(png|jpe?g)$/i, '') + '.jpg';
+    const jpg = await new Promise(ok => cv.toBlob(ok, 'image/jpeg', 0.78));
+    if (jpg && jpg.size < file.size) { blob = jpg; mime = 'image/jpeg'; nombre = nombre.replace(/\.(png|jpe?g)$/i, '') + '.jpg'; }
   }
-  if (blob.size > 5 * 1024 * 1024) throw new Error(`"${file.name}" pesa ${kb(blob.size)}; el máximo es 5 MB.`);
+  if (blob.size > 10 * 1024 * 1024) throw new Error(`"${file.name}" pesa ${kb(blob.size)}; el máximo es 10 MB. Si es un PDF escaneado, escanéelo en menor resolución o en blanco y negro.`);
   return { file: blob, nombre, tamano: blob.size, mime };
 }
 const b64DeBlob = blob => new Promise((ok, mal) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(',')[1] || ''); r.onerror = () => mal(new Error('No se pudo leer el archivo.')); r.readAsDataURL(blob); });
@@ -1100,7 +1167,7 @@ function leerForm(root, formulario) {
     else if (f.tipo === 'periodo') { datos[f.key] = $(`[data-k="${f.key}"][data-t="periodo"]`, root)?.dataset.v || '';
       if (datos[f.key] === 'Fuera de período' && f.excepcion_justificar) datos[f.key + '_excepcion_detalle'] = ($(`[data-k="${f.key}_excepcion_detalle"]`, root)?.value || '').trim(); }
     else datos[f.key] = ($(`[data-k="${f.key}"]`, root)?.value || '').trim();
-    if (['lista', 'opcion'].includes(f.tipo) && (f.excepcion_opciones || []).includes(datos[f.key]) && f.excepcion_justificar)
+    if (['lista', 'opcion'].includes(f.tipo) && (((f.excepcion_opciones || []).includes(datos[f.key]) && f.excepcion_justificar) || antiguedadCorta(f, datos)))
       datos[f.key + '_excepcion_detalle'] = ($(`[data-k="${f.key}_excepcion_detalle"]`, root)?.value || '').trim();
   });
   return datos;
@@ -1115,7 +1182,8 @@ function validarForm(formulario, datos) {
     if (f.tipo === 'archivo' && (v || []).length > (f.max_archivos || 5)) return `En "${f.label}" se permiten máximo ${f.max_archivos || 5} archivo(s).`;
     if (['lista', 'opcion'].includes(f.tipo) && (f.excepcion_opciones || []).includes(v) && f.excepcion_justificar && !datos[f.key + '_excepcion_detalle']) return `Seleccionó "${v}" (excepción): escriba la justificación.`;
     if (f.tipo === 'periodo' && v === 'Fuera de período' && f.excepcion_justificar && !datos[f.key + '_excepcion_detalle']) return 'Su solicitud está fuera de los períodos de aplicación: escriba la justificación de la excepción.';
-    const er = errorRestriccion(f, datos); if (er) return er;
+    const ac = ['lista', 'opcion'].includes(f.tipo) && antiguedadCorta(f, datos);
+    if (ac && !datos[f.key + '_excepcion_detalle']) return `No cumple la antigüedad mínima para "${v}" (tiene ${ac.tiene} mes(es); la política pide ${ac.pide}): escriba la justificación de la excepción.`;
   }
   if (datos.correo_jefatura && datos.correo_jefatura.toLowerCase() === S.user.email) return 'El correo de la jefatura no puede ser el suyo.';
   return null;
@@ -1201,7 +1269,8 @@ const POL_ANCHO = 1240;   // 1240 px ≈ A4 a 150 dpi: nítido y liviano
 const LIBS = {
   pdfjs:       { url: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js',        sri: 'sha384-/1qUCSGwTur9vjf/z9lmu/eCUYbpOTgSjmpbMQZ1/CtX2v/WcAIKqRv+U1DUCG6e' },
   pdfjsWorker: { url: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js', sri: 'sha384-SnzOobpRMLXZ52iJvZm/C0fYw0OQemTXzTjIsdsfMcrCtCEe9qgzxTd3RSklO5x2' },
-  xlsx:        { url: 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js',           sri: 'sha384-vtjasyidUo0kW94K5MXDXntzOJpQgBKXmE7e2Ga4LG0skTTLeBi97eFAXsqewJjw' }
+  xlsx:        { url: 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js',           sri: 'sha384-vtjasyidUo0kW94K5MXDXntzOJpQgBKXmE7e2Ga4LG0skTTLeBi97eFAXsqewJjw' },
+  jszip:       { url: 'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js',              sri: 'sha384-+mbV2IY1Zk/X1p/nWllGySJSUN8uMs+gUAN10Or95UBH0fpj6GfKgPmgC5EXieXG' }
 };
 function cargarScript(lib, msj) {
   return new Promise((ok, mal) => { const sc = document.createElement('script');
@@ -1325,7 +1394,7 @@ function tablaSolicitudes(rows, opts = {}) {
   return `<div class="tbl-wrap"><table class="tbl cards"><thead><tr><th>Folio</th>${opts.solicitante ? '<th>Solicitante</th>' : '<th>Trámite</th>'}<th>Enviada</th><th>Estado</th><th>${opts.extra || 'Paso actual'}</th></tr></thead><tbody>
     ${rows.map(s => `<tr class="click" data-id="${s.id}">
       <td><b>${esc(s.folio)}</b>${s.es_prueba ? ' <span class="tag prb">Prueba</span>' : ''}${s.version > 1 ? ` <span class="tag">v${s.version}</span>` : ''}${s.excepcion ? ' <span class="tag exc">Excepción</span>' : ''}</td>
-      ${opts.solicitante ? `<td>${esc(s.solicitante_nombre)}<div class="xs muted">${esc(s.departamento || '')}</div></td>` : `<td>${esc(s.modulo_nombre)}</td>`}
+      ${opts.solicitante ? `<td>${esc(s.solicitante_nombre)}${s.solicitante_activo === false ? ' <span class="tag">Inactivo</span>' : ''}<div class="xs muted">${esc(s.departamento || '')}</div></td>` : `<td>${esc(s.modulo_nombre)}</td>`}
       <td class="small">${fmt(s.creado_en)}</td>
       <td>${badge(s.estado)}<div class="mini-steps">${(s.pasos || []).map(p => `<i class="${p.estado}" title="${esc(p.paso)}: ${esc(ESTADOS[p.estado])}"></i>`).join('')}</div></td>
       <td class="small">${opts.celda ? opts.celda(s) : s.paso_actual ? `${esc(s.paso_actual.paso)}<div class="xs muted">${esc((s.paso_actual.aprobadores || []).join(', '))}</div><div class="xs" style="font-weight:600;color:${diasDesde(s.paso_actual.desde) >= (s.dias_recordatorio || 6) ? 'var(--danger)' : 'var(--ink-3)'}">esperando ${dur((Date.now() - new Date(s.paso_actual.desde)) / 3600000)}</div>` : s.estado === 'aprobada' ? (s.pdf_enviado_en ? `Aviso enviado ${fmtD(s.pdf_enviado_en)}` : '<span style="color:var(--danger);font-weight:700">Aviso sin enviar</span>') : '—'}</td>
@@ -1385,7 +1454,7 @@ function filtrosReporte() {
   const hoyS = hoy(), f = JSON.parse(store.get('rep') || '{}');
   return { modulo: f.modulo || '', desde: f.desde || hoyS.slice(0, 4) + '-01-01', hasta: f.hasta || hoyS };
 }
-const TABS_REP = ['indicadores', 'beneficio', 'aprobadores', 'exportar'];
+const TABS_REP = ['indicadores', 'tt_activo', 'beneficio', 'aprobadores', 'exportar'];
 async function vistaReportes(a, b) {
   // v1.8: cada trámite tiene sus propios reportes. #/reportes → elegir trámite; #/reportes/<trámite>/<pestaña>
   await cargarBase();
@@ -1400,13 +1469,14 @@ async function vistaReportes(a, b) {
         <div class="row small" style="color:var(--pri);font-weight:700;margin-top:auto">Ver reportes →</div></a>`).join('')}</div>`);
     return;
   }
-  const conBen = !!mod.opciones?.beneficio;
-  const tab = TABS_REP.includes(b) && (b !== 'beneficio' || conBen) ? b : 'indicadores';
+  const conBen = !!mod.opciones?.beneficio, conDias = (mod.formulario || []).some(f => f.tipo === 'dias');
+  const tab = TABS_REP.includes(b) && (b !== 'beneficio' || conBen) && (b !== 'tt_activo' || conDias) ? b : 'indicadores';
   const F = { ...filtrosReporte(), modulo: mod.codigo };
   if (filtrosReporte().modulo !== mod.codigo) store.set('rep', JSON.stringify(F));
   cargando('reportes');
   const R = await api('rh_reporte', { p_modulo: F.modulo, p_desde: F.desde, p_hasta: F.hasta });
   const RB = tab === 'beneficio' ? await api('rh_reporte_beneficio', { p_modulo: F.modulo, p_desde: F.desde, p_hasta: F.hasta }) : null;
+  const RT = tab === 'tt_activo' ? await api('rh_reporte_teletrabajo', { p_modulo: F.modulo }) : null;
   const T = R.totales, pct = n => T.total ? Math.round(n / T.total * 100) + '%' : '—';
   const diasRec = R.dias_recordatorio || 6;
   const filtros = `<div class="card" style="margin-bottom:16px"><div class="card-b row wrap" style="gap:12px;align-items:flex-end">
@@ -1415,7 +1485,7 @@ async function vistaReportes(a, b) {
       <div class="field"><label>Hasta</label><input class="inp" type="date" id="rhasta" value="${esc(F.hasta)}"></div>
       <div class="row wrap" style="gap:6px"><button class="btn sm" data-rango="anio">Este año</button><button class="btn sm" data-rango="90">Últimos 90 días</button><button class="btn sm" data-rango="todo">Todo</button></div>
       <button class="btn pri" id="raplicar">Aplicar</button></div></div>`;
-  const tabs = `<div class="tabs">${[['indicadores', 'Indicadores'], conBen ? ['beneficio', 'Beneficio y presupuesto'] : null, ['aprobadores', 'Aprobadores'], ['exportar', 'Exportar a Excel']].filter(Boolean).map(([k, l]) => `<a href="#/reportes/${esc(mod.codigo)}/${k}" class="${k === tab ? 'on' : ''}">${l}</a>`).join('')}</div>`;
+  const tabs = `<div class="tabs">${[['indicadores', 'Indicadores'], conDias ? ['tt_activo', 'Teletrabajo activo'] : null, conBen ? ['beneficio', 'Beneficio y presupuesto'] : null, ['aprobadores', 'Aprobadores'], ['exportar', 'Exportar a Excel']].filter(Boolean).map(([k, l]) => `<a href="#/reportes/${esc(mod.codigo)}/${k}" class="${k === tab ? 'on' : ''}">${l}</a>`).join('')}</div>`;
   if (tab === 'beneficio') {
     const mon = n => (RB.moneda === 'USD' ? 'US$' : RB.moneda + ' ') + Number(n || 0).toLocaleString('es-CR', { maximumFractionDigits: 0 });
     const P = RB.presupuesto, pctE = P.monto ? Math.round(P.ejecutado / P.monto * 100) : null, pctC = P.monto ? Math.round(P.comprometido / P.monto * 100) : null;
@@ -1423,8 +1493,8 @@ async function vistaReportes(a, b) {
     var cuerpoB = `
       <div class="kpis">
         <div class="kpi"><div class="l">Solicitantes</div><div class="v">${RB.totales.solicitantes}</div><div class="s">${RB.totales.solicitudes} solicitudes · ${RB.totales.aprobadas} aprobadas</div></div>
-        <div class="kpi"><div class="l">Beneficiarios activos hoy</div><div class="v" style="color:var(--ok)">${RB.activos.n}</div><div class="s">vigencia ${RB.vigencia_meses} meses desde la aprobación</div></div>
-        <div class="kpi"><div class="l">Monto aprobado</div><div class="v">${mon(RB.totales.monto_aprobado)}</div><div class="s">solicitudes del periodo</div></div>
+        <div class="kpi"><div class="l">Beneficiarios activos hoy</div><div class="v" style="color:var(--ok)">${RB.activos.n}</div><div class="s">${RB.vigencia_meses} meses desde la aprobación + ${RB.extension_meses} de extensión</div></div>
+        <div class="kpi"><div class="l">Tope anual aprobado</div><div class="v">${mon(RB.totales.monto_aprobado)}</div><div class="s">solicitudes del periodo</div></div>
         <div class="kpi"><div class="l">Reembolsado</div><div class="v">${mon(RB.totales.ejecutado)}</div><div class="s">${RB.totales.monto_aprobado ? Math.round(RB.totales.ejecutado / RB.totales.monto_aprobado * 100) + '% de lo aprobado' : '—'}</div></div>
       </div>
       <div class="card" style="margin-bottom:16px"><div class="card-h"><h2>Presupuesto ${P.anio}</h2>${P.monto == null ? `<a class="small" href="#/modulo/${esc(mod.codigo)}/politica">Definir presupuesto →</a>` : ''}</div><div class="card-b">
@@ -1442,8 +1512,8 @@ async function vistaReportes(a, b) {
         <div class="card"><div class="card-h"><h2>Por período de aplicación</h2></div>${RB.por_periodo.length ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Período</th><th class="num">Solicitantes</th><th class="num">Aprob. / Total</th><th class="num">Monto</th></tr></thead><tbody>
           ${RB.por_periodo.map(x => `<tr><td style="white-space:nowrap"><b>${esc(x.periodo)}</b> <span class="xs muted">${x.anio}</span></td><td class="num">${x.solicitantes}</td><td class="num">${x.aprobadas} / ${x.solicitudes}</td><td class="num" style="white-space:nowrap">${mon(x.monto)}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">Sin solicitudes en el periodo.</div>'}</div>
       </div>
-      <div class="card" style="margin-top:16px"><div class="card-h"><h2>Beneficiarios activos (${RB.activos.n})</h2><span class="xs muted">Aprobados en los últimos ${RB.vigencia_meses} meses y no finalizados · ${mon(RB.activos.ejecutado)} reembolsado de ${mon(RB.activos.monto)}</span></div>
-        ${RB.activos.lista.length ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Folio</th><th>Solicitante</th><th>Tipo</th><th>Vence</th><th class="num">Aprobado</th><th class="num">Reembolsado</th><th class="num">Saldo</th></tr></thead><tbody>
+      <div class="card" style="margin-top:16px"><div class="card-h"><h2>Beneficiarios activos (${RB.activos.n})</h2><span class="xs muted">Vigentes o en extensión, no finalizados · ${mon(RB.activos.ejecutado)} reembolsado de ${mon(RB.activos.monto)} · <a href="#/beneficios/${esc(mod.codigo)}">Control de beneficios →</a></span></div>
+        ${RB.activos.lista.length ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Folio</th><th>Solicitante</th><th>Tipo</th><th>Vence</th><th class="num">Tope</th><th class="num">Reembolsado</th><th class="num">Saldo</th></tr></thead><tbody>
         ${RB.activos.lista.map(x => `<tr class="click" data-id="${x.id}"><td><b>${esc(x.folio)}</b></td><td class="small">${esc(x.solicitante)}</td><td class="small">${esc(x.tipo || '—')}</td><td class="small">${fmtD(x.vence)}</td>
           <td class="num">${mon(x.monto)}</td><td class="num">${mon(x.ejecutado)}</td><td class="num" style="${x.saldo < 0 ? 'color:var(--danger)' : ''}">${mon(x.saldo)}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">No hay beneficiarios activos.</div>'}</div>
       ${RB.finalizados.length ? `<p class="small" style="margin-top:12px">Beneficios finalizados en el periodo: ${RB.finalizados.map(x => `<b>${x.n}</b> ${esc(x.motivo || '')}`).join(' · ')}</p>` : ''}
@@ -1463,6 +1533,7 @@ async function vistaReportes(a, b) {
         <div class="kpi"><div class="l">En aprobación</div><div class="v" style="color:var(--warn)">${T.en_aprobacion}</div><div class="s">${R.pendientes.filter(p => p.horas >= diasRec * 24).length} con ${diasRec}+ días en un paso</div></div>
         <div class="kpi"><div class="l">Tiempo promedio de aprobación</div><div class="v">${dur(HA.prom)}</div><div class="s">Mediana ${dur(HA.mediana)} · máx. ${dur(HA.max)}</div></div>
         <div class="kpi"><div class="l">Con excepción</div><div class="v">${T.excepcion}</div><div class="s">${pct(T.excepcion)} del total · ${R.recordatorios} recordatorios</div></div>
+        <div class="kpi"><div class="l">Personas que solicitaron</div><div class="v">${R.personas?.solicitantes ?? '—'}</div><div class="s">${R.personas?.inactivos ? `${R.personas.inactivos} hoy inactiva(s) · ${R.personas.solicitudes_inactivos} solicitud(es) suyas` : 'todas activas hoy'}</div></div>
       </div>
       <div class="grid2" style="align-items:start">
         <div class="card"><div class="card-h"><h2>Solicitudes por mes</h2><div class="leyenda"><span><i style="background:${COL.aprobada}"></i>Aprobadas</span><span><i style="background:${COL.rechazada}"></i>Rechazadas</span><span><i style="background:${COL.en_aprobacion}"></i>En aprobación</span><span><i style="background:${COL.cancelada}"></i>Canceladas</span></div></div>
@@ -1504,6 +1575,7 @@ async function vistaReportes(a, b) {
       <p class="xs muted" style="margin-top:10px">Tiempos de respuesta de las solicitudes enviadas en el periodo; incluye rondas anteriores de solicitudes modificadas. "Pendientes ahora" muestra todos los pasos abiertos, sin importar la fecha.</p>`;
   }
   if (tab === 'beneficio') cuerpo = cuerpoB;
+  if (tab === 'tt_activo') cuerpo = cuerpoTeletrabajo(RT, store.get('ttdep') || '', store.get('ttdia') || '');
   if (tab === 'exportar') {
     cuerpo = `<div class="card"><div class="card-b stack">
       <div class="row" style="gap:14px;align-items:flex-start"><div class="mod-ic" style="flex:none">${I.xls}</div>
@@ -1533,14 +1605,63 @@ async function vistaReportes(a, b) {
     try { const r = await api('rh_recordar', { p_aprobacion_id: +b.dataset.recp }); toast('Recordatorio enviado a ' + r.para.join(', '), 'ok'); vistaReportes(mod.codigo, tab); } catch (err) { toast(err.message, 'err'); } }));
   if ($('#xls')) $('#xls').onclick = e => ocupado(e.currentTarget, async () => { try { await descargarExcel(F, R); historialExport(); } catch (err) { toast(err.message, 'err'); } });
   if ($('#hexp')) historialExport();
+  if (tab === 'tt_activo') {
+    const repintar = () => { store.set('ttdep', $('#ttdep').value); $('#ttbody').outerHTML = cuerpoTeletrabajo(RT, $('#ttdep').value, store.get('ttdia') || ''); enlazarTT(); };
+    const enlazarTT = () => { $('#ttdep').onchange = repintar;
+      $$('[data-ttdia]').forEach(b => b.onclick = () => { store.set('ttdia', b.dataset.ttdia); repintar(); });
+      $('#ttxls').onclick = e => ocupado(e.currentTarget, async () => { try { await excelTeletrabajo(RT, $('#ttdep').value); } catch (err) { toast(err.message, 'err'); } }); };
+    enlazarTT();
+  }
+}
+/* v1.15: TELETRABAJO ACTIVO — quién teletrabaja cada día y quién viene a la oficina (según la última solicitud aprobada de cada persona) */
+function cuerpoTeletrabajo(RT, dep, dia) {
+  const dias = RT.dias_semana || ['lun', 'mar', 'mie', 'jue', 'vie'];
+  const deps = [...new Set(RT.personas.map(p => p.departamento))].sort();
+  const P = RT.personas.filter(p => !dep || p.departamento === dep), conTT = P.filter(p => p.tt && (p.dias || []).length);
+  const d = dias.includes(dia) ? dia : dias[0];
+  const tele = x => P.filter(p => (p.dias || []).includes(x)), ofi = x => P.filter(p => !(p.dias || []).includes(x));
+  const maxN = Math.max(1, P.length);
+  const lista = arr => arr.length ? `<div class="chips-personas">${arr.map(p => `<span class="tag" title="${esc(p.puesto || '')}">${esc(p.nombre)}${!dep ? ` <span class="muted">· ${esc(p.departamento)}</span>` : ''}${p.prueba ? ' <span class="muted">(prueba)</span>' : ''}</span>`).join(' ')}</div>` : '<div class="small muted">Nadie.</div>';
+  return `<div id="ttbody">
+    <div class="card" style="margin-bottom:16px"><div class="card-b row wrap" style="gap:12px;align-items:flex-end">
+      <div class="field" style="min-width:220px"><label>Departamento</label><select class="inp" id="ttdep"><option value="">Todos</option>${deps.map(x => `<option ${x === dep ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select></div>
+      <button class="btn" id="ttxls">${I.xls} Descargar Excel</button>
+      <span class="xs muted grow">A hoy. Cuenta a las personas <b>activas</b>; el teletrabajo de cada una es el de su última solicitud aprobada.${RT.sin_datos ? ` No se cuentan ${RT.sin_datos} cuenta(s) creadas automáticamente para aprobar o recibir copia, sin departamento.` : ''}</span></div></div>
+    <div class="kpis">
+      <div class="kpi"><div class="l">Personas activas</div><div class="v">${P.length}</div><div class="s">${dep ? esc(dep) : 'toda la empresa'}</div></div>
+      <div class="kpi"><div class="l">Con teletrabajo aprobado</div><div class="v" style="color:var(--ok)">${conTT.length}</div><div class="s">${P.length ? Math.round(conTT.length / P.length * 100) : 0}% de las personas</div></div>
+      <div class="kpi"><div class="l">Sin teletrabajo</div><div class="v">${P.length - conTT.length}</div><div class="s">vienen todos los días</div></div>
+      <div class="kpi"><div class="l">Inactivos con teletrabajo aprobado</div><div class="v" style="color:var(--ink-3)">${RT.inactivos.filter(p => !dep || p.departamento === dep).length}</div><div class="s">no cuentan en los días</div></div></div>
+    <div class="grid2" style="align-items:start">
+      <div class="card"><div class="card-h"><h2>Por día de la semana</h2><div class="leyenda"><span><i style="background:var(--acero)"></i>Teletrabajo</span><span><i style="background:var(--pri-100)"></i>En oficina</span></div></div>
+        <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Día</th><th class="num">Teletrabajan</th><th class="num">En oficina</th><th style="width:45%"></th></tr></thead><tbody>
+        ${dias.map(x => { const t = tele(x).length, o = P.length - t; return `<tr class="click ${x === d ? 'sel' : ''}" data-ttdia="${x}"><td><b>${DIAS[x] || x}</b></td><td class="num">${t}</td><td class="num">${o}</td>
+          <td><div class="track" style="height:12px;background:var(--pri-100);border-radius:6px;overflow:hidden"><div style="height:100%;width:${t / maxN * 100}%;background:var(--acero)"></div></div></td></tr>`; }).join('')}
+        </tbody></table></div><div class="card-b xs muted" style="padding-top:8px">Toque un día para ver los nombres.</div></div>
+      <div class="card"><div class="card-h"><h2>${DIAS[d] || d}</h2><span class="small muted">${tele(d).length} teletrabajan · ${ofi(d).length} en oficina</span></div><div class="card-b stack">
+        <div><div class="small b" style="margin-bottom:6px">Teletrabajan</div>${lista(tele(d))}</div>
+        <div><div class="small b" style="margin-bottom:6px">Vienen a la oficina</div>${lista(ofi(d))}</div></div></div></div>
+    ${RT.inactivos.length ? `<div class="card" style="margin-top:16px"><div class="card-h"><h2>Inactivos con teletrabajo aprobado</h2><span class="xs muted">Siguen en el récord del año</span></div><div class="tbl-wrap"><table class="tbl"><tbody>
+      ${RT.inactivos.filter(p => !dep || p.departamento === dep).map(p => `<tr><td><b>${esc(p.nombre)}</b> <span class="tag">Inactivo</span><div class="xs muted">${esc(p.departamento || '')}</div></td><td class="small">${(p.dias || []).map(x => DIAS[x] || x).join(', ')}</td><td class="small"><a href="#/solicitud/${p.solicitud_id}">${esc(p.folio)}</a></td><td class="small">${p.inactivo_desde ? 'desde ' + fmtD(p.inactivo_desde) : ''}</td></tr>`).join('')}</tbody></table></div></div>` : ''}
+  </div>`;
+}
+async function excelTeletrabajo(RT, dep) {
+  const X = await cargarXlsx(), dias = RT.dias_semana || ['lun', 'mar', 'mie', 'jue', 'vie'];
+  const P = RT.personas.filter(p => !dep || p.departamento === dep);
+  const filas = P.map(p => ({ 'Nombre': p.nombre, 'Correo': p.email, 'Departamento': p.departamento, 'Puesto': p.puesto || '', 'Teletrabajo aprobado': p.tt ? 'Sí' : 'No',
+    'Folio': p.folio || '', ...Object.fromEntries(dias.map(x => [DIAS[x] || x, (p.dias || []).includes(x) ? 'Teletrabajo' : 'Oficina'])) }));
+  const resumen = [['Día', 'Teletrabajan', 'En oficina'], ...dias.map(x => { const t = P.filter(p => (p.dias || []).includes(x)).length; return [DIAS[x] || x, t, P.length - t]; })];
+  const wb = X.utils.book_new(); X.utils.book_append_sheet(wb, X.utils.json_to_sheet(filas.length ? filas : [{ 'Sin datos': '' }]), 'Personas'); X.utils.book_append_sheet(wb, X.utils.aoa_to_sheet(resumen), 'Por día');
+  api('rh_registrar_exportacion', { p_tipo: 'teletrabajo', p_filas: filas.length, p_detalle: 'Teletrabajo activo · ' + (dep || 'todos los departamentos') }).catch(() => {});
+  X.writeFile(wb, `Teletrabajo activo${dep ? ' - ' + dep : ''} - ${hoy()}.xlsx`);
 }
 async function historialExport() {
   const box = $('#hexp'); if (!box) return;
   try { const L = await api('rh_exportaciones_lista');
     box.innerHTML = L.length ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Fecha</th><th>Persona</th><th>Tipo</th><th>Filtro</th><th class="num">Solicitudes</th></tr></thead><tbody>${L.map(x => `<tr>
         <td class="small">${fmt(x.creado_en)}</td><td><b>${esc(x.usuario_nombre || x.usuario_email)}</b><div class="xs muted">${esc(x.usuario_email)} · ${esc(ROLES[x.rol] || x.rol)}</div></td>
-        <td>${x.tipo === 'csv' ? 'CSV (lista)' : 'Excel'}</td>
-        <td class="small">${x.tipo === 'csv' ? esc(x.detalle) : `${esc(x.modulo || 'Todos los trámites')} · ${esc(x.desde || 'inicio')} a ${esc(x.hasta || 'hoy')}`}</td>
+        <td>${x.tipo === 'csv' ? 'CSV (lista)' : x.tipo === 'teletrabajo' ? 'Excel teletrabajo' : 'Excel'}</td>
+        <td class="small">${x.tipo !== 'excel' ? esc(x.detalle) : `${esc(x.modulo || 'Todos los trámites')} · ${esc(x.desde || 'inicio')} a ${esc(x.hasta || 'hoy')}`}</td>
         <td class="num">${x.filas}</td></tr>`).join('')}</tbody></table></div>` : '<span class="muted small">Todavía no hay descargas registradas.</span>';
   } catch (err) { box.innerHTML = `<span class="small" style="color:var(--danger)">${esc(err.message)}</span>`; }
 }
@@ -1659,6 +1780,7 @@ function pistaPolitica(s) {
 }
 function sugerencia(d, s) {
   if (d.sugerir === 'hoy' || (d.tipo === 'fecha' && d.key.includes('aprobacion'))) return hoy();
+  if (d.key === 'monto' && !d.sugerir) { const x = detalleElegido(s); if (x?.d?.tope != null) return x.d.tope; }
   const x = detalleElegido(s); if (x && d.sugerir && x.d[d.sugerir] != null) return x.d[d.sugerir];
   return '';
 }
@@ -1695,7 +1817,7 @@ async function vistaDetalle(id) {
       <div class="card-h" style="background:#E8EEF7;border-radius:14px 14px 0 0"><h2>Le solicitan información adicional</h2><span class="xs muted">${esc(pregunta.por_nombre)} · ${esc(pregunta.paso)} · ${fmt(pregunta.en)}</span></div>
       <div class="card-b stack"><div class="quote" style="margin:0;white-space:pre-wrap">${esc(pregunta.pregunta)}</div>
         <div class="field"><label class="req" for="resp">Su respuesta</label><textarea class="inp" id="resp" style="min-height:80px"></textarea></div>
-        <div class="field"><span class="lbl">Archivos (opcional)</span><div class="files" data-k="_resp" data-t="archivo" data-max="10"><div class="fl"></div><label class="btn sm">${I.clip} Adjuntar archivo<input type="file" hidden multiple accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"></label><span class="xs muted" style="margin-left:8px">PDF, JPG o PNG · máx. 5 MB c/u</span></div></div>
+        <div class="field"><span class="lbl">Archivos (opcional)</span><div class="files" data-k="_resp" data-t="archivo" data-max="10"><div class="fl"></div><label class="btn sm">${I.clip} Adjuntar archivo<input type="file" hidden multiple accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"></label><span class="xs muted" style="margin-left:8px">PDF, JPG o PNG · máx. 10 MB c/u</span></div></div>
         <div class="row wrap" style="justify-content:flex-end;gap:10px"><span class="xs muted grow">Al responder, la solicitud vuelve al mismo paso. Si necesita cambiar los datos del formulario use <b>Modificar</b> (el flujo se reinicia).</span><button class="btn pri" id="enviar-resp">${I.send} Enviar respuesta</button></div></div></div>`
       : `<div class="alert a-info" style="border-color:var(--acero)">${I.info}<div><b>Esperando información del solicitante.</b> ${esc(pregunta.por_nombre)} (${esc(pregunta.paso)}) preguntó: <i>${esc(pregunta.pregunta)}</i></div></div>`) : '';
   const qa = (s.intercambios || []).length ? `<div class="card" style="margin-top:16px"><div class="card-h"><h2>Información adicional</h2></div><div class="card-b">${s.intercambios.map(x => `<div class="qa">
@@ -1703,20 +1825,33 @@ async function vistaDetalle(id) {
       ${x.respuesta ? `<div class="a"><div class="xs muted">Respuesta · ${fmt(x.respondido_en)}</div><div class="small" style="white-space:pre-wrap">${esc(x.respuesta)}</div>
         ${(x.adjuntos || []).map(f => `<button class="btn sm ghost" data-adj="${f.id}">${I.clip} ${esc(f.nombre)}</button>`).join('')}</div>` : '<div class="a xs muted">Sin respuesta todavía</div>'}</div>`).join('')}</div></div>` : '';
   const camposArch = (s.formulario || []).filter(f => f.tipo === 'archivo');
+  const vivos = new Set((D.adjuntos || []).map(x => x.id));
   const docs = camposArch.length ? `<div class="card" style="margin-top:16px" id="docs"><div class="card-h"><h2>${I.clip.replace('<svg', '<svg style="width:18px;height:18px;vertical-align:-3px;margin-right:6px"')}Documentos adjuntos</h2></div><div class="card-b stack" style="gap:12px">
       ${camposArch.map(f => `<div><div class="small b">${esc(f.label)}</div>${(s.datos[f.key] || []).length ? (s.datos[f.key] || []).map(x => `<div class="file-it" style="margin-top:6px">${I.clip.replace('<svg', '<svg style="width:15px;height:15px;flex:none"')}<span class="nm">${esc(x.nombre)}</span><span class="sz">${kb(x.tamano)}</span>
-          <button class="btn sm" data-adj="${x.id}">Abrir</button><button class="btn sm ghost icon" data-adjd="${x.id}" title="Descargar">${I.pdf}</button></div>`).join('') : '<div class="xs muted">—</div>'}</div>`).join('')}</div></div>` : '';
+          ${vivos.has(x.id) ? `<button class="btn sm" data-adj="${x.id}">Abrir</button><button class="btn sm ghost icon" data-adjd="${x.id}" title="Descargar">${I.pdf}</button>` : '<span class="xs muted">depurado</span>'}</div>`).join('') : '<div class="xs muted">—</div>'}</div>`).join('')}</div></div>` : '';
+  // v1.15: contrato firmado (lo carga RH en solicitudes aprobadas; el solicitante lo puede descargar)
+  const firmados = (D.adjuntos || []).filter(x => x.campo === '_contrato');
+  const contratoCard = s.estado === 'aprobada' && (firmados.length || P.subir_contrato) ? `<div class="card" style="margin-top:16px;${P.subir_contrato && !firmados.length ? 'border-color:var(--warn)' : ''}" id="contrato">
+      <div class="card-h"><h2>${I.doc.replace('<svg', '<svg style="width:18px;height:18px;vertical-align:-3px;margin-right:6px"')}Contrato firmado</h2>${firmados.length ? '<span class="badge s-aprobada">Cargado</span>' : '<span class="badge s-en_espera">Pendiente</span>'}</div>
+      <div class="card-b stack" style="gap:10px">
+        ${firmados.map(x => `<div class="file-it">${I.clip.replace('<svg', '<svg style="width:15px;height:15px;flex:none"')}<span class="nm">${esc(x.nombre)}</span><span class="sz">${kb(x.tamano)} · ${fmtD(x.creado_en)}</span>
+          <button class="btn sm" data-adj="${x.id}">Abrir</button><button class="btn sm ghost icon" data-adjd="${x.id}" title="Descargar">${I.pdf}</button>
+          ${P.subir_contrato ? `<button class="btn sm ghost icon" data-delcf="${x.id}" title="Quitar" style="color:var(--danger)">${I.trash}</button>` : ''}</div>`).join('') || `<div class="small muted">${P.subir_contrato ? 'Genere el contrato en Word, imprímalo o fírmelo y cárguelo aquí escaneado.' : 'Recursos Humanos cargará aquí el contrato firmado.'}</div>`}
+        ${P.subir_contrato ? `<div class="files" data-k="_contrato" data-t="archivo" data-max="3"><div class="fl"></div><label class="btn sm">${I.clip} Elegir archivo<input type="file" hidden multiple accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"></label><span class="xs muted" style="margin-left:8px">PDF, JPG o PNG · máx. 10 MB</span></div>
+          <div><button class="btn pri sm" id="subircf">${I.check} Cargar contrato firmado</button> <span class="xs muted">Es lo único que se puede agregar a una solicitud aprobada. Se avisa al solicitante.</span></div>` : ''}
+      </div></div>` : '';
   const B = D.beneficio, R$ = n => n == null ? '—' : (B?.moneda === 'USD' ? 'US$' : (B?.moneda || '') + ' ') + Number(n).toLocaleString('es-CR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const benef = B ? `<div class="card" style="margin-top:16px"><div class="card-h"><h2>Beneficio y reembolsos</h2><span class="badge ${B.estado === 'activo' ? 's-aprobada' : 's-cancelada'}">${B.estado === 'activo' ? 'Activo' : B.estado === 'vencido' ? 'Vencido' : 'Finalizado'}</span></div><div class="card-b stack">
-      <dl class="kv"><dt>Vigencia</dt><dd>${fmtD(B.inicio)} → ${fmtD(B.vence)}</dd><dt>Tipo</dt><dd>${esc(B.tipo || '—')}</dd>
-        <dt>Monto aprobado</dt><dd>${R$(B.monto_aprobado)}</dd><dt>Reembolsado</dt><dd>${R$(B.ejecutado)}</dd>
+      <dl class="kv"><dt>Vigencia</dt><dd>${fmtD(B.inicio)} → ${fmtD(B.vence)}<div class="xs muted">Extensión para reembolsos hasta ${fmtD(B.extension_hasta)} (+${B.extension_meses} meses)</div></dd><dt>Tipo</dt><dd>${esc(B.tipo || '—')}</dd>
+        <dt>Tope anual</dt><dd>${R$(B.monto_aprobado)}${B.tope_ajustado != null ? `<div class="xs muted">Ajustado por RH (aprobado: ${R$(B.tope_original)})</div>` : ''}${P.beneficio ? ` <button class="btn sm ghost" id="ben_tope">${I.edit} Ajustar</button>` : ''}</dd><dt>Reembolsado</dt><dd>${R$(B.ejecutado)}</dd>
         <dt>Saldo</dt><dd style="${B.saldo < 0 ? 'color:var(--danger)' : ''}">${R$(B.saldo)}</dd>
         ${B.fin ? `<dt>Finalizado</dt><dd>${fmtISO(B.fin)} · ${esc(B.fin_motivo || '')}<div class="xs muted">${esc(B.fin_por || '')}</div></dd>` : ''}</dl>
-      ${(D.reembolsos || []).length ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Fecha</th><th>Detalle</th><th class="num">Monto</th>${P.beneficio ? '<th></th>' : ''}</tr></thead><tbody>
-        ${D.reembolsos.map(r => `<tr><td class="small">${fmtISO(r.fecha)}</td><td class="small">${esc(r.descripcion || '—')}<div class="xs muted">${esc(r.registrado_por)}</div></td><td class="num">${R$(r.monto)}</td>
+      ${(D.reembolsos || []).length ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Fecha</th><th>Período</th><th>Detalle</th><th class="num">Monto</th>${P.beneficio ? '<th></th>' : ''}</tr></thead><tbody>
+        ${D.reembolsos.map(r => `<tr><td class="small">${fmtISO(r.fecha)}</td><td class="small">${esc(r.periodo || '—')}</td><td class="small">${esc(r.descripcion || '—')}<div class="xs muted">${esc(r.registrado_por)}</div></td><td class="num">${R$(r.monto)}</td>
           ${P.beneficio ? `<td style="text-align:right"><button class="btn sm ghost icon" data-delre="${r.id}" title="Eliminar">${I.trash}</button></td>` : ''}</tr>`).join('')}</tbody></table></div>` : '<div class="xs muted">Sin reembolsos registrados.</div>'}
       ${P.beneficio ? `<div class="row wrap" style="gap:8px;align-items:flex-end;border-top:1px solid var(--line);padding-top:12px">
           <div class="field" style="width:150px"><label>Fecha</label><input class="inp" type="date" id="re_f" value="${hoy()}"></div>
+          <div class="field" style="width:190px"><label>Período de aplicación</label><select class="inp" id="re_p"><option value="">—</option>${(D.opciones?.periodos || []).map(x => `<option>${esc(x.nombre + ' ' + x.anio)}</option>`).join('')}</select></div>
           <div class="field" style="width:140px"><label>Monto</label><input class="inp" type="number" min="0" step="0.01" id="re_m"></div>
           <div class="field grow" style="min-width:180px"><label>Detalle (materia, factura)</label><input class="inp" id="re_d"></div>
           <button class="btn pri" id="re_add">${I.plus} Registrar reembolso</button></div>
@@ -1738,14 +1873,15 @@ async function vistaDetalle(id) {
         <div><div class="lbl" style="margin-bottom:6px">Firma (obligatoria para aprobar)</div><div id="sig"></div></div>
         <div class="row" style="justify-content:flex-end;gap:10px;flex-wrap:wrap" id="acc-aprob">
           ${P.pedir_info ? `<button class="btn" id="pinfo">${I.info} Solicitar más información</button>` : ''}<button class="btn dan" id="rech">${I.x} Rechazar</button><button class="btn pri" id="aprob">${I.check} Aprobar y firmar</button></div>
-        ${yoAprob.es_final ? '<p class="xs muted" style="margin:0">Al aprobar se avisa por correo al solicitante y a RH; el documento final con todas las firmas queda listo para descargar.</p>' : ''}
+        ${yoAprob.es_final ? '<p class="xs muted" style="margin:0">Al aprobar se avisa por correo al solicitante y a RH; RH genera el contrato para firma.</p>' : ''}
       </div></div>` : '';
   shell(activo, `
     <div class="page-head"><div><a href="javascript:history.back()" class="small" style="text-decoration:none">← Volver</a>
       <h1 style="margin-top:6px">${esc(s.folio)} · ${esc(D.modulo_nombre)}</h1>
       <p class="row wrap" style="gap:8px">${badge(s.estado)}${s.es_prueba ? '<span class="tag prb">Dato de prueba</span>' : ''}${s.version > 1 ? `<span class="tag">Versión ${s.version}</span>` : ''}${s.excepcion ? '<span class="tag exc">⚠ Excepción a la política</span>' : ''}<span class="small muted">Enviada ${fmt(s.creado_en)}${s.finalizado_en ? ' · Finalizada ' + fmt(s.finalizado_en) : ''}</span></p></div>
       <div class="row wrap">
-        ${P.pdf ? `<button class="btn" id="dl">${I.pdf} Descargar PDF</button>` : ''}
+        ${P.contrato ? `<button class="btn pri" id="dlw">${I.doc} Generar contrato (Word)</button>` : ''}
+        ${P.pdf ? `<button class="btn" id="dl" title="Resumen de la solicitud con todas las firmas de aprobación">${I.pdf} Comprobante PDF</button>` : ''}
         ${P.reenviar ? `<button class="btn pri" id="reenv">${I.send} ${s.pdf_enviado_en ? 'Reenviar aviso' : 'Enviar aviso'}</button>` : ''}
         ${P.modificar ? `<button class="btn ${s.estado === 'rechazada' ? 'pri' : ''}" id="modif">${I.edit} ${s.estado === 'rechazada' ? 'Modificar y reenviar' : 'Modificar'}</button>` : ''}
         ${P.cancelar ? `<button class="btn ghost" id="canc" style="color:var(--danger)">${I.x} Cancelar solicitud</button>` : ''}
@@ -1768,7 +1904,7 @@ async function vistaDetalle(id) {
       </div>
       <div>
         <div class="card"><div class="card-h"><h2>Flujo de aprobación</h2></div><div class="card-b"><ul class="tl">${tl}</ul></div></div>
-        ${docs}${qa}${benef}
+        ${contratoCard}${docs}${qa}${benef}
         ${(D.versiones || []).length ? `<div class="card" style="margin-top:16px"><div class="card-h"><h2>${I.history.replace('<svg', '<svg style="width:18px;height:18px;vertical-align:-3px;margin-right:6px"')}Versiones anteriores</h2></div><div class="card-b" style="padding-top:4px">
           ${D.versiones.map((v, k) => { const sig = k === 0 ? s.datos : D.versiones[k - 1].datos;
             const camb = (v.formulario || []).filter(f => JSON.stringify(v.datos[f.key] ?? null) !== JSON.stringify(sig[f.key] ?? null)).map(f => f.label);
@@ -1799,7 +1935,7 @@ async function vistaDetalle(id) {
           aprobar ? 'Aprobar' : 'Rechazar', aprobar ? 'pri' : 'dan')) return;
       try {
         const r = await api('rh_resolver', { p_aprobacion_id: yoAprob.id, p_aprobar: aprobar, p_firma: firma.vacia() ? null : firma.png(), p_comentario: com, p_datos: dap });
-        if (r.final && r.aprobada) toast('Solicitud aprobada. Se avisó por correo al solicitante y a RH; el documento final ya se puede descargar.', 'ok');
+        if (r.final && r.aprobada) toast('Solicitud aprobada. Se avisó por correo al solicitante y a RH.', 'ok');
         else toast(aprobar ? `Aprobado. Se notificó al siguiente paso: ${r.siguiente}.` : 'Solicitud rechazada y notificada.', 'ok');
         router();
       } catch (e) { toast(e.message, 'err'); }
@@ -1851,7 +1987,7 @@ async function vistaDetalle(id) {
   $$('[data-adjd]').forEach(b => b.onclick = () => ocupado(b, async () => { try { await descargarAdjunto(+b.dataset.adjd, false); } catch (err) { toast(err.message, 'err'); } }));
   if (P.beneficio) {
     $('#re_add').onclick = e => ocupado(e.currentTarget, async () => {
-      try { await api('rh_reembolso_guardar', { p_solicitud: s.id, p_fecha: $('#re_f').value || null, p_monto: +$('#re_m').value || 0, p_descripcion: $('#re_d').value });
+      try { await api('rh_reembolso_guardar', { p_solicitud: s.id, p_fecha: $('#re_f').value || null, p_monto: +$('#re_m').value || 0, p_descripcion: $('#re_d').value, p_periodo: $('#re_p').value || null });
         toast('Reembolso registrado.', 'ok'); vistaDetalle(s.id); } catch (err) { toast(err.message, 'err'); } });
     $$('[data-delre]').forEach(b => b.onclick = async () => { if (!await confirmar('Eliminar reembolso', '¿Eliminar este reembolso? Queda registrado en la bitácora.', 'Eliminar', 'dan')) return;
       try { await api('rh_reembolso_eliminar', { p_id: +b.dataset.delre }); vistaDetalle(s.id); } catch (err) { toast(err.message, 'err'); } });
@@ -1864,8 +2000,19 @@ async function vistaDetalle(id) {
     if ($('#ben_react')) $('#ben_react').onclick = () => ocupado($('#ben_react'), async () => { try { await api('rh_beneficio_finalizar', { p_id: s.id, p_fecha: null, p_motivo: null }); toast('Beneficio reactivado.', 'ok'); vistaDetalle(s.id); } catch (err) { toast(err.message, 'err'); } });
   }
   if (P.pdf) $('#dl').onclick = e => ocupado(e.currentTarget, async () => { try { (await construirPDF(D)).save(s.folio + '.pdf'); } catch (err) { toast(err.message, 'err'); } });
+  if (P.contrato) $('#dlw').onclick = e => ocupado(e.currentTarget, async () => { try { await generarContrato(s.id); } catch (err) { toast(err.message, 'err'); } });
+  if (P.subir_contrato) {
+    enlazarForm($('#contrato'));
+    $('#subircf').onclick = e => ocupado(e.currentTarget, async () => {
+      const box = $('.files[data-k="_contrato"]'); if (!box._files.length) return toast('Elija el archivo del contrato firmado.', 'err');
+      try { const adj = await subirLista(box._files); await api('rh_contrato_firmado_adjuntar', { p_id: s.id, p_adjuntos: adj.map(x => x.id) });
+        toast('Contrato firmado cargado. Se avisó al solicitante.', 'ok'); vistaDetalle(s.id); } catch (err) { toast(err.message, 'err'); } });
+    $$('[data-delcf]').forEach(b => b.onclick = async () => { if (!await confirmar('Quitar contrato firmado', '¿Quitar este archivo? Queda registrado en la bitácora.', 'Quitar', 'dan')) return;
+      try { await api('rh_contrato_firmado_eliminar', { p_adjunto: +b.dataset.delcf }); vistaDetalle(s.id); } catch (err) { toast(err.message, 'err'); } });
+  }
+  if ($('#ben_tope')) $('#ben_tope').onclick = () => modalTope(s.id, B, () => vistaDetalle(s.id));
   if (P.reenviar) $('#reenv').onclick = () => modal({ title: 'Reenviar aviso de aprobación', body: `
-      <p style="margin-top:0">Se envía un correo (sin adjunto) avisando que la solicitud fue aprobada, con un botón para entrar a ver y descargar el documento final.</p>
+      <p style="margin-top:0">Se envía un correo (sin adjunto) avisando que la solicitud fue aprobada, con un botón para entrar a verla.</p>
       <label class="chk" style="margin-bottom:8px"><input type="radio" name="dest" value="todos" checked><span><b>Solicitante y RH</b><br><span class="small muted">${esc(s.solicitante_email)} + correos de RH configurados</span></span></label>
       <label class="chk"><input type="radio" name="dest" value="yo"><span><b>Solo a mí</b><br><span class="small muted">${esc(S.user.email)}</span></span></label>`,
     actions: [{ label: 'Cancelar' }, { label: I.send + ' Enviar', cls: 'pri', onClick: ({ close, el, btn }) => ocupado(btn, async () => {
@@ -1894,6 +2041,70 @@ async function vistaDetalle(id) {
     catch (err) { toast(err.message, 'err'); } }));
 }
 
+
+/* =====================================================================
+   v1.15 · CONTRATOS EN WORD (la plantilla .docx se llena en el navegador; no se guarda)
+   ===================================================================== */
+const ETIQ_CONTRATO = { empresa_nombre: 'razón social', empresa_corto: 'nombre corto de la empresa', empresa_cedula: 'cédula jurídica', empresa_domicilio: 'domicilio de la empresa',
+  rep_nombre: 'representante legal', rep_nombre_mayus: 'representante legal', rep_calidades: 'calidades del representante', rep_condicion: 'condición del representante',
+  uso_inicial: 'plazo de uso inicial', nombre: 'nombre del colaborador', nombre_mayus: 'nombre del colaborador', cedula: 'cédula', direccion: 'dirección',
+  direccion_teletrabajo: 'dirección de teletrabajo', puesto: 'puesto', departamento: 'departamento', fecha_ingreso: 'fecha de ingreso', estado_civil: 'estado civil',
+  profesion: 'profesión', tipo_apoyo: 'tipo de apoyo', programa: 'programa', institucion: 'institución', estudios: 'estudios y tipo de apoyo', tope: 'tope anual',
+  porcentaje: 'porcentaje', fecha_aprobacion: 'fecha de aprobación', dias: 'días', dias_n: 'cantidad de días', fecha_contrato: 'fecha del contrato', folio: 'folio' };
+async function cargarJSZip() {
+  if (window.JSZip) return window.JSZip;
+  await cargarScript(LIBS.jszip, 'No se pudo cargar el generador de Word. Revise su conexión.');
+  return window.JSZip;
+}
+const xmlEsc = t => String(t ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+// Resaltado amarillo respetando el orden de las propiedades de un "run" de Word
+function rprResaltado(rpr) {
+  rpr = (rpr || '<w:rPr></w:rPr>').replace(/<w:highlight [^>]*\/>/g, '');
+  const m = rpr.match(/<w:(u|effect|bdr|shd|fitText|vertAlign|rtl|cs|em|lang|eastAsianLayout|specVanish|oMath)[ />]/);
+  const tag = '<w:highlight w:val="yellow"/>';
+  return m ? rpr.replace(m[0], tag + m[0]) : rpr.replace('</w:rPr>', tag + '</w:rPr>');
+}
+function llenarXml(xml, V, faltan) {
+  // 1) Word a veces parte un marcador {{campo}} en varios fragmentos: se unen
+  xml = xml.replace(/\{(?:<[^>]+>)*\{(?:[^{}<]|<[^>]+>)*?\}(?:<[^>]+>)*\}/g, m => m.replace(/<[^>]+>/g, ''));
+  // 2) cada fragmento con marcadores se reescribe: valor en negro, o "[completar: …]" resaltado si falta el dato
+  xml = xml.replace(/<w:r(?: [^>]*)?>(<w:rPr>(?:(?!<\/w:rPr>)[\s\S])*<\/w:rPr>)?<w:t(?: [^>]*)?>([^<]*\{\{\w+\}\}[^<]*)<\/w:t><\/w:r>/g, (m, rpr, txt) => {
+    const base = (rpr || '').replace(/<w:color w:val="FF0000"[^>]*\/>/g, '');
+    return txt.split(/(\{\{\w+\}\})/).filter(x => x !== '').map(parte => {
+      const k = (parte.match(/^\{\{(\w+)\}\}$/) || [])[1];
+      if (!k) return `<w:r>${base}<w:t xml:space="preserve">${parte}</w:t></w:r>`;
+      const v = V[k];
+      if (v != null && String(v).trim() !== '') return `<w:r>${base}<w:t xml:space="preserve">${xmlEsc(v)}</w:t></w:r>`;
+      faltan.add(ETIQ_CONTRATO[k] || k);
+      return `<w:r>${rprResaltado(base)}<w:t xml:space="preserve">[completar: ${xmlEsc(ETIQ_CONTRATO[k] || k)}]</w:t></w:r>`;
+    }).join('');
+  });
+  // 3) marcadores en lugares poco comunes (tablas, campos): texto simple
+  return xml.replace(/\{\{(\w+)\}\}/g, (m, k) => { const v = V[k]; if (v == null || String(v).trim() === '') { faltan.add(ETIQ_CONTRATO[k] || k); return '[completar: ' + xmlEsc(ETIQ_CONTRATO[k] || k) + ']'; } return xmlEsc(v); });
+}
+async function generarContrato(id) {
+  const [Z, D] = await Promise.all([cargarJSZip(), api('rh_contrato_datos', { p_id: id })]);
+  const P = await api('rh_contrato_plantilla', { p_modulo: D.modulo });
+  const zip = await Z.loadAsync(P.contenido, { base64: true }), faltan = new Set();
+  for (const nombre of Object.keys(zip.files).filter(n => /^word\/(document|header\d*|footer\d*)\.xml$/.test(n))) {
+    zip.file(nombre, llenarXml(await zip.file(nombre).async('string'), D.valores || {}, faltan));
+  }
+  const blob = await zip.generateAsync({ type: 'blob', mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', compression: 'DEFLATE' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = `${(P.nombre || 'Contrato').replace(/\.docx$/i, '')} - ${D.folio}.docx`; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+  toast(faltan.size ? `Contrato generado. Complete en Word lo resaltado en amarillo: ${[...faltan].join(', ')}.` : 'Contrato generado.', faltan.size ? '' : 'ok');
+}
+function modalTope(id, B, alGuardar) {
+  const mon = B?.moneda === 'USD' ? 'US$' : (B?.moneda || '');
+  modal({ title: 'Ajustar tope anual', body: `<p style="margin-top:0">Tope registrado al aprobar: <b>${mon}${Number(B.tope_original ?? 0).toLocaleString('es-CR')}</b>. El ajuste cambia el saldo y lo comprometido del presupuesto.</p>
+      <div class="grid2"><div class="field"><label>Nuevo tope (${esc(B.moneda || 'USD')})</label><input class="inp" type="number" min="0" step="0.01" id="tp_v" value="${B.tope_ajustado ?? ''}" placeholder="Vacío = usar el aprobado"></div>
+      <div class="field"><label>Motivo</label><input class="inp" id="tp_m" placeholder="Ej. ajuste por política 2027"></div></div>`,
+    actions: [{ label: 'Cancelar' }, { label: 'Guardar', cls: 'pri', onClick: ({ close, el, btn }) => ocupado(btn, async () => {
+      const v = $('#tp_v', el).value;
+      try { await api('rh_beneficio_tope', { p_id: id, p_tope: v === '' ? null : +v, p_motivo: $('#tp_m', el).value }); close(); toast('Tope actualizado.', 'ok'); alGuardar(); } catch (err) { toast(err.message, 'err'); }
+    }) }] });
+}
 /* =====================================================================
    PDF (se genera en el navegador; no se almacena)
    ===================================================================== */
@@ -2057,6 +2268,7 @@ async function tabResponsables(m) {
 async function tabPolitica(m) {
   const rows = (await api('rh_politicas')).filter(p => p.modulo === m.codigo);
   const fd = (m.formulario || []).find(f => f.tipo === 'dias');
+  const fTipos = (m.formulario || []).find(f => f.key === (m.opciones?.beneficio?.campo_tipo || '') && ['lista', 'opcion'].includes(f.tipo)) || (m.formulario || []).find(f => f.detalle_opciones && ['lista', 'opcion'].includes(f.tipo));
   const recargar = () => vistaModulo(m.codigo, 'politica');
   $('#edbody').innerHTML = `
     ${fd ? `<div class="card" style="margin-bottom:18px"><div class="card-b row wrap" style="gap:16px;align-items:flex-end">
@@ -2078,6 +2290,15 @@ async function tabPolitica(m) {
         <div class="field" style="width:110px"><label>Año</label><input class="inp" type="number" id="pres_a" value="${hoy().slice(0, 4)}"></div>
         <div class="field" style="width:170px"><label>Monto (${esc(m.opciones.beneficio.moneda || 'USD')})</label><input class="inp" type="number" min="0" step="100" id="pres_m" placeholder="Vacío = quitar"></div>
         <button class="btn pri" id="gpres">${I.check} Guardar</button></div></div>` : ''}
+    ${fTipos ? `<div class="card" style="margin-bottom:18px"><div class="card-h"><h2>Tipos de solicitud</h2><div class="row wrap" style="gap:8px"><button class="btn" id="addtipo">${I.plus} Agregar tipo</button><button class="btn pri" id="gtipos">${I.check} Guardar tipos</button></div></div>
+      <div class="card-b stack"><p class="small muted" style="margin:0">Lo que el solicitante ve al elegir el tipo (leyenda), el porcentaje y el tope que se sugieren al Gerente de RH, y la antigüedad mínima: si la persona no la cumple, la solicitud se tramita como <b>excepción</b> con justificación.</p>
+        <div class="tbl-wrap"><table class="tbl"><thead><tr><th style="min-width:200px">Tipo</th><th style="width:90px">% reembolso</th><th style="width:120px">Tope anual (${esc(m.opciones?.beneficio?.moneda || 'USD')})</th><th style="width:100px">Antigüedad mín. (meses)</th><th style="min-width:240px">Leyenda que ve el solicitante</th><th></th></tr></thead><tbody id="tipos"></tbody></table></div></div></div>` : ''}
+    ${m.opciones?.beneficio ? `<div class="card" style="margin-bottom:18px"><div class="card-b row wrap" style="gap:16px;align-items:flex-end">
+        <div class="grow" style="min-width:240px"><h3>Vigencia del beneficio</h3>
+          <p class="small muted" style="margin:4px 0 0">El beneficio dura estos meses desde la fecha de aprobación. La <b>extensión</b> da tiempo extra para presentar reembolsos; al vencer, la persona debe presentar una solicitud nueva.</p></div>
+        <div class="field" style="width:130px"><label>Vigencia (meses)</label><input class="inp" type="number" min="1" max="60" id="vig_m" value="${esc(m.opciones.beneficio.vigencia_meses || 12)}"></div>
+        <div class="field" style="width:130px"><label>Extensión (meses)</label><input class="inp" type="number" min="0" max="36" id="vig_e" value="${esc(m.opciones.beneficio.extension_meses ?? 6)}"></div>
+        <button class="btn pri" id="gvig">${I.check} Guardar</button></div></div>` : ''}
     <div class="card" style="margin-bottom:18px"><div class="card-b row wrap" style="gap:16px;align-items:flex-end">
         <div class="grow" style="min-width:240px"><h3>Recordatorios al aprobador</h3>
           <p class="small muted" style="margin:4px 0 0">El <b>solicitante</b> puede enviar un recordatorio cuando un paso lleva estos días sin respuesta (máx. uno cada 24 h). RH puede enviarlo en cualquier momento.</p></div>
@@ -2131,6 +2352,23 @@ async function tabPolitica(m) {
       try { await api('rh_modulo_periodos', { p_modulo: m.codigo, p_periodos: PL.map(({ nombre, desde, hasta }) => ({ nombre, desde, hasta })) });
         toast('Períodos guardados.', 'ok'); await cargarBase(); recargar(); } catch (err) { toast(err.message, 'err'); } });
   }
+  if (fTipos) {
+    const TP = (fTipos.opciones || []).map(o => ({ nombre: o, anterior: o, ...(fTipos.detalle_opciones || {})[o] }));
+    const pintarT = () => { $('#tipos').innerHTML = TP.map((t, k) => `<tr data-tk="${k}"><td><input class="inp" data-t="nombre" value="${esc(t.nombre)}"></td>
+        <td><input class="inp" type="number" min="0" max="100" data-t="porcentaje" value="${esc(t.porcentaje ?? '')}"></td>
+        <td><input class="inp" type="number" min="0" step="50" data-t="tope" value="${esc(t.tope ?? '')}" placeholder="Sin tope"></td>
+        <td><input class="inp" type="number" min="0" max="240" data-t="antiguedad_meses" value="${esc(t.antiguedad_meses ?? '')}"></td>
+        <td><textarea class="inp" data-t="nota" style="min-height:44px">${esc(t.nota || '')}</textarea></td>
+        <td><button class="btn sm ghost icon" data-rmt="${k}" title="Quitar" style="color:var(--danger)">${I.trash}</button></td></tr>`).join(''); };
+    pintarT();
+    $('#tipos').oninput = e => { const tr = e.target.closest('[data-tk]'); if (tr && e.target.dataset.t) TP[+tr.dataset.tk][e.target.dataset.t] = e.target.value; };
+    $('#tipos').onclick = e => { const b = e.target.closest('[data-rmt]'); if (b) { TP.splice(+b.dataset.rmt, 1); pintarT(); } };
+    $('#addtipo').onclick = () => { TP.push({ nombre: 'Nuevo tipo', anterior: '', porcentaje: 50, tope: '', antiguedad_meses: 3, nota: '' }); pintarT(); };
+    $('#gtipos').onclick = e => ocupado(e.currentTarget, async () => {
+      try { await api('rh_modulo_tipos_guardar', { p_modulo: m.codigo, p_tipos: TP }); toast('Tipos de solicitud guardados.', 'ok'); await cargarBase(); recargar(); } catch (err) { toast(err.message, 'err'); } });
+  }
+  if ($('#gvig')) $('#gvig').onclick = e => ocupado(e.currentTarget, async () => {
+    try { await api('rh_modulo_vigencia', { p_modulo: m.codigo, p_vigencia: +$('#vig_m').value, p_extension: +$('#vig_e').value }); toast('Vigencia guardada.', 'ok'); await cargarBase(); recargar(); } catch (err) { toast(err.message, 'err'); } });
   if ($('#gpres')) $('#gpres').onclick = e => ocupado(e.currentTarget, async () => {
     try { const v = $('#pres_m').value; await api('rh_modulo_presupuesto', { p_modulo: m.codigo, p_anio: +$('#pres_a').value, p_monto: v === '' ? null : +v });
       toast('Presupuesto guardado.', 'ok'); await cargarBase(true); recargar(); } catch (err) { toast(err.message, 'err'); } });
@@ -2181,21 +2419,22 @@ async function adminUsuarios() {
   cargando('usuarios');
   const us = await api('rh_admin_usuarios');
   const filtro = store.get('fu') || '';
-  shell('usuarios', `<div class="page-head"><div><h1>Usuarios</h1><p>Todos ingresan con un código por correo. Los administradores tienen además un PIN de respaldo.</p></div>
-      <button class="btn pri" id="nu">${I.plus} Nuevo usuario</button></div>
+  shell('usuarios', `<div class="page-head"><div><h1>Usuarios y roles</h1><p>Todos ingresan con un código por correo; quien no tiene usuario se registra solo (con un correo de los dominios permitidos). Los administradores tienen además un PIN de respaldo.</p></div>
+      <div class="row wrap"><button class="btn" id="cm">${I.xls} Carga masiva (Excel)</button><button class="btn pri" id="nu">${I.plus} Nuevo usuario</button></div></div>
     <div class="card"><div class="card-h"><input class="inp" id="bu" placeholder="Buscar…" value="${esc(filtro)}" style="max-width:320px"><span class="small muted">${us.length} usuario(s)</span></div>
     <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Usuario</th><th>Departamento / puesto</th><th>Rol</th><th>Estado</th><th>Último acceso</th><th></th></tr></thead><tbody id="tu">
     ${us.map(u => `<tr data-q="${esc((u.nombre + ' ' + u.email + ' ' + u.departamento).toLowerCase())}">
       <td><b>${esc(u.nombre || '—')}</b><div class="xs muted">${esc(u.email)}</div></td>
       <td class="small">${esc(u.departamento || '—')}<div class="xs muted">${esc(u.puesto)}</div></td>
       <td><span class="tag ${u.rol === 'admin' ? 'adm' : u.rol === 'rh' ? 'rh' : ''}">${esc(ROLES[u.rol])}</span>${u.rol === 'admin' ? `<div class="xs muted">${u.tiene_pin ? (u.pin_temporal ? 'PIN de respaldo temporal' : 'PIN de respaldo activo') : 'Sin PIN de respaldo'}</div>` : ''}</td>
-      <td>${u.activo ? '<span class="badge s-aprobada">Activo</span>' : '<span class="badge s-cancelada">Inactivo</span>'}${u.origen === 'aprobador' ? '<div class="xs muted">creado como aprobador</div>' : ''}</td>
+      <td>${u.activo ? '<span class="badge s-aprobada">Activo</span>' : '<span class="badge s-cancelada">Inactivo</span>'}${u.perfil_completo ? '' : '<div class="xs" style="color:var(--warn)">perfil incompleto</div>'}${u.origen === 'aprobador' ? '<div class="xs muted">creado como aprobador</div>' : u.origen === 'registro' ? '<div class="xs muted">se registró solo</div>' : u.origen === 'carga' ? '<div class="xs muted">carga masiva</div>' : ''}</td>
       <td class="small">${fmt(u.ultimo_acceso)}</td>
       <td style="text-align:right;white-space:nowrap"><button class="btn sm" data-ed="${u.id}">${I.edit} Editar</button>${u.id !== S.user.id ? ` <button class="btn sm ghost icon" data-del="${u.id}" title="Eliminar">${I.trash}</button>` : ''}</td></tr>`).join('')}
     </tbody></table></div></div>`);
   const filtrar = () => { const q = $('#bu').value.toLowerCase(); store.set('fu', q); $$('#tu tr').forEach(tr => tr.style.display = tr.dataset.q.includes(q) ? '' : 'none'); };
   $('#bu').oninput = filtrar; filtrar();
   $('#nu').onclick = () => modalUsuario({ activo: true, rol: 'usuario' });
+  $('#cm').onclick = modalCarga;
   $$('[data-ed]').forEach(b => b.onclick = () => modalUsuario(us.find(u => u.id === b.dataset.ed)));
   $$('[data-del]').forEach(b => b.onclick = async () => { const u = us.find(x => x.id === b.dataset.del);
     if (!await confirmar('Eliminar usuario', `¿Eliminar a <b>${esc(u.email)}</b>? Sus solicitudes se conservan. Si solo quiere quitarle el acceso, mejor desactívelo.`, 'Eliminar', 'dan')) return;
@@ -2209,6 +2448,9 @@ function modalUsuario(u, alGuardar) {
       <div class="field span2"><label>Nombre completo</label><input class="inp" id="un" value="${esc(u.nombre || '')}"></div>
       <div class="field"><label>Departamento</label><select class="inp" id="ud">${opcionesDep(u.departamento)}</select></div>
       <div class="field"><label>Puesto</label><input class="inp" id="up" value="${esc(u.puesto || '')}"></div>
+      <div class="field"><label>Cédula</label><input class="inp" id="uc" value="${esc(u.cedula || '')}"></div>
+      <div class="field"><label>Fecha de ingreso</label><input class="inp" id="ui" type="date" value="${esc(u.fecha_ingreso || '')}" max="${hoy()}"></div>
+      <div class="field span2"><label>Dirección física</label><input class="inp" id="udir" value="${esc(u.direccion || '')}"><span class="help">Si faltan datos del perfil, la persona los completa al ingresar.</span></div>
       <div class="field"><label>Rol</label><select class="inp" id="ur">${Object.entries(ROLES).map(([k, v]) => `<option value="${k}" ${u.rol === k ? 'selected' : ''}>${v}</option>`).join('')}</select>
         <span class="help">Colaborador: solo sus solicitudes. RH: además ve todas y publica políticas. Admin: además usuarios y flujos.</span></div>
       <div class="field"><label>Estado</label><select class="inp" id="ua"><option value="1" ${u.activo ? 'selected' : ''}>Activo</option><option value="0" ${!u.activo ? 'selected' : ''}>Inactivo</option></select></div>
@@ -2219,7 +2461,8 @@ function modalUsuario(u, alGuardar) {
     actions: [{ label: 'Cancelar' }, { label: 'Guardar', cls: 'pri', onClick: ({ close, el, btn }) => ocupado(btn, async () => {
       try {
         const r = await api('rh_admin_guardar_usuario', { p_usuario: { id: u.id || null, email: $('#ue', el).value, nombre: $('#un', el).value, departamento: $('#ud', el).value,
-          puesto: $('#up', el).value, rol: $('#ur', el).value, activo: $('#ua', el).value === '1', pin: $('#upin', el).value }, p_notificar: $('#unot', el).checked });
+          puesto: $('#up', el).value, cedula: $('#uc', el).value, fecha_ingreso: $('#ui', el).value, direccion: $('#udir', el).value,
+          rol: $('#ur', el).value, activo: $('#ua', el).value === '1', pin: $('#upin', el).value }, p_notificar: $('#unot', el).checked });
         close(); toast((r.nuevo ? 'Usuario creado.' : 'Usuario actualizado.') + (r.sesiones_cerradas ? ` Se cerraron ${r.sesiones_cerradas} sesión(es) abiertas de esta persona: deberá ingresar de nuevo con su nuevo rol.` : ''), 'ok'); alGuardar ? alGuardar() : adminUsuarios();
       } catch (e) { toast(e.message, 'err'); }
     }) }],
@@ -2311,7 +2554,7 @@ function edFormulario() {
       <div class="grid3">
         <div class="field"><span class="lbl">Tipo</span><select class="inp" data-p="tipo" ${f.sistema ? 'disabled' : ''}>${Object.entries(TIPOS_CAMPO).map(([k, v]) => `<option value="${k}" ${f.tipo === k ? 'selected' : ''}>${v}</option>`).join('')}</select></div>
         <div class="field"><span class="lbl">Clave interna</span><input class="inp" value="${esc(f.key)}" disabled>${f.sistema ? '<span class="help">Campo del sistema</span>' : ''}</div>
-        <div class="field"><span class="lbl">Valor inicial</span><select class="inp" data-p="auto"><option value="">Vacío</option>${[['hoy', 'Fecha de hoy'], ['nombre', 'Nombre del usuario'], ['email', 'Correo del usuario (no editable)'], ['departamento', 'Departamento del usuario'], ['puesto', 'Puesto del usuario']].map(([k, v]) => `<option value="${k}" ${f.auto === k ? 'selected' : ''}>${v}</option>`).join('')}</select></div>
+        <div class="field"><span class="lbl">Valor inicial</span><select class="inp" data-p="auto"><option value="">Vacío</option>${[['hoy', 'Fecha de hoy'], ['nombre', 'Nombre del usuario'], ['email', 'Correo del usuario (no editable)'], ['departamento', 'Departamento del usuario'], ['puesto', 'Puesto del usuario'], ['cedula', 'Cédula del usuario'], ['direccion', 'Dirección del usuario'], ['fecha_ingreso', 'Fecha de ingreso del usuario']].map(([k, v]) => `<option value="${k}" ${f.auto === k ? 'selected' : ''}>${v}</option>`).join('')}</select></div>
         <div class="field span2"><span class="lbl">Texto de ayuda</span><input class="inp" data-p="ayuda" value="${esc(f.ayuda || '')}"></div>
         <label class="chk" style="align-self:end"><input type="checkbox" data-p="requerido" ${f.requerido ? 'checked' : ''} ${f.key === 'correo_jefatura' ? 'disabled' : ''}><span>Obligatorio</span></label>
         ${['texto', 'lista', 'opcion', 'fecha', 'numero', 'departamento'].includes(f.tipo) ? `<label class="chk" style="align-self:end"><input type="checkbox" data-p="en_resumen" ${f.en_resumen ? 'checked' : ''}><span>Mostrar en el resumen de los correos</span></label>` : ''}
@@ -2391,7 +2634,7 @@ function edFlujo() {
               <button class="btn icon ghost" data-drm="${k}" style="color:var(--danger)">${I.trash}</button></div>`).join('')}
             <button class="btn sm ghost" data-dadd style="margin-top:6px">${I.plus} Agregar dato (ej. monto, porcentaje, fecha)</button></div>
         </div></div>`).join('')}
-      <div class="arrow">${I.arrow}</div><div class="step-end">Aprobada → PDF al solicitante y RH</div>
+      <div class="arrow">${I.arrow}</div><div class="step-end">Aprobada → aviso al solicitante y RH · RH genera el contrato</div>
     </div><button class="btn" id="addp" style="margin-top:14px">${I.plus} Agregar paso</button></div>
     <div class="card card-b small stack" style="position:sticky;top:120px">
       <h3>Cómo funciona</h3>
@@ -2425,7 +2668,7 @@ function edTextos() {
   const T = ED.textos;
   const campos = [['intro', 'Texto inicial (confidencialidad)', 'Se muestra al inicio del formulario y en el PDF.'],
                   ['declaracion', 'Declaración (casilla obligatoria)', 'El solicitante debe marcarla para poder enviar.'],
-                  ['msg_aprobado', 'Mensaje al aprobarse', 'Va en el correo final con el PDF y en el documento.'],
+                  ['msg_aprobado', 'Mensaje al aprobarse', 'Va en el correo de aprobación y se muestra en la solicitud.'],
                   ['msg_rechazado', 'Mensaje al rechazarse', 'Va en el correo de rechazo, antes del motivo.'],
                   ['msg_info', 'Mensaje al solicitar más información', 'Va en el correo al solicitante, antes de la pregunta del aprobador.']];
   $('#edbody').innerHTML = `<div class="card card-b stack">${campos.map(([k, l, h]) => `<div class="field"><label>${l}</label><textarea class="inp" data-t="${k}">${esc(T[k] || '')}</textarea><span class="help">${h}</span></div>`).join('')}</div>`;
@@ -2575,6 +2818,263 @@ async function adminCorreos() {
     </tbody></table></div>`}</div>
     <p class="xs muted" style="margin-top:10px">Supabase conserva el resultado HTTP solo unas horas; después la columna muestra “Enviado”.</p>`);
   $('#rf').onclick = adminCorreos;
+}
+
+/* =====================================================================
+   v1.15 · PERSONAS (RH): datos, perfil y activar / inactivar
+   ===================================================================== */
+async function vistaPersonas() {
+  cargando('personas');
+  const us = await api('rh_personas'), F = JSON.parse(store.get('fper') || '{}');
+  const est = F.estado || 'activos';
+  shell('personas', `<div class="page-head"><div><h1>Personas</h1><p>Colaboradores registrados. RH puede corregir sus datos e inactivarlos (por ejemplo, al salir de la compañía). Los inactivos siguen contando en los reportes del año, marcados como inactivos.</p></div>
+      ${esAdmin() ? `<a class="btn" href="#/admin/usuarios">${I.key} Roles y carga masiva</a>` : ''}</div>
+    <div class="card"><div class="card-h"><div class="row wrap grow">
+      <input class="inp" id="pq" placeholder="Buscar nombre, correo, cédula, departamento…" value="${esc(F.q || '')}" style="max-width:320px">
+      <select class="inp" id="pe" style="max-width:190px">${[['activos', 'Activos'], ['inactivos', 'Inactivos'], ['incompletos', 'Perfil incompleto'], ['todos', 'Todos']].map(([k, l]) => `<option value="${k}" ${est === k ? 'selected' : ''}>${l}</option>`).join('')}</select>
+      <span class="small muted" id="pn"></span></div></div>
+    <div class="tbl-wrap"><table class="tbl cards"><thead><tr><th>Persona</th><th>Departamento / puesto</th><th>Cédula</th><th>Ingreso</th><th>Perfil</th><th>Estado</th><th class="num">Solicitudes</th><th></th></tr></thead><tbody id="pt">
+    ${us.map(u => `<tr data-id="${u.id}" data-q="${esc([u.nombre, u.email, u.cedula, u.departamento, u.puesto].join(' ').toLowerCase())}" data-act="${u.activo ? 1 : 0}" data-pc="${u.perfil_completo ? 1 : 0}">
+      <td><b>${esc(u.nombre || '—')}</b>${u.rol !== 'usuario' ? ` <span class="tag ${u.rol === 'admin' ? 'adm' : 'rh'}">${esc(ROLES[u.rol])}</span>` : ''}<div class="xs muted">${esc(u.email)}</div></td>
+      <td class="small">${esc(u.departamento || '—')}<div class="xs muted">${esc(u.puesto || '')}</div></td>
+      <td class="small">${esc(u.cedula || '—')}</td><td class="small">${fmtISO(u.fecha_ingreso)}</td>
+      <td>${u.perfil_completo ? '<span class="badge s-aprobada">Completo</span>' : '<span class="badge s-en_espera">Incompleto</span>'}</td>
+      <td>${u.activo ? '<span class="badge s-aprobada">Activo</span>' : `<span class="badge s-cancelada">Inactivo</span><div class="xs muted">${u.inactivo_desde ? 'desde ' + fmtD(u.inactivo_desde) : ''}</div>`}</td>
+      <td class="num">${u.solicitudes}</td>
+      <td style="text-align:right"><button class="btn sm" data-ed="${u.id}">${I.edit} Editar</button></td></tr>`).join('')}
+    </tbody></table></div></div>`);
+  const filtrar = () => { const q = $('#pq').value.toLowerCase(), e = $('#pe').value; store.set('fper', JSON.stringify({ q, estado: e })); let n = 0;
+    $$('#pt tr').forEach(tr => { const ok = tr.dataset.q.includes(q) && (e === 'todos' || (e === 'activos' && tr.dataset.act === '1') || (e === 'inactivos' && tr.dataset.act === '0') || (e === 'incompletos' && tr.dataset.pc === '0'));
+      tr.style.display = ok ? '' : 'none'; if (ok) n++; }); $('#pn').textContent = `${n} de ${us.length}`; };
+  $('#pq').oninput = filtrar; $('#pe').onchange = filtrar; filtrar();
+  $$('[data-ed]').forEach(b => b.onclick = () => { const u = us.find(x => x.id === b.dataset.ed);
+    const bloqueado = !esAdmin() && u.rol !== 'usuario', yo = u.id === S.user.id;
+    modal({ title: 'Editar persona', body: `<p class="small muted" style="margin-top:0">${esc(u.email)}</p><form class="grid2" id="fpe">${camposPerfil(u).replace(/class="field"/g, 'class="field"')}
+        <div class="field"><label>Estado</label><select class="inp" id="pa" ${bloqueado || yo ? 'disabled' : ''}><option value="1" ${u.activo ? 'selected' : ''}>Activo</option><option value="0" ${!u.activo ? 'selected' : ''}>Inactivo</option></select>
+          <span class="help">${bloqueado ? 'Solo un administrador puede inactivar usuarios de RH o administradores.' : 'Al inactivar se cierran sus sesiones; ya no podrá ingresar ni aparece en el teletrabajo activo.'}</span></div></form>`,
+      actions: [{ label: 'Cancelar' }, { label: 'Guardar', cls: 'pri', onClick: ({ close, el, btn }) => ocupado(btn, async () => {
+        try { const r = await api('rh_persona_guardar', { p_usuario: { id: u.id, ...leerPerfil(el), activo: $('#pa', el).value === '1' } });
+          close(); toast('Datos guardados.' + (r.sesiones_cerradas ? ` Se cerraron ${r.sesiones_cerradas} sesión(es).` : ''), 'ok'); vistaPersonas(); } catch (err) { toast(err.message, 'err'); } }) }] }); });
+}
+
+/* =====================================================================
+   v1.15 · CONTROL DE BENEFICIOS (RH): tope por persona y año, reembolsos y vigencia
+   ===================================================================== */
+async function vistaBeneficios(codigo) {
+  cargando('beneficios');
+  await cargarBase();
+  const mods = S.modulos.filter(m => m.opciones?.beneficio);
+  const m = mods.find(x => x.codigo === codigo) || mods[0];
+  if (!m) { shell('beneficios', '<div class="empty">Ningún trámite maneja beneficios.</div>'); return; }
+  const F = JSON.parse(store.get('fben') || '{}'), anio = F.anio ?? '';
+  const B = await api('rh_beneficios', { p_modulo: m.codigo, p_anio: anio === '' ? null : +anio });
+  const mon = n => n == null ? '—' : (B.moneda === 'USD' ? 'US$' : B.moneda + ' ') + Number(n).toLocaleString('es-CR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const EST = { activo: ['Vigente', 's-aprobada'], extension: ['En extensión', 's-en_espera'], vencido: ['Vencido', 's-cancelada'], finalizado: ['Finalizado', 's-rechazada'] };
+  const filas = B.filas.filter(f => !F.estado || f.beneficio?.estado === F.estado);
+  const tot = filas.reduce((a, f) => ({ tope: a.tope + (+f.beneficio?.monto_aprobado || 0), ej: a.ej + (+f.beneficio?.ejecutado || 0) }), { tope: 0, ej: 0 });
+  shell('beneficios', `<div class="page-head"><div><h1>Control de beneficios</h1><p>${esc(m.nombre)}: tope anual por persona, reembolsos y vigencia (${B.vigencia_meses} meses desde la aprobación + ${B.extension_meses} meses de extensión; después debe solicitarse de nuevo).</p></div>
+      ${mods.length > 1 ? `<select class="inp" id="bm" style="max-width:240px">${mods.map(x => `<option value="${esc(x.codigo)}" ${x.codigo === m.codigo ? 'selected' : ''}>${esc(nombreCorto(x))}</option>`).join('')}</select>` : ''}</div>
+    <div class="card" style="margin-bottom:16px"><div class="card-b row wrap" style="gap:12px;align-items:flex-end">
+      <div class="field"><label>Año de aprobación</label><select class="inp" id="ba"><option value="">Todos</option>${B.anios.sort().reverse().map(a => `<option ${String(a) === String(anio) ? 'selected' : ''}>${a}</option>`).join('')}</select></div>
+      <div class="field"><label>Estado</label><select class="inp" id="be"><option value="">Todos</option>${Object.entries(EST).map(([k, [l]]) => `<option value="${k}" ${F.estado === k ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
+      <div class="field grow" style="min-width:200px"><label>Buscar</label><input class="inp" id="bq" placeholder="Nombre, folio, programa…" value="${esc(F.q || '')}"></div>
+      <a class="small" href="#/modulo/${esc(m.codigo)}/politica">Configurar vigencia y tipos →</a></div></div>
+    <div class="kpis"><div class="kpi"><div class="l">Beneficiarios</div><div class="v">${filas.length}</div><div class="s">${filas.filter(f => ['activo', 'extension'].includes(f.beneficio?.estado)).length} vigentes o en extensión</div></div>
+      <div class="kpi"><div class="l">Tope anual total</div><div class="v">${mon(tot.tope)}</div></div>
+      <div class="kpi"><div class="l">Reembolsado</div><div class="v">${mon(tot.ej)}</div><div class="s">${tot.tope ? Math.round(tot.ej / tot.tope * 100) + '% del tope' : '—'}</div></div>
+      <div class="kpi"><div class="l">Saldo</div><div class="v">${mon(tot.tope - tot.ej)}</div></div></div>
+    <div class="card"><div class="tbl-wrap"><table class="tbl cards"><thead><tr><th>Persona</th><th>Tipo / programa</th><th>Aprobado</th><th>Vigente hasta</th><th>Extensión hasta</th><th class="num">Tope anual</th><th class="num">Reembolsado</th><th class="num">Saldo</th><th>Estado</th><th></th></tr></thead><tbody id="bt">
+    ${filas.map(f => { const b = f.beneficio || {}, e = EST[b.estado] || [b.estado, ''];
+      return `<tr data-q="${esc([f.solicitante, f.email, f.folio, f.programa, f.tipo].join(' ').toLowerCase())}" data-row="${f.id}">
+        <td><b>${esc(f.solicitante)}</b>${f.activo_usuario ? '' : ' <span class="tag">Inactivo</span>'}${f.es_prueba ? ' <span class="tag prb">Prueba</span>' : ''}<div class="xs"><a href="#/solicitud/${f.id}">${esc(f.folio)}</a> · ${esc(f.departamento || '')}</div></td>
+        <td class="small">${esc(f.tipo || '—')}<div class="xs muted">${esc(f.programa || '')}</div></td>
+        <td class="small">${fmtD(b.inicio)}</td><td class="small">${fmtD(b.vence)}</td><td class="small">${fmtD(b.extension_hasta)}</td>
+        <td class="num">${mon(b.monto_aprobado)}${b.tope_ajustado != null ? '<div class="xs muted">ajustado</div>' : ''}</td><td class="num">${mon(b.ejecutado)}</td>
+        <td class="num" style="${b.saldo < 0 ? 'color:var(--danger)' : ''}">${mon(b.saldo)}</td>
+        <td><span class="badge ${e[1]}">${e[0]}</span>${b.contrato_firmado ? '<div class="xs" style="color:var(--ok)">Contrato firmado ✓</div>' : '<div class="xs muted">Sin contrato firmado</div>'}</td>
+        <td style="text-align:right"><button class="btn sm" data-abrir="${f.id}">Reembolsos (${f.reembolsos.length})</button></td></tr>`; }).join('') || '<tr><td colspan="10"><div class="empty">No hay beneficios con esos filtros.</div></td></tr>'}
+    </tbody></table></div></div>
+    <p class="xs muted" style="margin-top:10px">El tope anual sale del monto que registra el Gerente de RH al aprobar; RH puede ajustarlo. Los reembolsos se aceptan hasta el fin de la extensión.</p>`);
+  const guardarF = () => { store.set('fben', JSON.stringify({ anio: $('#ba').value, estado: $('#be').value, q: $('#bq').value })); vistaBeneficios(m.codigo); };
+  $('#ba').onchange = guardarF; $('#be').onchange = guardarF; if ($('#bm')) $('#bm').onchange = () => { location.hash = '#/beneficios/' + $('#bm').value; };
+  const filtrar = () => { const q = $('#bq').value.toLowerCase(); store.set('fben', JSON.stringify({ anio: $('#ba').value, estado: $('#be').value, q }));
+    $$('#bt tr[data-q]').forEach(tr => { const ok = tr.dataset.q.includes(q); tr.style.display = ok ? '' : 'none'; const d = tr.nextElementSibling; if (d?.classList.contains('det-ben') && !ok) d.remove(); }); };
+  $('#bq').oninput = filtrar; filtrar();
+  $$('[data-abrir]').forEach(btn => btn.onclick = () => {
+    const tr = btn.closest('tr'), f = B.filas.find(x => x.id === +btn.dataset.abrir), b = f.beneficio || {};
+    if (tr.nextElementSibling?.classList.contains('det-ben')) return tr.nextElementSibling.remove();
+    const det = document.createElement('tr'); det.className = 'det-ben';
+    det.innerHTML = `<td colspan="10" style="background:var(--surface-2)"><div class="stack" style="gap:10px">
+      ${f.reembolsos.length ? `<table class="tbl"><thead><tr><th>Fecha</th><th>Período</th><th>Detalle</th><th class="num">Monto</th><th></th></tr></thead><tbody>${f.reembolsos.map(r => `<tr><td class="small">${fmtISO(r.fecha)}</td><td class="small">${esc(r.periodo || '—')}</td>
+        <td class="small">${esc(r.descripcion || '—')}<div class="xs muted">${esc(r.registrado_por)}</div></td><td class="num">${mon(r.monto)}</td><td style="text-align:right"><button class="btn sm ghost icon" data-delr="${r.id}" title="Eliminar">${I.trash}</button></td></tr>`).join('')}</tbody></table>` : '<div class="xs muted">Sin reembolsos registrados.</div>'}
+      ${b.estado === 'finalizado' || b.estado === 'vencido' ? `<div class="small muted">${b.estado === 'vencido' ? `Venció el ${fmtD(b.extension_hasta)}: para nuevos reembolsos la persona debe presentar una solicitud nueva.` : `Finalizado el ${fmtISO(b.fin)} · ${esc(b.fin_motivo || '')}`}</div>` : `<div class="row wrap" style="gap:8px;align-items:flex-end">
+        <div class="field" style="width:150px"><label>Fecha</label><input class="inp" type="date" data-r="fecha" value="${hoy()}"></div>
+        <div class="field" style="width:190px"><label>Período de aplicación</label><select class="inp" data-r="periodo"><option value="">—</option>${(B.periodos || []).map(x => `<option>${esc(x.nombre + ' ' + x.anio)}</option>`).join('')}</select></div>
+        <div class="field" style="width:130px"><label>Monto</label><input class="inp" type="number" min="0" step="0.01" data-r="monto"></div>
+        <div class="field grow" style="min-width:160px"><label>Detalle (materia, factura)</label><input class="inp" data-r="desc"></div>
+        <button class="btn pri" data-addr>${I.plus} Registrar</button></div>`}
+      <div class="row wrap" style="gap:8px"><button class="btn sm" data-tope>${I.edit} Ajustar tope</button><a class="btn sm ghost" href="#/solicitud/${f.id}">Abrir solicitud →</a></div></div></td>`;
+    tr.after(det);
+    const recargar = () => vistaBeneficios(m.codigo);
+    $('[data-tope]', det).onclick = () => modalTope(f.id, { ...b, moneda: B.moneda }, recargar);
+    const add = $('[data-addr]', det); if (add) add.onclick = () => ocupado(add, async () => {
+      try { await api('rh_reembolso_guardar', { p_solicitud: f.id, p_fecha: $('[data-r=fecha]', det).value || null, p_monto: +$('[data-r=monto]', det).value || 0,
+          p_descripcion: $('[data-r=desc]', det).value, p_periodo: $('[data-r=periodo]', det).value || null }); toast('Reembolso registrado.', 'ok'); recargar(); } catch (err) { toast(err.message, 'err'); } });
+    $$('[data-delr]', det).forEach(x => x.onclick = async () => { if (!await confirmar('Eliminar reembolso', '¿Eliminar este reembolso? Queda registrado en la bitácora.', 'Eliminar', 'dan')) return;
+      try { await api('rh_reembolso_eliminar', { p_id: +x.dataset.delr }); recargar(); } catch (err) { toast(err.message, 'err'); } });
+  });
+}
+
+/* =====================================================================
+   v1.15 · CONTRATOS (RH): datos de la empresa y del representante, plantillas Word y pendientes de firma
+   ===================================================================== */
+async function vistaContratos() {
+  cargando('contratos');
+  const [C, ap] = await Promise.all([api('rh_contrato_config'), api('rh_todas', { p_filtros: { estado: 'aprobada' } })]);
+  const c = C.config || {}, pend = ap.filter(x => !x.contrato_firmado && !x.es_prueba && C.plantillas.some(p => p.modulo === x.modulo));
+  const campo = (k, l, h, area) => `<div class="field ${area ? 'span2' : ''}"><label>${l}</label>${area ? `<textarea class="inp" data-cc="${k}" style="min-height:60px">${esc(c[k] || '')}</textarea>` : `<input class="inp" data-cc="${k}" value="${esc(c[k] || '')}">`}${h ? `<span class="help">${h}</span>` : ''}</div>`;
+  shell('contratos', `<div class="page-head"><div><h1>Contratos</h1><p>Al aprobarse una solicitud, RH genera el contrato en Word desde la solicitud (botón <b>Generar contrato</b>), lo revisa, lo firma y carga el contrato firmado.</p></div></div>
+    <div class="card" style="margin-bottom:16px;${pend.length ? 'border-color:var(--warn)' : ''}"><div class="card-h"><h2>Aprobadas sin contrato firmado (${pend.length})</h2></div>
+      ${tablaSolicitudes(pend, { solicitante: true, vacio: 'Todas las solicitudes aprobadas tienen su contrato firmado cargado.', extra: 'Trámite', celda: x => `${esc(x.modulo_nombre)}<div class="xs muted">aprobada ${fmtD(x.finalizado_en)}</div>` })}</div>
+    <div class="card" style="margin-bottom:16px"><div class="card-h"><h2>Datos de la empresa y del representante</h2><button class="btn pri" id="gcc">${I.check} Guardar</button></div>
+      <div class="card-b grid2">
+        ${campo('empresa_nombre', 'Razón social', 'Ej. BTICINO COSTA RICA S.A.')}${campo('empresa_corto', 'Nombre corto en el contrato', 'Ej. BTICINO COSTA RICA (se repite en las cláusulas)')}
+        ${campo('empresa_cedula', 'Cédula jurídica', 'Ej. 3-101-022032')}${campo('empresa_domicilio', 'Domicilio', 'Ej. Costa Rica, Heredia, Barreal de Heredia')}
+        ${campo('rep_nombre', 'Representante legal (CEO)', 'Nombre completo de quien firma por la empresa')}${campo('uso_inicial', 'Plazo de uso inicial (Apoyo Educativo)', 'Texto que va antes de "mes posterior…", ej. un (1)')}
+        ${campo('rep_calidades', 'Calidades del representante', 'Ej. mayor, casado, Administrador de Empresas, vecino de Alajuela, cédula de identidad número …', true)}
+        ${campo('rep_condicion', 'Condición en la que firma', 'Ej. representante legal y con facultades de Apoderado General sin límite de suma', true)}
+      </div></div>
+    <div class="card"><div class="card-h"><h2>Plantillas Word</h2></div><div class="card-b stack">
+      <p class="small" style="margin:0">Cada trámite usa una plantilla <b>.docx</b>. Los datos se llenan donde la plantilla dice <span class="kbd">{{campo}}</span>; si un dato falta, en el Word queda <span style="background:#ff0">[completar: …]</span> resaltado para que lo escriba. Para cambiar el texto del contrato: descargue la plantilla, edítela en Word (sin borrar las llaves) y súbala de nuevo.</p>
+      ${S.modulos.map(m => { const p = C.plantillas.find(x => x.modulo === m.codigo);
+        return `<div class="fcard"><div class="row between wrap"><div><b>${esc(m.nombre)}</b><div class="xs muted">${p ? `${esc(p.nombre)} · ${kb(p.tamano)} · actualizada ${fmtD(p.actualizado)}${p.actualizado_por ? ' por ' + esc(p.actualizado_por) : ''}` : 'Sin plantilla: no se puede generar el contrato de este trámite.'}</div></div>
+          <div class="row wrap" style="gap:6px">${p ? `<button class="btn sm" data-dlp="${esc(m.codigo)}">${I.pdf} Descargar plantilla</button>` : ''}<label class="btn sm">${I.up} ${p ? 'Reemplazar' : 'Subir'} plantilla<input type="file" hidden accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" data-upp="${esc(m.codigo)}"></label></div></div></div>`; }).join('')}
+      <details><summary class="small" style="cursor:pointer">Campos disponibles para las plantillas</summary>
+        <div class="tbl-wrap" style="margin-top:8px"><table class="tbl"><tbody>${Object.entries(ETIQ_CONTRATO).map(([k, l]) => `<tr><td><span class="kbd">{{${k}}}</span></td><td class="small">${esc(l)}</td></tr>`).join('')}</tbody></table></div></details>
+    </div></div>`);
+  clicFilas();
+  $('#gcc').onclick = e => ocupado(e.currentTarget, async () => {
+    const cfg = {}; $$('[data-cc]').forEach(i => cfg[i.dataset.cc] = i.value.trim());
+    try { await api('rh_contrato_config_guardar', { p_cfg: cfg }); toast('Datos de los contratos guardados.', 'ok'); } catch (err) { toast(err.message, 'err'); } });
+  $$('[data-dlp]').forEach(b => b.onclick = () => ocupado(b, async () => {
+    try { const P = await api('rh_contrato_plantilla', { p_modulo: b.dataset.dlp }); const bin = atob(P.contenido), arr = new Uint8Array(bin.length); for (let k = 0; k < bin.length; k++) arr[k] = bin.charCodeAt(k);
+      const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([arr], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' })); a.download = P.nombre; a.click(); }
+    catch (err) { toast(err.message, 'err'); } }));
+  $$('[data-upp]').forEach(i => i.onchange = async () => { const f = i.files[0]; if (!f) return;
+    if (!/\.docx$/i.test(f.name)) return toast('La plantilla debe ser un archivo Word .docx.', 'err');
+    if (f.size > 2 * 1024 * 1024) return toast('La plantilla pesa más de 2 MB.', 'err');
+    try { const Z = await cargarJSZip(), z = await Z.loadAsync(f), doc = await z.file('word/document.xml')?.async('string');
+      if (!doc) throw new Error('El archivo no es un documento de Word válido.');
+      const n = (doc.replace(/<[^>]+>/g, '').match(/\{\{\w+\}\}/g) || []).length;
+      if (!n && !await confirmar('Plantilla sin campos', 'La plantilla no tiene ningún campo <span class="kbd">{{…}}</span>: el contrato saldrá siempre igual, sin datos de la persona. ¿Subirla de todos modos?', 'Subir', 'pri')) return;
+      await api('rh_contrato_plantilla_guardar', { p_modulo: i.dataset.upp, p_nombre: f.name, p_contenido: await b64DeBlob(f) });
+      toast(`Plantilla guardada${n ? ` (${n} campos)` : ''}.`, 'ok'); vistaContratos(); }
+    catch (err) { toast(err.message, 'err'); } finally { i.value = ''; } });
+}
+
+/* =====================================================================
+   v1.15 · CONSUMO DE LA BASE (admin)
+   ===================================================================== */
+const mb = n => n < 1048576 ? kb(n) : (n / 1048576).toLocaleString('es-CR', { maximumFractionDigits: n < 10485760 ? 1 : 0 }) + ' MB';
+async function adminConsumo() {
+  cargando('consumo');
+  const C = await api('rh_admin_consumo'), pct = C.bd_total / C.limite_plan * 100, A = C.adjuntos;
+  const mods = Object.fromEntries(S.modulos.map(m => [m.codigo, nombreCorto(m)]));
+  shell('consumo', `<div class="page-head"><div><h1>Consumo de la base</h1><p>Cuánto espacio usa la central en Supabase. El plan Pro incluye 8 GB de base de datos (después se cobra por GB adicional).</p></div><button class="btn" id="rf">${I.refresh} Actualizar</button></div>
+    <div class="kpis">
+      <div class="kpi"><div class="l">Base de datos completa</div><div class="v">${mb(C.bd_total)}</div><div class="s">${pct.toLocaleString('es-CR', { maximumFractionDigits: 1 })} % de 8 GB · incluye otras apps</div></div>
+      <div class="kpi"><div class="l">Central de Solicitudes RH</div><div class="v">${mb(C.central_total)}</div><div class="s">${C.solicitudes} solicitudes</div></div>
+      <div class="kpi"><div class="l">Adjuntos</div><div class="v">${mb(A.bytes)}</div><div class="s">${A.n} archivos · ${A.contratos_n} contratos firmados (${mb(A.contratos_bytes)})</div></div>
+      <div class="kpi"><div class="l">Políticas (páginas)</div><div class="v">${mb(C.politicas.bytes)}</div><div class="s">${C.politicas.n} versiones · ${C.politicas.paginas} páginas</div></div>
+      <div class="kpi"><div class="l">Otras apps en la misma base</div><div class="v">${mb(C.otras_apps)}</div><div class="s">ej. Tickets de Pricing (solo lectura del tamaño)</div></div></div>
+    <div class="track" style="height:12px;background:var(--gris-50);border-radius:8px;overflow:hidden;position:relative;margin:-4px 0 18px"><div style="position:absolute;inset:0 auto 0 0;width:${Math.min(100, Math.max(0.5, pct))}%;background:${pct > 80 ? 'var(--danger)' : 'var(--pri)'}"></div></div>
+    <div class="grid2" style="align-items:start">
+      <div class="card"><div class="card-h"><h2>Tablas de la central</h2><span class="xs muted">incluye índices</span></div><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Tabla</th><th class="num">Filas aprox.</th><th class="num">Tamaño</th></tr></thead><tbody>
+        ${C.tablas.slice(0, 12).map(t => `<tr><td class="small">${esc(t.tabla)}</td><td class="num small">${Number(t.filas).toLocaleString('es-CR')}</td><td class="num small">${mb(t.bytes)}</td></tr>`).join('')}</tbody></table></div></div>
+      <div class="card"><div class="card-h"><h2>Adjuntos por trámite y año</h2></div>${C.adjuntos_por.length ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Trámite</th><th>Año</th><th>Estado</th><th class="num">Archivos</th><th class="num">Tamaño</th></tr></thead><tbody>
+        ${C.adjuntos_por.map(x => `<tr><td class="small">${esc(mods[x.modulo] || x.modulo)}</td><td class="small">${x.anio}</td><td>${badge(x.estado)}</td><td class="num small">${x.n}</td><td class="num small">${mb(x.bytes)}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">No hay adjuntos.</div>'}</div></div>
+    <div class="card" style="margin-top:16px"><div class="card-h"><h2>Depurar adjuntos antiguos</h2>${C.ultima_depuracion_adjuntos ? `<span class="xs muted">Última: ${fmt(C.ultima_depuracion_adjuntos.fecha)} · ${C.ultima_depuracion_adjuntos.archivos} archivos (${mb(C.ultima_depuracion_adjuntos.bytes)})</span>` : ''}</div>
+      <div class="card-b stack"><p class="small" style="margin:0">Borra los adjuntos (cotizaciones, planes de estudio, respuestas) de solicitudes <b>terminadas</b> hace más de N meses. La solicitud, sus datos, firmas y bitácora se conservan; en el detalle el archivo aparece como <i>depurado</i>. <b>Los contratos firmados nunca se borran aquí.</b></p>
+        <div class="row wrap" style="gap:12px;align-items:flex-end"><div class="field" style="width:170px"><label>Terminadas hace más de</label><input class="inp" type="number" min="1" max="120" id="dm" value="24"><span class="help">meses</span></div>
+          <label class="chk" style="max-width:340px"><input type="checkbox" id="dap"><span>Incluir también las <b>aprobadas</b><br><span class="xs muted">Sin marcar: solo rechazadas y canceladas.</span></span></label>
+          <button class="btn" id="dcont">${I.info} Revisar</button><button class="btn dan" id="ddep" disabled>${I.trash} Depurar</button></div>
+        <div id="dres" class="small"></div></div></div>
+    <div class="grid2" style="align-items:start;margin-top:16px">
+      <div class="card"><div class="card-h"><h2>Archivos más pesados</h2></div>${C.mayores.length ? `<div class="tbl-wrap"><table class="tbl"><tbody>${C.mayores.map(x => `<tr><td class="small"><b>${esc(x.nombre)}</b><div class="xs muted">${x.folio ? `<a href="#/solicitud/${x.solicitud_id}">${esc(x.folio)}</a> · ${esc(ESTADOS[x.estado] || x.estado)}` : 'sin enviar'}${x.campo === '_contrato' ? ' · contrato firmado' : ''}</div></td><td class="num small">${mb(x.tamano)}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">Sin archivos.</div>'}</div>
+      <div class="card"><div class="card-h"><h2>Políticas guardadas</h2></div><div class="tbl-wrap"><table class="tbl"><tbody>${C.politicas_lista.map(p => `<tr><td class="small"><b>${esc(p.titulo)}</b>${p.version ? ' v' + esc(p.version) : ''}${p.vigente ? ' <span class="badge s-aprobada">Vigente</span>' : ''}<div class="xs muted">${esc(mods[p.modulo] || p.modulo)} · ${p.formato === 'archivo' ? 'archivo original (formato antiguo)' : p.paginas + ' pág.'} · ${p.aceptaciones} aceptaciones</div></td>
+        <td class="num small">${mb(p.bytes * 3 / 4)}</td><td style="text-align:right">${!p.vigente && !p.aceptaciones ? `<button class="btn sm ghost icon" data-delpol="${p.id}" title="Eliminar">${I.trash}</button>` : ''}</td></tr>`).join('') || '<tr><td class="small muted">Sin políticas.</td></tr>'}</tbody></table></div>
+        <div class="card-b xs muted">Las políticas aceptadas en solicitudes se conservan como evidencia. Las que nunca se usaron y no están vigentes se pueden eliminar.</div></div></div>
+    <div class="alert a-info" style="margin-top:16px">${I.info}<div class="small"><b>Limpieza automática:</b> al iniciar sesión se borran solas las sesiones vencidas, los códigos de más de 2 días, los registros sin confirmar, los archivos que se subieron pero nunca se enviaron (1 día) y la bitácora de correos de más de un año. Los PDF y los contratos Word se generan al descargarlos: no ocupan espacio. Las fotos se reducen antes de subirse.</div></div>`);
+  $('#rf').onclick = adminConsumo;
+  let par = null;
+  $('#dcont').onclick = e => ocupado(e.currentTarget, async () => {
+    try { par = { p_meses: +$('#dm').value, p_aprobadas: $('#dap').checked }; const r = await api('rh_admin_depurar_adjuntos', { p_accion: 'contar', ...par });
+      $('#dres').innerHTML = r.archivos ? `Se borrarían <b>${r.archivos}</b> archivo(s) (${mb(r.bytes)}) de <b>${r.solicitudes}</b> solicitud(es) terminadas antes del ${fmtD(r.antes_de)}.` : 'No hay adjuntos que cumplan ese criterio.';
+      $('#ddep').disabled = !r.archivos; } catch (err) { toast(err.message, 'err'); } });
+  $('#ddep').onclick = async e => { const btn = e.target.closest('button');
+    if (!await confirmar('Depurar adjuntos', 'Los archivos se eliminarán <b>definitivamente</b>. Las solicitudes y sus datos se conservan. ¿Continuar?', 'Depurar', 'dan')) return;
+    ocupado(btn, async () => { try { const r = await api('rh_admin_depurar_adjuntos', { p_accion: 'depurar', ...par }); toast(`Se depuraron ${r.archivos} archivo(s) (${mb(r.bytes)}).`, 'ok'); adminConsumo(); } catch (err) { toast(err.message, 'err'); } }); };
+  $$('[data-delpol]').forEach(b => b.onclick = async () => { if (!await confirmar('Eliminar política', '¿Eliminar esta versión? Nunca fue aceptada ni está vigente.', 'Eliminar', 'dan')) return;
+    try { await api('rh_politica_eliminar', { p_id: +b.dataset.delpol }); adminConsumo(); } catch (err) { toast(err.message, 'err'); } });
+}
+
+/* =====================================================================
+   v1.15 · CARGA MASIVA DE USUARIOS (admin, Excel)
+   ===================================================================== */
+const COLS_CARGA = [['email', 'Correo'], ['nombre', 'Nombre completo'], ['departamento', 'Departamento'], ['puesto', 'Puesto'], ['cedula', 'Cédula'],
+                    ['direccion', 'Dirección física'], ['fecha_ingreso', 'Fecha de ingreso'], ['rol', 'Rol'], ['activo', 'Estado']];
+const normCol = t => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\*/g, '').trim();
+async function plantillaCarga() {
+  const X = await cargarXlsx(), wb = X.utils.book_new();
+  const ej = [{ 'Correo': 'nombre.apellido@legrand.com', 'Nombre completo': 'Nombre Apellido Apellido', 'Departamento': S.departamentos[0] || '', 'Puesto': 'Analista', 'Cédula': '1-0000-0000',
+               'Dirección física': 'Heredia, Barreal, 200 m norte…', 'Fecha de ingreso': new Date(2022, 0, 15), 'Rol': 'Colaborador', 'Estado': 'Activo' }];
+  const ws = X.utils.json_to_sheet(ej, { cellDates: true }); ws['!cols'] = [30, 28, 24, 22, 14, 40, 16, 18, 10].map(w => ({ wch: w }));
+  X.utils.book_append_sheet(wb, ws, 'Usuarios');
+  X.utils.book_append_sheet(wb, X.utils.aoa_to_sheet([['Departamentos válidos'], ...S.departamentos.map(d => [d])]), 'Departamentos');
+  X.utils.book_append_sheet(wb, X.utils.aoa_to_sheet([['Instrucciones'], ['1. Una fila por persona. Solo el Correo es obligatorio; borre la fila de ejemplo.'],
+    ['2. Si el correo ya existe, se actualizan solo las celdas con datos (las vacías no borran nada).'], ['3. Departamento: escríbalo igual que en la hoja Departamentos.'],
+    ['4. Rol: Colaborador o Recursos Humanos (los administradores se crean a mano en Usuarios). Vacío = Colaborador.'], ['5. Estado: Activo o Inactivo. Vacío = Activo.'],
+    ['6. Fecha de ingreso: fecha de Excel o texto AAAA-MM-DD.'], ['7. A quien le falten datos obligatorios (departamento, puesto, cédula, dirección, fecha de ingreso) se le pedirán la primera vez que ingrese.']]), 'Instrucciones');
+  X.writeFile(wb, 'Plantilla carga de usuarios.xlsx');
+}
+function modalCarga() {
+  let filas = [], resultado = null;
+  const m = modal({ title: 'Carga masiva de usuarios (Excel)', size: 'lg', body: `<div class="stack">
+      <div class="row wrap" style="gap:10px"><button class="btn" id="cdpl">${I.xls} 1. Descargar plantilla</button>
+        <label class="btn pri">${I.up} 2. Elegir el Excel lleno<input type="file" hidden id="cfile" accept=".xlsx,.xls,.csv"></label></div>
+      <p class="xs muted" style="margin:0">Se crean o actualizan usuarios por correo. Lo que falte se le pedirá a cada persona al ingresar. Nadie recibe correo salvo que marque la casilla.</p>
+      <div id="cprev"></div></div>`, actions: [{ label: 'Cerrar' }] });
+  const el = m.el, prev = $('#cprev', el);
+  $('#cdpl', el).onclick = e => ocupado(e.currentTarget, async () => { try { await plantillaCarga(); } catch (err) { toast(err.message, 'err'); } });
+  $('#cfile', el).onchange = async e => { const f = e.target.files[0]; if (!f) return;
+    try { const X = await cargarXlsx(), wb = X.read(await f.arrayBuffer(), { cellDates: true }), ws = wb.Sheets[wb.SheetNames[0]];
+      const raw = X.utils.sheet_to_json(ws, { defval: '', raw: true });
+      const mapa = {}; Object.keys(raw[0] || {}).forEach(h => { const n = normCol(h); const c = COLS_CARGA.find(([k, l]) => normCol(l) === n || k === n || (k === 'email' && /^(correo|email|e-mail)/.test(n)) || (k === 'activo' && n === 'activo')); if (c) mapa[h] = c[0]; });
+      if (!Object.values(mapa).includes('email')) throw new Error('No encontré la columna "Correo". Use la plantilla.');
+      const iso = v => v instanceof Date ? new Date(v.getTime() - v.getTimezoneOffset() * 60000).toISOString().slice(0, 10) : String(v ?? '').trim();
+      filas = raw.map((r, i) => { const o = { fila: i + 2 }; Object.entries(mapa).forEach(([h, k]) => o[k] = k === 'fecha_ingreso' ? iso(r[h]) : String(r[h] ?? '').trim()); return o; })
+                 .filter(o => o.email && !/^nombre\.apellido@/i.test(o.email));
+      resultado = null; pintar(); } catch (err) { toast(err.message, 'err'); } finally { e.target.value = ''; } };
+  const pintar = () => {
+    if (!filas.length) { prev.innerHTML = '<div class="small muted">El archivo no tiene filas con correo.</div>'; return; }
+    const R = resultado ? Object.fromEntries(resultado.filas.map(x => [x.fila, x])) : {};
+    prev.innerHTML = `<div class="row between wrap" style="margin-bottom:8px"><b>${filas.length} fila(s)</b>${resultado ? `<span class="small">${resultado.creados} creados · ${resultado.actualizados} actualizados · <span style="color:${resultado.errores ? 'var(--danger)' : 'inherit'}">${resultado.errores} con error</span></span>` : ''}</div>
+      <div class="tbl-wrap" style="max-height:320px;overflow:auto"><table class="tbl"><thead><tr><th>Fila</th><th>Correo</th><th>Nombre</th><th>Departamento</th><th>Rol</th>${resultado ? '<th>Resultado</th>' : ''}</tr></thead><tbody>
+      ${filas.map(f => `<tr><td class="small">${f.fila}</td><td class="small">${esc(f.email)}</td><td class="small">${esc(f.nombre || '')}</td><td class="small">${esc(f.departamento || '')}</td><td class="small">${esc(f.rol || 'Colaborador')}</td>
+        ${resultado ? `<td class="small">${R[f.fila] ? `<span class="badge ${R[f.fila].resultado === 'Error' ? 's-rechazada' : 's-aprobada'}">${esc(R[f.fila].resultado)}</span><div class="xs muted">${esc(R[f.fila].detalle || '')}</div>` : ''}</td>` : ''}</tr>`).join('')}</tbody></table></div>
+      ${resultado ? `<div class="row wrap" style="gap:10px;margin-top:10px"><button class="btn" id="cres">${I.xls} Descargar resultado (Excel)</button></div>`
+        : `<label class="chk" style="margin-top:10px"><input type="checkbox" id="cnot"><span><b>Avisar por correo</b> a los usuarios nuevos que ya pueden ingresar</span></label>
+           <button class="btn pri" id="cgo" style="margin-top:10px">${I.check} Cargar ${filas.length} usuario(s)</button>`}`;
+    if ($('#cgo', el)) $('#cgo', el).onclick = e => ocupado(e.currentTarget, async () => {
+      try { const tot = { creados: 0, actualizados: 0, errores: 0, filas: [] };
+        for (let i = 0; i < filas.length; i += 200) { const r = await api('rh_admin_carga_usuarios', { p_filas: filas.slice(i, i + 200), p_notificar: $('#cnot', el).checked });
+          tot.creados += r.creados; tot.actualizados += r.actualizados; tot.errores += r.errores; tot.filas.push(...r.filas); }
+        resultado = tot; pintar(); toast(`Carga lista: ${tot.creados} creados, ${tot.actualizados} actualizados, ${tot.errores} con error.`, tot.errores ? '' : 'ok'); }
+      catch (err) { toast(err.message, 'err'); } });
+    if ($('#cres', el)) $('#cres', el).onclick = async () => { const X = await cargarXlsx(), R2 = Object.fromEntries(resultado.filas.map(x => [x.fila, x]));
+      const ws = X.utils.json_to_sheet(filas.map(f => ({ 'Fila': f.fila, ...Object.fromEntries(COLS_CARGA.map(([k, l]) => [l, f[k] || ''])), 'Resultado': R2[f.fila]?.resultado || '', 'Detalle': R2[f.fila]?.detalle || '' })));
+      const wb = X.utils.book_new(); X.utils.book_append_sheet(wb, ws, 'Resultado'); X.writeFile(wb, 'Resultado carga de usuarios.xlsx'); };
+  };
 }
 
 iniciar();
