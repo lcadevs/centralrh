@@ -22,7 +22,7 @@
 const CONFIG = {
   SUPABASE_URL: 'https://iecfgpqnnsxmnmbxnfcp.supabase.co',
   SUPABASE_KEY: 'sb_publishable_Mt2sdPIzEcfbKv15x4-JTQ_Tf6csjiH',
-  VERSION: '1.15'
+  VERSION: '1.16'
 };
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -310,6 +310,7 @@ dl.kv dd{margin:0;padding:10px 0 10px 12px;border-bottom:1px solid var(--line);f
 .pol .ic{width:40px;height:40px;border-radius:10px;background:var(--pri);color:#fff;display:grid;place-items:center;flex:none}
 .pol .ic svg{width:20px;height:20px}
 .pol.ok{border-color:var(--pri-100);background:var(--pri-50)}
+@media (max-width:600px){.pol{flex-wrap:wrap}.pol .grow{flex:1 1 calc(100% - 60px)}.pol>.btn{width:100%}}
 .chk.off{opacity:.55;cursor:not-allowed}
 .ver{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-top:10px}
 .diff{background:var(--warn-50);color:#6E5418;border-radius:6px;padding:1px 7px;font-size:12px;font-weight:600;display:inline-block;margin:2px 4px 2px 0}
@@ -346,6 +347,40 @@ dl.kv dd{margin:0;padding:10px 0 10px 12px;border-bottom:1px solid var(--line);f
 .lento td{background:#FBF4F4}
 .dot-st{width:9px;height:9px;border-radius:50%;display:inline-block}
 /* v1.15 */
+.seg{display:inline-flex;border:1px solid var(--line-2);border-radius:10px;overflow:hidden;background:#fff}
+.seg button{border:0;background:none;padding:9px 14px;font:inherit;font-size:13.5px;cursor:pointer;color:var(--ink-2)}
+.seg button.on{background:var(--pri);color:#fff;font-weight:600}
+.tt-hero{display:flex;gap:14px;align-items:center;background:linear-gradient(120deg,var(--pri) 0%,var(--acero) 100%);color:#fff;border-radius:var(--r);padding:16px 20px;margin-bottom:16px;font-size:15px;line-height:1.5;box-shadow:var(--shadow)}
+.tt-hero b{color:#fff}.tt-hero-i{flex:none;width:42px;height:42px;border-radius:12px;background:rgba(255,255,255,.16);display:grid;place-items:center}.tt-hero-i svg{width:22px;height:22px}
+.tt-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:16px;align-items:start}
+.tt-semana{display:flex;gap:10px;align-items:flex-end;justify-content:space-between}
+.tt-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;border:0;background:none;cursor:pointer;padding:6px 2px;border-radius:12px;font:inherit;position:relative}
+.tt-col:hover{background:var(--pri-50)}
+.tt-n{font-weight:700;font-size:15px;color:var(--ink)}
+.tt-barra{width:100%;max-width:56px;height:170px;display:flex;flex-direction:column-reverse;border-radius:10px;overflow:hidden;background:var(--gris-50)}
+.tt-o{background:var(--pri)}.tt-t{background:var(--pri-100)}
+.tt-col.top .tt-o{background:linear-gradient(180deg,#2E6B4E,#1F3A5F)}
+.tt-d{font-weight:600;font-size:13px}.tt-crown{position:absolute;top:-6px;font-size:10.5px;font-weight:700;color:var(--ok);background:var(--ok-50);border-radius:20px;padding:1px 7px}
+.tt-cal{display:grid;gap:3px;grid-auto-rows:auto}
+.tt-meses{display:grid;gap:3px;font-size:11px;color:var(--ink-3)}
+.tt-etq{grid-column:1;font-size:11px;color:var(--ink-3);align-self:center}
+.tt-cel{aspect-ratio:1;border:0;border-radius:3px;padding:0;cursor:pointer;min-width:0}
+.tt-cel:hover{outline:2px solid var(--ink-2)}.tt-cel.on{outline:2px solid #E0A800;outline-offset:1px}
+.tt-cel.fut{background:repeating-linear-gradient(45deg,var(--gris-50),var(--gris-50) 2px,#fff 2px,#fff 4px)}
+.tt-escala{display:inline-flex;gap:3px;align-items:center}.tt-escala i{width:11px;height:11px;border-radius:2px;display:inline-block}
+.tt-mini{height:10px;border-radius:5px;background:var(--pri-100);overflow:hidden}.tt-mini i{display:block;height:100%;background:var(--pri)}
+.tt-mat td,.tt-mat th{padding:8px 10px}
+.tt-patron{display:inline-flex;gap:3px}.tt-patron i{width:20px;height:20px;border-radius:6px;font-style:normal;font-size:10.5px;font-weight:700;display:grid;place-items:center;background:var(--gris-50);color:var(--ink-3)}
+.tt-patron i.on{background:var(--acero);color:#fff}
+.tag.tt-tag{background:#E3ECF6;color:#2A4A73}
+.tt-scroll{max-height:190px;overflow:auto;padding-right:4px}
+.tt-scroll-t{max-height:560px;overflow:auto}.tt-scroll-t thead th{position:sticky;top:0;z-index:1;background:var(--surface-2)}
+.tt-grid>*,.tt-col{min-width:0}
+@media (max-width:900px){.tt-grid{grid-template-columns:1fr}.tt-barra{height:130px}.tt-cal{gap:2px}.tt-meses span{font-size:9.5px}.tt-semana{gap:4px}.tt-col .xs{font-size:10px;white-space:nowrap}.tt-crown{font-size:9.5px;padding:1px 5px}.tt-hero{font-size:14px;padding:14px}}
+.btn-reemb{margin-top:8px;white-space:nowrap}
+.uso-tope{height:8px;border-radius:4px;background:var(--pri-100);overflow:hidden;margin:6px 0 4px}.uso-tope i{display:block;height:100%;background:var(--ok)}
+.det-in{position:sticky;left:16px}
+#bt tr[data-row]{cursor:pointer}
 .tbl tr.sel td{background:var(--pri-50)}
 .chips-personas{display:flex;flex-wrap:wrap;gap:6px}
 .chips-personas .tag{font-weight:500}
@@ -1454,7 +1489,7 @@ function filtrosReporte() {
   const hoyS = hoy(), f = JSON.parse(store.get('rep') || '{}');
   return { modulo: f.modulo || '', desde: f.desde || hoyS.slice(0, 4) + '-01-01', hasta: f.hasta || hoyS };
 }
-const TABS_REP = ['indicadores', 'tt_activo', 'beneficio', 'aprobadores', 'exportar'];
+const TABS_REP = ['indicadores', 'tt_activo', 'tt_anual', 'beneficio', 'aprobadores', 'exportar'];
 async function vistaReportes(a, b) {
   // v1.8: cada trámite tiene sus propios reportes. #/reportes → elegir trámite; #/reportes/<trámite>/<pestaña>
   await cargarBase();
@@ -1470,13 +1505,15 @@ async function vistaReportes(a, b) {
     return;
   }
   const conBen = !!mod.opciones?.beneficio, conDias = (mod.formulario || []).some(f => f.tipo === 'dias');
-  const tab = TABS_REP.includes(b) && (b !== 'beneficio' || conBen) && (b !== 'tt_activo' || conDias) ? b : 'indicadores';
+  const tab = TABS_REP.includes(b) && (b !== 'beneficio' || conBen) && (!['tt_activo', 'tt_anual'].includes(b) || conDias) ? b : 'indicadores';
   const F = { ...filtrosReporte(), modulo: mod.codigo };
   if (filtrosReporte().modulo !== mod.codigo) store.set('rep', JSON.stringify(F));
   cargando('reportes');
   const R = await api('rh_reporte', { p_modulo: F.modulo, p_desde: F.desde, p_hasta: F.hasta });
   const RB = tab === 'beneficio' ? await api('rh_reporte_beneficio', { p_modulo: F.modulo, p_desde: F.desde, p_hasta: F.hasta }) : null;
   const RT = tab === 'tt_activo' ? await api('rh_reporte_teletrabajo', { p_modulo: F.modulo }) : null;
+  const RA = tab === 'tt_anual' ? await api('rh_analitica_teletrabajo', { p_modulo: F.modulo }) : null;
+  const OA = RA ? { anio: +RA.hoy.slice(0, 4), dep: '', metrica: 'ofi', prueba: true, sel: '', ...JSON.parse(store.get('tta') || '{}'), q: '' } : null;
   const T = R.totales, pct = n => T.total ? Math.round(n / T.total * 100) + '%' : '—';
   const diasRec = R.dias_recordatorio || 6;
   const filtros = `<div class="card" style="margin-bottom:16px"><div class="card-b row wrap" style="gap:12px;align-items:flex-end">
@@ -1485,7 +1522,7 @@ async function vistaReportes(a, b) {
       <div class="field"><label>Hasta</label><input class="inp" type="date" id="rhasta" value="${esc(F.hasta)}"></div>
       <div class="row wrap" style="gap:6px"><button class="btn sm" data-rango="anio">Este año</button><button class="btn sm" data-rango="90">Últimos 90 días</button><button class="btn sm" data-rango="todo">Todo</button></div>
       <button class="btn pri" id="raplicar">Aplicar</button></div></div>`;
-  const tabs = `<div class="tabs">${[['indicadores', 'Indicadores'], conDias ? ['tt_activo', 'Teletrabajo activo'] : null, conBen ? ['beneficio', 'Beneficio y presupuesto'] : null, ['aprobadores', 'Aprobadores'], ['exportar', 'Exportar a Excel']].filter(Boolean).map(([k, l]) => `<a href="#/reportes/${esc(mod.codigo)}/${k}" class="${k === tab ? 'on' : ''}">${l}</a>`).join('')}</div>`;
+  const tabs = `<div class="tabs">${[['indicadores', 'Indicadores'], conDias ? ['tt_activo', 'Teletrabajo activo'] : null, conDias ? ['tt_anual', 'Analítica anual'] : null, conBen ? ['beneficio', 'Beneficio y presupuesto'] : null, ['aprobadores', 'Aprobadores'], ['exportar', 'Exportar a Excel']].filter(Boolean).map(([k, l]) => `<a href="#/reportes/${esc(mod.codigo)}/${k}" class="${k === tab ? 'on' : ''}">${l}</a>`).join('')}</div>`;
   if (tab === 'beneficio') {
     const mon = n => (RB.moneda === 'USD' ? 'US$' : RB.moneda + ' ') + Number(n || 0).toLocaleString('es-CR', { maximumFractionDigits: 0 });
     const P = RB.presupuesto, pctE = P.monto ? Math.round(P.ejecutado / P.monto * 100) : null, pctC = P.monto ? Math.round(P.comprometido / P.monto * 100) : null;
@@ -1576,6 +1613,7 @@ async function vistaReportes(a, b) {
   }
   if (tab === 'beneficio') cuerpo = cuerpoB;
   if (tab === 'tt_activo') cuerpo = cuerpoTeletrabajo(RT, store.get('ttdep') || '', store.get('ttdia') || '');
+  if (tab === 'tt_anual') cuerpo = cuerpoTTAnual(RA, OA);
   if (tab === 'exportar') {
     cuerpo = `<div class="card"><div class="card-b stack">
       <div class="row" style="gap:14px;align-items:flex-start"><div class="mod-ic" style="flex:none">${I.xls}</div>
@@ -1593,9 +1631,9 @@ async function vistaReportes(a, b) {
       <div class="card-b" id="hexp"><span class="muted small">Cargando…</span></div></div>`;
   }
   const avisoPrueba = T.prueba ? `<div class="alert a-info">${I.info}<div class="small">Este periodo incluye <b>${T.prueba} solicitudes de prueba</b> (PRUEBA-xx). Se pueden borrar en <a href="#/admin/config">Configuración general</a>.</div></div>` : '';
-  shell('reportes', `<div class="page-head"><div>${mods.length > 1 ? '<a href="#/reportes" class="small" style="text-decoration:none">← Elegir otro trámite</a>' : ''}<h1 style="margin-top:6px">Reportes · ${esc(nombreCorto(mod))}</h1><p>Indicadores de este trámite.</p></div></div>${filtros}${avisoPrueba}${tabs}${cuerpo}`);
+  shell('reportes', `<div class="page-head"><div>${mods.length > 1 ? '<a href="#/reportes" class="small" style="text-decoration:none">← Elegir otro trámite</a>' : ''}<h1 style="margin-top:6px">Reportes · ${esc(nombreCorto(mod))}</h1><p>Indicadores de este trámite.</p></div></div>${tab === 'tt_anual' ? '' : filtros + avisoPrueba}${tabs}${cuerpo}`);
   const guardarF = f => { store.set('rep', JSON.stringify(f)); if (f.modulo !== mod.codigo) location.hash = `#/reportes/${f.modulo}/${tab === 'beneficio' ? 'indicadores' : tab}`; else vistaReportes(mod.codigo, tab); };
-  $('#raplicar').onclick = () => guardarF({ modulo: $('#rmod')?.value || mod.codigo, desde: $('#rdesde').value, hasta: $('#rhasta').value });
+  if ($('#raplicar')) $('#raplicar').onclick = () => guardarF({ modulo: $('#rmod')?.value || mod.codigo, desde: $('#rdesde').value, hasta: $('#rhasta').value });
   if ($('#rmod')) $('#rmod').onchange = () => guardarF({ modulo: $('#rmod').value, desde: $('#rdesde').value, hasta: $('#rhasta').value });
   if (tab === 'beneficio') clicFilas();
   $$('[data-rango]').forEach(b => b.onclick = () => { const hs = hoy(), r = b.dataset.rango;
@@ -1605,6 +1643,7 @@ async function vistaReportes(a, b) {
     try { const r = await api('rh_recordar', { p_aprobacion_id: +b.dataset.recp }); toast('Recordatorio enviado a ' + r.para.join(', '), 'ok'); vistaReportes(mod.codigo, tab); } catch (err) { toast(err.message, 'err'); } }));
   if ($('#xls')) $('#xls').onclick = e => ocupado(e.currentTarget, async () => { try { await descargarExcel(F, R); historialExport(); } catch (err) { toast(err.message, 'err'); } });
   if ($('#hexp')) historialExport();
+  if (tab === 'tt_anual') { const repintar = () => { $('#ttabody').outerHTML = cuerpoTTAnual(RA, OA); enlazarTTAnual(RA, OA, repintar); }; enlazarTTAnual(RA, OA, repintar); }
   if (tab === 'tt_activo') {
     const repintar = () => { store.set('ttdep', $('#ttdep').value); $('#ttbody').outerHTML = cuerpoTeletrabajo(RT, $('#ttdep').value, store.get('ttdia') || ''); enlazarTT(); };
     const enlazarTT = () => { $('#ttdep').onchange = repintar;
@@ -1613,6 +1652,187 @@ async function vistaReportes(a, b) {
     enlazarTT();
   }
 }
+/* =====================================================================
+   v1.16 · ANALÍTICA ANUAL DE TELETRABAJO
+   Día por día del año: quién viene a la oficina y quién teletrabaja, según la solicitud aprobada que regía ese día.
+   Una aprobación rige desde su fecha hasta que otra aprobación de la misma persona la reemplaza o la persona se inactiva.
+   ===================================================================== */
+const MESES_C = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+const DIAS_C = { lun: 'Lun', mar: 'Mar', mie: 'Mié', jue: 'Jue', vie: 'Vie', sab: 'Sáb', dom: 'Dom' };
+const DIAS_L = { lun: 'L', mar: 'M', mie: 'X', jue: 'J', vie: 'V', sab: 'S', dom: 'D' };
+const WD = ['dom', 'lun', 'mar', 'mie', 'jue', 'vie', 'sab'];
+function ttCalc(A, o) {
+  const dias = A.dias_semana || ['lun', 'mar', 'mie', 'jue', 'vie'];
+  const P = A.personas.filter(p => (!o.dep || p.departamento === o.dep) && (o.prueba || !p.prueba));
+  const per = {};
+  A.periodos.forEach(x => { if (o.prueba || !x.prueba) (per[x.email] = per[x.email] || []).push(x); });
+  const fechas = [];
+  for (let t = Date.UTC(o.anio, 0, 1); t < Date.UTC(o.anio + 1, 0, 1); t += 864e5) {
+    const d = new Date(t), c = WD[d.getUTCDay()];
+    if (dias.includes(c)) fechas.push({ f: d.toISOString().slice(0, 10), c, mes: d.getUTCMonth(), futuro: false, ofi: 0, tt: 0 });
+  }
+  fechas.forEach(x => { x.futuro = x.f > A.hoy; });
+  const M = P.map(p => {
+    const L = per[p.email] || [], st = new Uint8Array(fechas.length); let k = -1;
+    fechas.forEach((x, i) => {
+      if ((p.alta && x.f < p.alta) || (p.baja && x.f >= p.baja)) return;              // aún no ingresaba o ya está inactiva
+      while (k + 1 < L.length && L[k + 1].desde <= x.f) k++;                           // la última aprobación que ya regía ese día
+      const r = k >= 0 ? L[k] : null, tele = r && (!r.hasta || x.f <= r.hasta) && (r.dias || []).includes(x.c);
+      st[i] = tele ? 2 : 1;
+      if (tele) x.tt++; else x.ofi++;
+    });
+    return st;
+  });
+  const pas = fechas.map((x, i) => i).filter(i => !fechas[i].futuro);
+  const prom = (idx, fn) => idx.length ? idx.reduce((a, i) => a + fn(fechas[i]), 0) / idx.length : 0;
+  const porDia = dias.map(c => { const idx = pas.filter(i => fechas[i].c === c);
+    return { c, n: idx.length, ofi: prom(idx, x => x.ofi), tt: prom(idx, x => x.tt) }; });
+  const conDatos = porDia.filter(d => d.n);
+  const mas = conDatos.length ? conDatos.reduce((a, b) => b.ofi > a.ofi ? b : a) : null;
+  const menos = conDatos.length ? conDatos.reduce((a, b) => b.ofi < a.ofi ? b : a) : null;
+  const rec = pas.length ? pas.map(i => fechas[i]).reduce((a, b) => b.ofi > a.ofi ? b : a) : null;
+  const ult = pas.length ? pas[pas.length - 1] : -1;
+  return { dias, P, M, fechas, pas, porDia, mas, menos, rec, ult,
+    promOfi: prom(pas, x => x.ofi), promTot: prom(pas, x => x.ofi + x.tt),
+    conTT: ult >= 0 ? M.filter(st => { for (let i = Math.max(0, ult - dias.length + 1); i <= ult; i++) if (st[i] === 2) return true; return false; }).length : 0 };
+}
+// escala de color entre el mínimo y el máximo observados, para que se noten las diferencias aunque los valores sean parecidos
+function ttColor(v, max, metrica, min = 0) {
+  if (v == null || (v <= 0 && metrica === 'tt')) return 'var(--gris-50)';
+  const n = max > min ? Math.max(0, Math.min(1, (v - min) / (max - min))) : 0.6, a = (0.12 + 0.88 * n).toFixed(2);
+  return metrica === 'tt' ? `rgba(62,106,154,${a})` : `rgba(31,58,95,${a})`;
+}
+function cuerpoTTAnual(A, o) {
+  const R = ttCalc(A, o), { dias, fechas, porDia } = R, met = o.metrica;
+  const val = x => met === 'tt' ? x.tt : x.ofi, nom = met === 'tt' ? 'teletrabajan' : 'en oficina';
+  const deps = [...new Set(A.personas.map(p => p.departamento))].sort();
+  const n1 = v => (Math.round(v * 10) / 10).toLocaleString('es-CR'), pct = (a, b) => b ? Math.round(a / b * 100) + '%' : '—';
+  const anios = []; for (let y = Math.max(A.primer_anio, 2020); y <= +A.hoy.slice(0, 4); y++) anios.push(y);
+  if (!anios.includes(o.anio)) anios.push(o.anio);
+  const sel = fechas.find(x => x.f === o.sel) || fechas[R.ult] || fechas[0];
+  const iSel = fechas.indexOf(sel);
+  const fl = f => { const d = new Date(f + 'T12:00:00Z'); return `${DIAS[WD[d.getUTCDay()]] || ''} ${d.getUTCDate()} de ${MESES_C[d.getUTCMonth()].toLowerCase()}`; };
+  // ---- encabezado con la conclusión
+  const frase = R.mas ? `En ${o.anio}${o.dep ? ' en ' + esc(o.dep) : ''}, el día con más gente en la compañía es el <b>${(DIAS[R.mas.c] || R.mas.c).toLowerCase()}</b>: <b>${n1(R.mas.ofi)}</b> personas en promedio (${pct(R.mas.ofi, R.mas.ofi + R.mas.tt)} de ocupación). El más tranquilo es el <b>${(DIAS[R.menos.c] || R.menos.c).toLowerCase()}</b>, con ${n1(R.menos.ofi)}.`
+    : `Todavía no hay días transcurridos en ${o.anio}.`;
+  // ---- semana típica
+  const maxS = Math.max(1, ...porDia.map(d => d.ofi + d.tt));
+  const semana = `<div class="tt-semana">${porDia.map(d => { const tot = d.ofi + d.tt, top = R.mas && d.c === R.mas.c;
+    return `<button class="tt-col ${top ? 'top' : ''}" data-ttdia="${d.c}" title="${DIAS[d.c] || d.c}: ${n1(d.ofi)} en oficina y ${n1(d.tt)} en teletrabajo en promedio (${d.n} días)">
+      <div class="tt-n">${n1(met === 'tt' ? d.tt : d.ofi)}</div>
+      <div class="tt-barra"><div class="tt-t" style="height:${d.tt / maxS * 100}%"></div><div class="tt-o" style="height:${d.ofi / maxS * 100}%"></div></div>
+      <div class="tt-d">${DIAS_C[d.c] || d.c}</div>${top ? '<div class="tt-crown">Más gente</div>' : ''}<div class="xs muted">${pct(d.ofi, tot)} ocup.</div></button>`; }).join('')}</div>`;
+  // ---- calendario de calor (columnas = semanas, filas = días)
+  const ene1 = new Date(Date.UTC(o.anio, 0, 1)).getUTCDay(), off = (ene1 + 6) % 7;   // lunes = 0
+  const col = x => Math.floor((Math.round((Date.parse(x.f) - Date.UTC(o.anio, 0, 1)) / 864e5) + off) / 7);
+  const nCol = Math.max(...fechas.map(col)) + 1, vals = R.pas.map(i => val(fechas[i])), maxV = Math.max(1, ...vals), minV = vals.length ? Math.min(...vals) : 0;
+  const meses = MESES_C.map((m, i) => { const x = fechas.find(f => f.mes === i); return x ? `<span style="grid-column:${col(x) + 2}">${m}</span>` : ''; }).join('');
+  const celdas = fechas.map((x, i) => `<button class="tt-cel ${x.futuro ? 'fut' : ''} ${i === iSel ? 'on' : ''}" style="grid-column:${col(x) + 2};grid-row:${dias.indexOf(x.c) + 2};${x.futuro ? '' : 'background:' + ttColor(val(x), maxV, met, minV)}"
+      data-ttf="${x.f}" title="${fl(x.f)}: ${x.ofi} en oficina · ${x.tt} teletrabajan${x.futuro ? ' (proyección)' : ''}"></button>`).join('');
+  const etq = dias.map((c, i) => `<span class="tt-etq" style="grid-row:${i + 2}">${DIAS_C[c] || c}</span>`).join('');
+  const escala = [0, 0.25, 0.5, 0.75, 1].map(n => `<i style="background:${ttColor(minV + n * (maxV - minV), maxV, met, minV)}"></i>`).join('');
+  const calendario = `<div class="tt-cal" style="grid-template-columns:34px repeat(${nCol},minmax(0,1fr))"><span></span><div class="tt-meses" style="grid-column:1/-1;grid-row:1;grid-template-columns:34px repeat(${nCol},minmax(0,1fr))">${meses}</div>${etq}${celdas}</div>
+    <div class="row between wrap xs muted" style="margin-top:8px;gap:8px"><span>Toque un día para ver quién vino. Los días por venir (punteados) son una proyección con el teletrabajo vigente.</span><span class="tt-escala">${minV} ${escala} ${maxV} ${nom}</span></div>`;
+  // ---- detalle del día elegido
+  const enDia = st => R.P.map((p, j) => ({ p, s: R.M[j][iSel] })).filter(x => x.s === st).map(x => x.p);
+  const ofiD = iSel >= 0 ? enDia(1) : [], ttD = iSel >= 0 ? enDia(2) : [];
+  const porDep = {}; ofiD.forEach(p => (porDep[p.departamento] = porDep[p.departamento] || { o: 0, t: 0 }).o++); ttD.forEach(p => (porDep[p.departamento] = porDep[p.departamento] || { o: 0, t: 0 }).t++);
+  const depRows = Object.entries(porDep).sort((a, b) => b[1].o - a[1].o);
+  const chips = (arr, cls) => arr.length ? `<div class="chips-personas">${arr.map(p => `<span class="tag ${cls}" title="${esc(p.puesto || '')}">${esc(p.nombre)}${!o.dep ? ` <span class="muted">· ${esc(p.departamento)}</span>` : ''}</span>`).join(' ')}</div>` : '<div class="small muted">Nadie.</div>';
+  const detalle = sel ? `<div class="card"><div class="card-h"><div><h2 style="margin:0">${fl(sel.f)}${sel.futuro ? ' <span class="tag">proyección</span>' : ''}</h2><div class="small muted">${sel.ofi} en oficina · ${sel.tt} teletrabajan · ${pct(sel.ofi, sel.ofi + sel.tt)} de ocupación</div></div>
+      <div class="row" style="gap:6px"><button class="btn sm icon" data-ttmov="-1" title="Día anterior">‹</button><button class="btn sm icon" data-ttmov="1" title="Día siguiente">›</button></div></div>
+    <div class="card-b stack">
+      ${depRows.length ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Departamento</th><th class="num">Oficina</th><th class="num">Teletrabajo</th><th style="width:40%"></th></tr></thead><tbody>
+        ${depRows.map(([d, v]) => `<tr class="click" data-ttdep="${esc(d)}"><td><b>${esc(d)}</b></td><td class="num">${v.o}</td><td class="num">${v.t}</td><td><div class="tt-mini"><i style="width:${v.o / (v.o + v.t) * 100}%"></i></div></td></tr>`).join('')}</tbody></table></div>` : ''}
+      <div><div class="small b" style="margin-bottom:6px">Teletrabajan (${ttD.length})</div><div class="tt-scroll">${chips(ttD, 'tt-tag')}</div></div>
+      <div><div class="small b" style="margin-bottom:6px">En la oficina (${ofiD.length})</div><div class="tt-scroll">${chips(ofiD, '')}</div></div></div></div>` : '';
+  // ---- mes × día
+  const mesesCon = [...new Set(R.pas.map(i => fechas[i].mes))];
+  const mxd = mesesCon.map(mi => ({ mi, v: dias.map(c => { const idx = R.pas.filter(i => fechas[i].mes === mi && fechas[i].c === c); return idx.length ? idx.reduce((a, i) => a + val(fechas[i]), 0) / idx.length : null; }) }));
+  const vMx = mxd.flatMap(r => r.v.filter(v => v != null)), maxMx = Math.max(1, ...vMx), minMx = vMx.length ? Math.min(...vMx) : 0;
+  const claro = (v, mx, mn) => (mx > mn ? (v - mn) / (mx - mn) : .6) > .5;
+  const mesTabla = mxd.length ? `<div class="tbl-wrap"><table class="tbl tt-mat"><thead><tr><th>Mes</th>${dias.map(c => `<th class="num">${DIAS_C[c] || c}</th>`).join('')}</tr></thead><tbody>
+    ${mxd.map(r => { const mx = Math.max(...r.v.filter(v => v != null)); return `<tr><td><b>${MESES_C[r.mi]}</b></td>${r.v.map(v => v == null ? '<td></td>' : `<td class="num" style="background:${ttColor(v, maxMx, met, minMx)};color:${claro(v, maxMx, minMx) ? '#fff' : 'var(--ink)'}">${v === mx ? '<b>' + n1(v) + '</b>' : n1(v)}</td>`).join('')}</tr>`; }).join('')}</tbody></table></div>` : '<div class="empty">Sin días transcurridos.</div>';
+  // ---- departamento × día (promedio en oficina y % de su gente)
+  const depsAll = [...new Set(R.P.map(p => p.departamento))].sort();
+  const dxd = depsAll.map(d => { const js = R.P.map((p, j) => p.departamento === d ? j : -1).filter(j => j >= 0);
+    const v = dias.map(c => { const idx = R.pas.filter(i => fechas[i].c === c); if (!idx.length) return null;
+      let of = 0, to = 0; idx.forEach(i => js.forEach(j => { const s = R.M[j][i]; if (s) { to++; if ((met === 'tt' ? 2 : 1) === s) of++; } })); return { v: of / idx.length, p: to ? of / to : 0 }; });
+    return { d, n: js.length, v }; }).filter(r => r.n);
+  const pD = dxd.flatMap(r => r.v.filter(Boolean).map(x => x.p)), maxP = pD.length ? Math.max(...pD) : 1, minP = pD.length ? Math.min(...pD) : 0;
+  const depTabla = dxd.length ? `<div class="tbl-wrap"><table class="tbl tt-mat"><thead><tr><th>Departamento</th><th class="num">Personas</th>${dias.map(c => `<th class="num">${DIAS_C[c] || c}</th>`).join('')}</tr></thead><tbody>
+    ${dxd.map(r => `<tr class="click" data-ttdep="${esc(r.d)}"><td><b>${esc(r.d)}</b></td><td class="num">${r.n}</td>${r.v.map(x => x == null ? '<td></td>' : `<td class="num" style="background:${ttColor(x.p, maxP, met, minP)};color:${claro(x.p, maxP, minP) ? '#fff' : 'var(--ink)'}" title="${Math.round(x.p * 100)}% de su gente">${n1(x.v)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
+    <div class="xs muted" style="margin-top:6px">Promedio de personas ${nom} cada día; el color es el porcentaje de la gente del departamento. Toque un departamento para filtrar.</div>` : '<div class="empty">Sin personas.</div>';
+  // ---- por persona
+  const filasP = R.P.map((p, j) => { const st = R.M[j]; let t = 0, of = 0; R.pas.forEach(i => { if (st[i] === 2) t++; else if (st[i] === 1) of++; });
+    const patron = dias.map(c => { const i = R.ult >= 0 ? (() => { for (let k = R.ult; k >= 0; k--) if (fechas[k].c === c) return k; return -1; })() : -1; return i >= 0 && st[i] === 2; });
+    const vig = (A.periodos.filter(x => x.email === p.email && (o.prueba || !x.prueba) && x.desde <= (fechas[R.ult]?.f || A.hoy)).pop()) || null;
+    return { p, t, of, patron, vig }; });
+  const personas = `<div class="row wrap" style="gap:10px;margin-bottom:10px"><input class="inp" id="ttq" placeholder="Buscar persona o departamento…" style="width:100%;max-width:320px" value="${esc(o.q || '')}">
+      <span class="xs muted" style="flex:1 1 220px">Patrón vigente al ${sel ? fl(fechas[R.ult]?.f || sel.f) : '—'} (azul = teletrabajo). Días contados hasta hoy.</span></div>
+    <div class="tbl-wrap tt-scroll-t"><table class="tbl"><thead><tr><th>Persona</th><th>Patrón</th><th class="num">Días en oficina</th><th class="num">Días teletrabajo</th><th class="num">% en oficina</th><th>Solicitud vigente</th></tr></thead><tbody id="ttpt">
+    ${filasP.map(r => `<tr data-q="${esc((r.p.nombre + ' ' + r.p.departamento + ' ' + r.p.email).toLowerCase())}"><td><b>${esc(r.p.nombre)}</b>${r.p.activo ? '' : ' <span class="tag">Inactivo</span>'}${r.p.prueba ? ' <span class="tag prb">Prueba</span>' : ''}<div class="xs muted">${esc(r.p.departamento)}${r.p.puesto ? ' · ' + esc(r.p.puesto) : ''}</div></td>
+      <td><div class="tt-patron">${dias.map((c, i) => `<i class="${r.patron[i] ? 'on' : ''}" title="${DIAS[c] || c}: ${r.patron[i] ? 'teletrabajo' : 'oficina'}">${DIAS_L[c] || c[0]}</i>`).join('')}</div></td>
+      <td class="num">${r.of}</td><td class="num">${r.t}</td><td class="num">${pct(r.of, r.of + r.t)}</td>
+      <td class="small">${r.vig ? `<a href="#/solicitud/${r.vig.solicitud_id}">${esc(r.vig.folio)}</a><div class="xs muted">desde ${fmtISO(r.vig.desde)}</div>` : '<span class="muted">Sin teletrabajo</span>'}</td></tr>`).join('') || '<tr><td colspan="6"><div class="empty">Sin personas.</div></td></tr>'}</tbody></table></div>`;
+  return `<div id="ttabody">
+    <div class="card" style="margin-bottom:16px"><div class="card-b row wrap" style="gap:12px;align-items:flex-end">
+      <div class="field" style="width:110px"><label>Año</label><select class="inp" id="tta_a">${anios.sort((a, b) => b - a).map(y => `<option ${y === o.anio ? 'selected' : ''}>${y}</option>`).join('')}</select></div>
+      <div class="field" style="min-width:200px"><label>Departamento</label><select class="inp" id="tta_d"><option value="">Todos</option>${deps.map(x => `<option ${x === o.dep ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select></div>
+      <div class="field"><label>Ver</label><div class="seg"><button class="${met === 'ofi' ? 'on' : ''}" data-ttm="ofi">En oficina</button><button class="${met === 'tt' ? 'on' : ''}" data-ttm="tt">Teletrabajo</button></div></div>
+      ${A.periodos.some(x => x.prueba) || A.personas.some(p => p.prueba) ? `<label class="chk" style="padding:8px 10px"><input type="checkbox" id="tta_p" ${o.prueba ? 'checked' : ''}><span class="small">Incluir datos de prueba</span></label>` : ''}
+      <button class="btn" id="tta_x">${I.xls} Descargar Excel</button></div></div>
+    <div class="tt-hero"><div class="tt-hero-i">${I.chart}</div><div>${frase}</div></div>
+    <div class="kpis">
+      <div class="kpi"><div class="l">Promedio diario en oficina</div><div class="v">${n1(R.promOfi)}</div><div class="s">de ${n1(R.promTot)} personas activas · ${pct(R.promOfi, R.promTot)}</div></div>
+      <div class="kpi"><div class="l">Día con más gente</div><div class="v" style="color:var(--pri)">${R.mas ? DIAS[R.mas.c] : '—'}</div><div class="s">${R.mas ? n1(R.mas.ofi) + ' en oficina en promedio' : ''}</div></div>
+      <div class="kpi"><div class="l">Día más tranquilo</div><div class="v" style="color:var(--acero)">${R.menos ? DIAS[R.menos.c] : '—'}</div><div class="s">${R.menos ? n1(R.menos.ofi) + ' en oficina en promedio' : ''}</div></div>
+      <div class="kpi"><div class="l">Récord del año</div><div class="v">${R.rec ? R.rec.ofi : '—'}</div><div class="s">${R.rec ? 'personas el ' + fl(R.rec.f) : ''}</div></div>
+      <div class="kpi"><div class="l">Con teletrabajo</div><div class="v" style="color:var(--ok)">${R.conTT}</div><div class="s">personas en la última semana</div></div></div>
+    <div class="tt-grid">
+      <div class="card"><div class="card-h"><h2>Semana típica</h2><div class="leyenda"><span><i style="background:var(--pri)"></i>Oficina</span><span><i style="background:var(--pri-100)"></i>Teletrabajo</span></div></div><div class="card-b">${semana}
+        <div class="xs muted" style="margin-top:8px">Promedio de cada día de la semana en lo que va del año. Toque un día para ver su último registro.</div></div></div>
+      ${detalle}</div>
+    <div class="card" style="margin-top:16px"><div class="card-h"><h2>Calendario ${o.anio} · personas ${nom}</h2></div><div class="card-b">${calendario}</div></div>
+    <div class="grid2" style="margin-top:16px;align-items:start">
+      <div class="card"><div class="card-h"><h2>Mes a mes</h2><span class="xs muted">promedio ${nom} por día</span></div><div class="card-b">${mesTabla}</div></div>
+      <div class="card"><div class="card-h"><h2>Por departamento</h2><span class="xs muted">promedio ${nom} por día</span></div><div class="card-b">${depTabla}</div></div></div>
+    <div class="card" style="margin-top:16px"><div class="card-h"><h2>Por persona</h2><span class="xs muted">${R.P.length} personas</span></div><div class="card-b">${personas}</div></div>
+    ${A.sin_datos ? `<p class="xs muted" style="margin-top:10px">No se cuentan ${A.sin_datos} cuenta(s) creadas automáticamente para aprobar o recibir copia, sin departamento.</p>` : ''}
+    <p class="xs muted" style="margin-top:6px">Cómo se cuenta: cada persona cuenta desde su fecha de ingreso hasta su inactivación. Un día de la semana es teletrabajo si la solicitud aprobada que regía ese día lo incluye; si no, cuenta en la oficina. No descuenta vacaciones, incapacidades ni feriados.</p>
+  </div>`;
+}
+function enlazarTTAnual(A, o, repintar) {
+  const set = cambios => { Object.assign(o, cambios); store.set('tta', JSON.stringify({ anio: o.anio, dep: o.dep, metrica: o.metrica, prueba: o.prueba, sel: o.sel })); repintar(); };
+  $('#tta_a').onchange = () => set({ anio: +$('#tta_a').value, sel: '' });
+  $('#tta_d').onchange = () => set({ dep: $('#tta_d').value });
+  $$('[data-ttm]').forEach(b => b.onclick = () => set({ metrica: b.dataset.ttm }));
+  if ($('#tta_p')) $('#tta_p').onchange = () => set({ prueba: $('#tta_p').checked });
+  $$('[data-ttf]').forEach(b => b.onclick = () => set({ sel: b.dataset.ttf }));
+  $$('[data-ttdep]').forEach(b => b.onclick = () => set({ dep: b.dataset.ttdep }));
+  $$('[data-ttdia]').forEach(b => b.onclick = () => { const F = ttCalc(A, o).fechas, past = F.filter(x => !x.futuro && x.c === b.dataset.ttdia); if (past.length) set({ sel: past[past.length - 1].f }); });
+  $$('[data-ttmov]').forEach(b => b.onclick = () => { const F = ttCalc(A, o).fechas; let i = F.findIndex(x => x.f === o.sel); if (i < 0) i = F.filter(x => !x.futuro).length - 1;
+    const j = Math.max(0, Math.min(F.length - 1, i + +b.dataset.ttmov)); set({ sel: F[j].f }); });
+  $('#ttq').oninput = () => { o.q = $('#ttq').value; const q = o.q.toLowerCase(); $$('#ttpt tr[data-q]').forEach(tr => tr.style.display = tr.dataset.q.includes(q) ? '' : 'none'); };
+  $('#ttq').oninput();
+  $('#tta_x').onclick = e => ocupado(e.currentTarget, async () => { try { await excelTTAnual(A, o); } catch (err) { toast(err.message, 'err'); } });
+}
+async function excelTTAnual(A, o) {
+  const X = await cargarXlsx(), R = ttCalc(A, o), { dias, fechas } = R;
+  const deps = [...new Set(R.P.map(p => p.departamento))].sort();
+  const hDia = fechas.map((x, i) => { const f = { 'Fecha': new Date(x.f + 'T12:00:00'), 'Día': DIAS[x.c] || x.c, 'En oficina': x.ofi, 'Teletrabajo': x.tt, 'Personas activas': x.ofi + x.tt, 'Proyección': x.futuro ? 'Sí' : 'No' };
+    deps.forEach(d => { let n = 0; R.P.forEach((p, j) => { if (p.departamento === d && R.M[j][i] === 1) n++; }); f['Oficina · ' + d] = n; }); return f; });
+  const hPer = R.P.map((p, j) => { let t = 0, of = 0; R.pas.forEach(i => { if (R.M[j][i] === 2) t++; else if (R.M[j][i] === 1) of++; });
+    return { 'Nombre': p.nombre, 'Correo': p.email, 'Departamento': p.departamento, 'Puesto': p.puesto || '', 'Estado': p.activo ? 'Activo' : 'Inactivo', 'Días en oficina': of, 'Días teletrabajo': t, '% en oficina': of + t ? Math.round(of / (of + t) * 100) / 100 : null }; });
+  const hSem = [['Día', 'Promedio en oficina', 'Promedio teletrabajo', 'Días contados'], ...R.porDia.map(d => [DIAS[d.c] || d.c, Math.round(d.ofi * 10) / 10, Math.round(d.tt * 10) / 10, d.n])];
+  const wb = X.utils.book_new();
+  X.utils.book_append_sheet(wb, X.utils.aoa_to_sheet(hSem), 'Semana típica');
+  X.utils.book_append_sheet(wb, X.utils.json_to_sheet(hDia.length ? hDia : [{ 'Sin datos': '' }]), 'Por día');
+  X.utils.book_append_sheet(wb, X.utils.json_to_sheet(hPer.length ? hPer : [{ 'Sin datos': '' }]), 'Por persona');
+  api('rh_registrar_exportacion', { p_tipo: 'teletrabajo', p_filas: hPer.length, p_detalle: `Analítica de teletrabajo ${o.anio} · ${o.dep || 'todos los departamentos'}` }).catch(() => {});
+  X.writeFile(wb, `Analítica teletrabajo ${o.anio}${o.dep ? ' - ' + o.dep : ''}.xlsx`);
+}
+
 /* v1.15: TELETRABAJO ACTIVO — quién teletrabaja cada día y quién viene a la oficina (según la última solicitud aprobada de cada persona) */
 function cuerpoTeletrabajo(RT, dep, dia) {
   const dias = RT.dias_semana || ['lun', 'mar', 'mie', 'jue', 'vie'];
@@ -1702,7 +1922,7 @@ async function descargarExcel(F, R) {
     'Orden': a.orden, 'Paso': a.paso, 'Asignado a': (a.aprobadores || []).join(', '), 'Estado del paso': ESTADOS[a.estado] || a.estado,
     'Resuelto por': a.resuelto_por_nombre || '', 'Correo de quien resolvió': a.resuelto_por_email || '', 'Le llegó el': D(a.asignado_en), 'Resuelto el': D(a.resuelto_en),
     'Horas': horas(a.asignado_en, a.resuelto_en), 'Comentario': a.comentario || '' })));
-  const hojaRe = (E.reembolsos || []).map(r => ({ 'Folio': r.folio, 'Solicitante': r.solicitante, 'Fecha': r.fecha, 'Monto': +r.monto, 'Detalle': r.descripcion, 'Registrado por': r.registrado_por, 'Registrado el': D(r.creado_en) }));
+  const hojaRe = (E.reembolsos || []).map(r => ({ 'Folio': r.folio, 'Solicitante': r.solicitante, 'Fecha': r.fecha, 'Informe SAP': r.informe_sap || '', 'Monto': +r.monto, 'Detalle': r.descripcion, 'Registrado por': r.registrado_por, 'Registrado el': D(r.creado_en) }));
   const hojaT = E.tiempos.map(t => ({ 'Folio': t.folio, 'Versión': t.version, 'Orden': t.orden, 'Paso': t.paso, 'Aprobador': t.aprobador_nombre, 'Correo': t.aprobador_email,
     'Decisión': ESTADOS[t.decision] || t.decision, 'Le llegó el': D(t.asignado_en), 'Resuelto el': D(t.resuelto_en), 'Horas': +t.horas, 'Días': Math.round(t.horas / 24 * 100) / 100 }));
   const hojaA = R.aprobadores.map(a => ({ 'Aprobador': a.nombre, 'Correo': a.email, 'Resueltas': a.resueltas, 'Aprobadas': a.aprobadas, 'Rechazadas': a.rechazadas,
@@ -1834,7 +2054,7 @@ async function vistaDetalle(id) {
   const contratoCard = s.estado === 'aprobada' && (firmados.length || P.subir_contrato) ? `<div class="card" style="margin-top:16px;${P.subir_contrato && !firmados.length ? 'border-color:var(--warn)' : ''}" id="contrato">
       <div class="card-h"><h2>${I.doc.replace('<svg', '<svg style="width:18px;height:18px;vertical-align:-3px;margin-right:6px"')}Contrato firmado</h2>${firmados.length ? '<span class="badge s-aprobada">Cargado</span>' : '<span class="badge s-en_espera">Pendiente</span>'}</div>
       <div class="card-b stack" style="gap:10px">
-        ${firmados.map(x => `<div class="file-it">${I.clip.replace('<svg', '<svg style="width:15px;height:15px;flex:none"')}<span class="nm">${esc(x.nombre)}</span><span class="sz">${kb(x.tamano)} · ${fmtD(x.creado_en)}</span>
+        ${firmados.map(x => `<div class="file-it" style="flex-wrap:wrap">${I.clip.replace('<svg', '<svg style="width:15px;height:15px;flex:none"')}<span class="nm" style="min-width:150px;white-space:normal">${esc(x.nombre)}</span><span class="sz">${kb(x.tamano)} · ${fmtD(x.creado_en)}</span>
           <button class="btn sm" data-adj="${x.id}">Abrir</button><button class="btn sm ghost icon" data-adjd="${x.id}" title="Descargar">${I.pdf}</button>
           ${P.subir_contrato ? `<button class="btn sm ghost icon" data-delcf="${x.id}" title="Quitar" style="color:var(--danger)">${I.trash}</button>` : ''}</div>`).join('') || `<div class="small muted">${P.subir_contrato ? 'Genere el contrato en Word, imprímalo o fírmelo y cárguelo aquí escaneado.' : 'Recursos Humanos cargará aquí el contrato firmado.'}</div>`}
         ${P.subir_contrato ? `<div class="files" data-k="_contrato" data-t="archivo" data-max="3"><div class="fl"></div><label class="btn sm">${I.clip} Elegir archivo<input type="file" hidden multiple accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"></label><span class="xs muted" style="margin-left:8px">PDF, JPG o PNG · máx. 10 MB</span></div>
@@ -1846,12 +2066,12 @@ async function vistaDetalle(id) {
         <dt>Tope anual</dt><dd>${R$(B.monto_aprobado)}${B.tope_ajustado != null ? `<div class="xs muted">Ajustado por RH (aprobado: ${R$(B.tope_original)})</div>` : ''}${P.beneficio ? ` <button class="btn sm ghost" id="ben_tope">${I.edit} Ajustar</button>` : ''}</dd><dt>Reembolsado</dt><dd>${R$(B.ejecutado)}</dd>
         <dt>Saldo</dt><dd style="${B.saldo < 0 ? 'color:var(--danger)' : ''}">${R$(B.saldo)}</dd>
         ${B.fin ? `<dt>Finalizado</dt><dd>${fmtISO(B.fin)} · ${esc(B.fin_motivo || '')}<div class="xs muted">${esc(B.fin_por || '')}</div></dd>` : ''}</dl>
-      ${(D.reembolsos || []).length ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Fecha</th><th>Período</th><th>Detalle</th><th class="num">Monto</th>${P.beneficio ? '<th></th>' : ''}</tr></thead><tbody>
-        ${D.reembolsos.map(r => `<tr><td class="small">${fmtISO(r.fecha)}</td><td class="small">${esc(r.periodo || '—')}</td><td class="small">${esc(r.descripcion || '—')}<div class="xs muted">${esc(r.registrado_por)}</div></td><td class="num">${R$(r.monto)}</td>
+      ${(D.reembolsos || []).length ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Fecha</th><th>Informe SAP</th><th>Detalle</th><th class="num">Monto</th>${P.beneficio ? '<th></th>' : ''}</tr></thead><tbody>
+        ${D.reembolsos.map(r => `<tr><td class="small">${fmtISO(r.fecha)}</td><td class="small"><b>${esc(r.informe_sap || '—')}</b></td><td class="small">${esc(r.descripcion || '—')}<div class="xs muted">${esc(r.registrado_por)}</div></td><td class="num">${R$(r.monto)}</td>
           ${P.beneficio ? `<td style="text-align:right"><button class="btn sm ghost icon" data-delre="${r.id}" title="Eliminar">${I.trash}</button></td>` : ''}</tr>`).join('')}</tbody></table></div>` : '<div class="xs muted">Sin reembolsos registrados.</div>'}
       ${P.beneficio ? `<div class="row wrap" style="gap:8px;align-items:flex-end;border-top:1px solid var(--line);padding-top:12px">
           <div class="field" style="width:150px"><label>Fecha</label><input class="inp" type="date" id="re_f" value="${hoy()}"></div>
-          <div class="field" style="width:190px"><label>Período de aplicación</label><select class="inp" id="re_p"><option value="">—</option>${(D.opciones?.periodos || []).map(x => `<option>${esc(x.nombre + ' ' + x.anio)}</option>`).join('')}</select></div>
+          <div class="field" style="width:170px"><label>N.º informe SAP *</label><input class="inp" id="re_i" maxlength="40" placeholder="Ej. 4500012345"></div>
           <div class="field" style="width:140px"><label>Monto</label><input class="inp" type="number" min="0" step="0.01" id="re_m"></div>
           <div class="field grow" style="min-width:180px"><label>Detalle (materia, factura)</label><input class="inp" id="re_d"></div>
           <button class="btn pri" id="re_add">${I.plus} Registrar reembolso</button></div>
@@ -1987,7 +2207,7 @@ async function vistaDetalle(id) {
   $$('[data-adjd]').forEach(b => b.onclick = () => ocupado(b, async () => { try { await descargarAdjunto(+b.dataset.adjd, false); } catch (err) { toast(err.message, 'err'); } }));
   if (P.beneficio) {
     $('#re_add').onclick = e => ocupado(e.currentTarget, async () => {
-      try { await api('rh_reembolso_guardar', { p_solicitud: s.id, p_fecha: $('#re_f').value || null, p_monto: +$('#re_m').value || 0, p_descripcion: $('#re_d').value, p_periodo: $('#re_p').value || null });
+      try { await api('rh_reembolso_guardar', { p_solicitud: s.id, p_fecha: $('#re_f').value || null, p_monto: +$('#re_m').value || 0, p_descripcion: $('#re_d').value, p_informe: $('#re_i').value });
         toast('Reembolso registrado.', 'ok'); vistaDetalle(s.id); } catch (err) { toast(err.message, 'err'); } });
     $$('[data-delre]').forEach(b => b.onclick = async () => { if (!await confirmar('Eliminar reembolso', '¿Eliminar este reembolso? Queda registrado en la bitácora.', 'Eliminar', 'dan')) return;
       try { await api('rh_reembolso_eliminar', { p_id: +b.dataset.delre }); vistaDetalle(s.id); } catch (err) { toast(err.message, 'err'); } });
@@ -2000,7 +2220,7 @@ async function vistaDetalle(id) {
     if ($('#ben_react')) $('#ben_react').onclick = () => ocupado($('#ben_react'), async () => { try { await api('rh_beneficio_finalizar', { p_id: s.id, p_fecha: null, p_motivo: null }); toast('Beneficio reactivado.', 'ok'); vistaDetalle(s.id); } catch (err) { toast(err.message, 'err'); } });
   }
   if (P.pdf) $('#dl').onclick = e => ocupado(e.currentTarget, async () => { try { (await construirPDF(D)).save(s.folio + '.pdf'); } catch (err) { toast(err.message, 'err'); } });
-  if (P.contrato) $('#dlw').onclick = e => ocupado(e.currentTarget, async () => { try { await generarContrato(s.id); } catch (err) { toast(err.message, 'err'); } });
+  if (P.contrato) $('#dlw').onclick = e => ocupado(e.currentTarget, async () => { try { await elegirEmpresaContrato(s.id); } catch (err) { toast(err.message, 'err'); } });
   if (P.subir_contrato) {
     enlazarForm($('#contrato'));
     $('#subircf').onclick = e => ocupado(e.currentTarget, async () => {
@@ -2082,8 +2302,32 @@ function llenarXml(xml, V, faltan) {
   // 3) marcadores en lugares poco comunes (tablas, campos): texto simple
   return xml.replace(/\{\{(\w+)\}\}/g, (m, k) => { const v = V[k]; if (v == null || String(v).trim() === '') { faltan.add(ETIQ_CONTRATO[k] || k); return '[completar: ' + xmlEsc(ETIQ_CONTRATO[k] || k) + ']'; } return xmlEsc(v); });
 }
-async function generarContrato(id) {
-  const [Z, D] = await Promise.all([cargarJSZip(), api('rh_contrato_datos', { p_id: id })]);
+// v1.16: la empresa y la cédula jurídica cambian según la persona: se eligen (o escriben) al generar; en blanco quedan para llenar en Word
+async function elegirEmpresaContrato(id) {
+  const C = await api('rh_contrato_config'), E = C.config?.entidades || [];
+  return new Promise(res => modal({ title: 'Generar contrato (Word)', body: `
+    <p style="margin-top:0">¿Con qué <b>entidad</b> se firma este contrato? El representante legal (${esc(C.config?.rep_nombre || 'sin configurar')}) es el mismo para todas.</p>
+    <div class="stack" style="gap:8px" id="ent_l">
+      ${E.map((x, i) => `<label class="chk ent"><input type="radio" name="ent" value="${i}"><span><b>${esc(x.nombre)}</b><br><span class="xs muted">Cédula jurídica ${esc(x.cedula || '—')}</span></span></label>`).join('')}
+      <label class="chk ent"><input type="radio" name="ent" value="otra"><span><b>Otra entidad</b><br><span class="xs muted">Escriba la razón social y la cédula jurídica</span></span></label>
+      <div class="grid2" id="ent_o" style="display:none;margin:0 0 4px 28px"><div class="field"><label>Razón social</label><input class="inp" id="ent_n" placeholder="Ej. EMPRESA EJEMPLO S.A."></div>
+        <div class="field"><label>Cédula jurídica</label><input class="inp" id="ent_c" placeholder="Ej. 3-101-000000"></div></div>
+      <label class="chk ent"><input type="radio" name="ent" value="blanco"><span><b>Dejar en blanco</b><br><span class="xs muted">Quedan resaltadas en amarillo para escribirlas en Word</span></span></label>
+    </div>
+    <p class="xs muted" style="margin-bottom:0">Las entidades que use quedan como sugerencia para los próximos contratos. Se administran en Recursos Humanos → Contratos.</p>`,
+    onOpen: el => $$('input[name=ent]', el).forEach(r => r.onchange = () => { $('#ent_o', el).style.display = r.value === 'otra' && r.checked ? '' : 'none'; if (r.value === 'otra') $('#ent_n', el).focus(); }),
+    actions: [{ label: 'Cancelar', onClick: ({ close }) => { close(); res(false); } },
+      { label: `${I.doc} Generar Word`, cls: 'pri', onClick: ({ close, el, btn }) => ocupado(btn, async () => {
+        const v = $('input[name=ent]:checked', el)?.value;
+        if (v == null) return toast('Elija la entidad, escriba otra o deje los datos en blanco.', 'err');
+        let emp = null;
+        if (v === 'otra') { emp = { nombre: $('#ent_n', el).value.trim(), cedula: $('#ent_c', el).value.trim() };
+          if (!emp.nombre) return toast('Escriba la razón social (o elija "Dejar en blanco").', 'err'); }
+        else if (v !== 'blanco') emp = E[+v];
+        try { await generarContrato(id, emp); close(); res(true); } catch (err) { toast(err.message, 'err'); } }) }] }));
+}
+async function generarContrato(id, empresa) {
+  const [Z, D] = await Promise.all([cargarJSZip(), api('rh_contrato_datos', { p_id: id, p_empresa: empresa || null })]);
   const P = await api('rh_contrato_plantilla', { p_modulo: D.modulo });
   const zip = await Z.loadAsync(P.contenido, { base64: true }), faltan = new Set();
   for (const nombre of Object.keys(zip.files).filter(n => /^word\/(document|header\d*|footer\d*)\.xml$/.test(n))) {
@@ -2883,16 +3127,17 @@ async function vistaBeneficios(codigo) {
       <div class="kpi"><div class="l">Tope anual total</div><div class="v">${mon(tot.tope)}</div></div>
       <div class="kpi"><div class="l">Reembolsado</div><div class="v">${mon(tot.ej)}</div><div class="s">${tot.tope ? Math.round(tot.ej / tot.tope * 100) + '% del tope' : '—'}</div></div>
       <div class="kpi"><div class="l">Saldo</div><div class="v">${mon(tot.tope - tot.ej)}</div></div></div>
-    <div class="card"><div class="tbl-wrap"><table class="tbl cards"><thead><tr><th>Persona</th><th>Tipo / programa</th><th>Aprobado</th><th>Vigente hasta</th><th>Extensión hasta</th><th class="num">Tope anual</th><th class="num">Reembolsado</th><th class="num">Saldo</th><th>Estado</th><th></th></tr></thead><tbody id="bt">
+    <div class="card"><div class="tbl-wrap"><table class="tbl cards"><thead><tr><th>Persona</th><th>Tipo / programa</th><th>Vigencia</th><th style="min-width:190px">Tope anual · reembolsado · saldo</th><th>Estado</th></tr></thead><tbody id="bt">
     ${filas.map(f => { const b = f.beneficio || {}, e = EST[b.estado] || [b.estado, ''];
       return `<tr data-q="${esc([f.solicitante, f.email, f.folio, f.programa, f.tipo].join(' ').toLowerCase())}" data-row="${f.id}">
-        <td><b>${esc(f.solicitante)}</b>${f.activo_usuario ? '' : ' <span class="tag">Inactivo</span>'}${f.es_prueba ? ' <span class="tag prb">Prueba</span>' : ''}<div class="xs"><a href="#/solicitud/${f.id}">${esc(f.folio)}</a> · ${esc(f.departamento || '')}</div></td>
-        <td class="small">${esc(f.tipo || '—')}<div class="xs muted">${esc(f.programa || '')}</div></td>
-        <td class="small">${fmtD(b.inicio)}</td><td class="small">${fmtD(b.vence)}</td><td class="small">${fmtD(b.extension_hasta)}</td>
-        <td class="num">${mon(b.monto_aprobado)}${b.tope_ajustado != null ? '<div class="xs muted">ajustado</div>' : ''}</td><td class="num">${mon(b.ejecutado)}</td>
-        <td class="num" style="${b.saldo < 0 ? 'color:var(--danger)' : ''}">${mon(b.saldo)}</td>
-        <td><span class="badge ${e[1]}">${e[0]}</span>${b.contrato_firmado ? '<div class="xs" style="color:var(--ok)">Contrato firmado ✓</div>' : '<div class="xs muted">Sin contrato firmado</div>'}</td>
-        <td style="text-align:right"><button class="btn sm" data-abrir="${f.id}">Reembolsos (${f.reembolsos.length})</button></td></tr>`; }).join('') || '<tr><td colspan="10"><div class="empty">No hay beneficios con esos filtros.</div></td></tr>'}
+        <td style="min-width:170px"><b>${esc(f.solicitante)}</b>${f.activo_usuario ? '' : ' <span class="tag">Inactivo</span>'}${f.es_prueba ? ' <span class="tag prb">Prueba</span>' : ''}<div class="xs"><a href="#/solicitud/${f.id}">${esc(f.folio)}</a> · ${esc(f.departamento || '')}</div>
+          <button class="btn sm pri btn-reemb" data-abrir="${f.id}">${I.plus} Reembolsos (${f.reembolsos.length})</button></td>
+        <td class="small" style="max-width:220px">${esc(f.tipo || '—')}<div class="xs muted">${esc(f.programa || '')}</div></td>
+        <td class="small" style="white-space:nowrap">${fmtD(b.inicio)} →<br>${fmtD(b.vence)}<div class="xs muted">ext. ${fmtD(b.extension_hasta)}</div></td>
+        <td><div class="row between" style="gap:8px"><b>${mon(b.monto_aprobado)}</b>${b.tope_ajustado != null ? '<span class="xs muted">ajustado</span>' : ''}</div>
+          <div class="uso-tope"><i style="width:${b.monto_aprobado ? Math.min(100, (+b.ejecutado || 0) / b.monto_aprobado * 100) : 0}%;${b.saldo < 0 ? 'background:var(--danger)' : ''}"></i></div>
+          <div class="xs muted">Reembolsado ${mon(b.ejecutado)} · <span style="${b.saldo < 0 ? 'color:var(--danger)' : ''}">saldo ${mon(b.saldo)}</span></div></td>
+        <td><span class="badge ${e[1]}">${e[0]}</span>${b.contrato_firmado ? '<div class="xs" style="color:var(--ok)">Contrato firmado ✓</div>' : '<div class="xs muted">Sin contrato firmado</div>'}</td></tr>`; }).join('') || '<tr><td colspan="5"><div class="empty">No hay beneficios con esos filtros.</div></td></tr>'}
     </tbody></table></div></div>
     <p class="xs muted" style="margin-top:10px">El tope anual sale del monto que registra el Gerente de RH al aprobar; RH puede ajustarlo. Los reembolsos se aceptan hasta el fin de la extensión.</p>`);
   const guardarF = () => { store.set('fben', JSON.stringify({ anio: $('#ba').value, estado: $('#be').value, q: $('#bq').value })); vistaBeneficios(m.codigo); };
@@ -2900,26 +3145,33 @@ async function vistaBeneficios(codigo) {
   const filtrar = () => { const q = $('#bq').value.toLowerCase(); store.set('fben', JSON.stringify({ anio: $('#ba').value, estado: $('#be').value, q }));
     $$('#bt tr[data-q]').forEach(tr => { const ok = tr.dataset.q.includes(q); tr.style.display = ok ? '' : 'none'; const d = tr.nextElementSibling; if (d?.classList.contains('det-ben') && !ok) d.remove(); }); };
   $('#bq').oninput = filtrar; filtrar();
+  // v1.16: toda la fila abre los reembolsos (además del botón de la primera columna, que siempre se ve)
+  $$('#bt tr[data-row]').forEach(tr => tr.onclick = e => { if (!e.target.closest('a,button')) $('[data-abrir]', tr).click(); });
   $$('[data-abrir]').forEach(btn => btn.onclick = () => {
     const tr = btn.closest('tr'), f = B.filas.find(x => x.id === +btn.dataset.abrir), b = f.beneficio || {};
-    if (tr.nextElementSibling?.classList.contains('det-ben')) return tr.nextElementSibling.remove();
+    if (tr.nextElementSibling?.classList.contains('det-ben')) { tr.classList.remove('sel'); return tr.nextElementSibling.remove(); }
+    tr.classList.add('sel');
     const det = document.createElement('tr'); det.className = 'det-ben';
-    det.innerHTML = `<td colspan="10" style="background:var(--surface-2)"><div class="stack" style="gap:10px">
-      ${f.reembolsos.length ? `<table class="tbl"><thead><tr><th>Fecha</th><th>Período</th><th>Detalle</th><th class="num">Monto</th><th></th></tr></thead><tbody>${f.reembolsos.map(r => `<tr><td class="small">${fmtISO(r.fecha)}</td><td class="small">${esc(r.periodo || '—')}</td>
-        <td class="small">${esc(r.descripcion || '—')}<div class="xs muted">${esc(r.registrado_por)}</div></td><td class="num">${mon(r.monto)}</td><td style="text-align:right"><button class="btn sm ghost icon" data-delr="${r.id}" title="Eliminar">${I.trash}</button></td></tr>`).join('')}</tbody></table>` : '<div class="xs muted">Sin reembolsos registrados.</div>'}
+    det.innerHTML = `<td colspan="5" style="background:var(--surface-2)"><div class="stack det-in" style="gap:10px">
+      <div class="row between wrap"><b>Reembolsos de ${esc(f.solicitante)}</b><span class="xs muted">Saldo ${mon(b.saldo)} de ${mon(b.monto_aprobado)}</span></div>
+      ${f.reembolsos.length ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Fecha</th><th>Informe SAP</th><th>Detalle</th><th class="num">Monto</th><th></th></tr></thead><tbody>${f.reembolsos.map(r => `<tr><td class="small">${fmtISO(r.fecha)}</td><td class="small"><b>${esc(r.informe_sap || '—')}</b></td>
+        <td class="small">${esc(r.descripcion || '—')}<div class="xs muted">${esc(r.registrado_por)}</div></td><td class="num">${mon(r.monto)}</td><td style="text-align:right"><button class="btn sm ghost icon" data-delr="${r.id}" title="Eliminar">${I.trash}</button></td></tr>`).join('')}</tbody></table></div>` : '<div class="xs muted">Sin reembolsos registrados.</div>'}
       ${b.estado === 'finalizado' || b.estado === 'vencido' ? `<div class="small muted">${b.estado === 'vencido' ? `Venció el ${fmtD(b.extension_hasta)}: para nuevos reembolsos la persona debe presentar una solicitud nueva.` : `Finalizado el ${fmtISO(b.fin)} · ${esc(b.fin_motivo || '')}`}</div>` : `<div class="row wrap" style="gap:8px;align-items:flex-end">
         <div class="field" style="width:150px"><label>Fecha</label><input class="inp" type="date" data-r="fecha" value="${hoy()}"></div>
-        <div class="field" style="width:190px"><label>Período de aplicación</label><select class="inp" data-r="periodo"><option value="">—</option>${(B.periodos || []).map(x => `<option>${esc(x.nombre + ' ' + x.anio)}</option>`).join('')}</select></div>
+        <div class="field" style="width:170px"><label>N.º informe SAP *</label><input class="inp" data-r="informe" maxlength="40" placeholder="Ej. 4500012345"></div>
         <div class="field" style="width:130px"><label>Monto</label><input class="inp" type="number" min="0" step="0.01" data-r="monto"></div>
         <div class="field grow" style="min-width:160px"><label>Detalle (materia, factura)</label><input class="inp" data-r="desc"></div>
         <button class="btn pri" data-addr>${I.plus} Registrar</button></div>`}
       <div class="row wrap" style="gap:8px"><button class="btn sm" data-tope>${I.edit} Ajustar tope</button><a class="btn sm ghost" href="#/solicitud/${f.id}">Abrir solicitud →</a></div></div></td>`;
     tr.after(det);
+    // el detalle queda a la vista aunque la tabla se desplace a lo ancho
+    const wrap = det.closest('.tbl-wrap'), ajustar = () => { const d = $('.det-in', det); if (d && wrap) d.style.width = (wrap.clientWidth - 32) + 'px'; };
+    ajustar(); window.addEventListener('resize', ajustar);
     const recargar = () => vistaBeneficios(m.codigo);
     $('[data-tope]', det).onclick = () => modalTope(f.id, { ...b, moneda: B.moneda }, recargar);
     const add = $('[data-addr]', det); if (add) add.onclick = () => ocupado(add, async () => {
       try { await api('rh_reembolso_guardar', { p_solicitud: f.id, p_fecha: $('[data-r=fecha]', det).value || null, p_monto: +$('[data-r=monto]', det).value || 0,
-          p_descripcion: $('[data-r=desc]', det).value, p_periodo: $('[data-r=periodo]', det).value || null }); toast('Reembolso registrado.', 'ok'); recargar(); } catch (err) { toast(err.message, 'err'); } });
+          p_descripcion: $('[data-r=desc]', det).value, p_informe: $('[data-r=informe]', det).value }); toast('Reembolso registrado.', 'ok'); recargar(); } catch (err) { toast(err.message, 'err'); } });
     $$('[data-delr]', det).forEach(x => x.onclick = async () => { if (!await confirmar('Eliminar reembolso', '¿Eliminar este reembolso? Queda registrado en la bitácora.', 'Eliminar', 'dan')) return;
       try { await api('rh_reembolso_eliminar', { p_id: +x.dataset.delr }); recargar(); } catch (err) { toast(err.message, 'err'); } });
   });
@@ -2936,13 +3188,15 @@ async function vistaContratos() {
   shell('contratos', `<div class="page-head"><div><h1>Contratos</h1><p>Al aprobarse una solicitud, RH genera el contrato en Word desde la solicitud (botón <b>Generar contrato</b>), lo revisa, lo firma y carga el contrato firmado.</p></div></div>
     <div class="card" style="margin-bottom:16px;${pend.length ? 'border-color:var(--warn)' : ''}"><div class="card-h"><h2>Aprobadas sin contrato firmado (${pend.length})</h2></div>
       ${tablaSolicitudes(pend, { solicitante: true, vacio: 'Todas las solicitudes aprobadas tienen su contrato firmado cargado.', extra: 'Trámite', celda: x => `${esc(x.modulo_nombre)}<div class="xs muted">aprobada ${fmtD(x.finalizado_en)}</div>` })}</div>
-    <div class="card" style="margin-bottom:16px"><div class="card-h"><h2>Datos de la empresa y del representante</h2><button class="btn pri" id="gcc">${I.check} Guardar</button></div>
+    <div class="card" style="margin-bottom:16px"><div class="card-h"><h2>Datos del representante y entidades</h2><button class="btn pri" id="gcc">${I.check} Guardar</button></div>
       <div class="card-b grid2">
-        ${campo('empresa_nombre', 'Razón social', 'Ej. BTICINO COSTA RICA S.A.')}${campo('empresa_corto', 'Nombre corto en el contrato', 'Ej. BTICINO COSTA RICA (se repite en las cláusulas)')}
-        ${campo('empresa_cedula', 'Cédula jurídica', 'Ej. 3-101-022032')}${campo('empresa_domicilio', 'Domicilio', 'Ej. Costa Rica, Heredia, Barreal de Heredia')}
-        ${campo('rep_nombre', 'Representante legal (CEO)', 'Nombre completo de quien firma por la empresa')}${campo('uso_inicial', 'Plazo de uso inicial (Apoyo Educativo)', 'Texto que va antes de "mes posterior…", ej. un (1)')}
+        <div class="span2 alert a-info" style="margin:0">${I.shield}<div class="small">La <b>empresa</b> y su <b>cédula jurídica</b> no son fijas: al pulsar <b>Generar contrato</b> se elige una entidad de la lista, se escribe otra o se dejan en blanco para llenarlas en Word. El nombre corto de las cláusulas sale de la razón social (sin "S.A.").</div></div>
+        ${campo('rep_nombre', 'Representante legal (CEO)', 'Nombre completo de quien firma por la empresa; es el mismo para todas las entidades')}${campo('uso_inicial', 'Plazo de uso inicial (Apoyo Educativo)', 'Texto que va antes de "mes posterior…", ej. un (1)')}
+        ${campo('empresa_domicilio', 'Domicilio de la empresa', 'Vacío = queda resaltado para llenarlo en Word', true)}
         ${campo('rep_calidades', 'Calidades del representante', 'Ej. mayor, casado, Administrador de Empresas, vecino de Alajuela, cédula de identidad número …', true)}
         ${campo('rep_condicion', 'Condición en la que firma', 'Ej. representante legal y con facultades de Apoderado General sin límite de suma', true)}
+        <div class="span2"><div class="row between wrap" style="margin-bottom:6px"><label style="margin:0"><b>Entidades sugeridas</b> <span class="xs muted">(se ofrecen al generar; la última usada queda primero)</span></label><button class="btn sm" id="ent_add" type="button">${I.plus} Agregar entidad</button></div>
+          <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Razón social</th><th style="width:200px">Cédula jurídica</th><th style="width:44px"></th></tr></thead><tbody id="ent_t"></tbody></table></div></div>
       </div></div>
     <div class="card"><div class="card-h"><h2>Plantillas Word</h2></div><div class="card-b stack">
       <p class="small" style="margin:0">Cada trámite usa una plantilla <b>.docx</b>. Los datos se llenan donde la plantilla dice <span class="kbd">{{campo}}</span>; si un dato falta, en el Word queda <span style="background:#ff0">[completar: …]</span> resaltado para que lo escriba. Para cambiar el texto del contrato: descargue la plantilla, edítela en Word (sin borrar las llaves) y súbala de nuevo.</p>
@@ -2953,9 +3207,17 @@ async function vistaContratos() {
         <div class="tbl-wrap" style="margin-top:8px"><table class="tbl"><tbody>${Object.entries(ETIQ_CONTRATO).map(([k, l]) => `<tr><td><span class="kbd">{{${k}}}</span></td><td class="small">${esc(l)}</td></tr>`).join('')}</tbody></table></div></details>
     </div></div>`);
   clicFilas();
+  const ENT = (c.entidades || []).map(x => ({ ...x }));
+  const pintarEnt = () => { $('#ent_t').innerHTML = ENT.map((x, i) => `<tr><td><input class="inp" data-en="${i}" value="${esc(x.nombre)}" placeholder="Ej. EMPRESA S.A."></td><td><input class="inp" data-ec="${i}" value="${esc(x.cedula || '')}" placeholder="3-101-000000"></td>
+      <td><button class="btn sm ghost icon" data-ed="${i}" title="Quitar">${I.trash}</button></td></tr>`).join('') || '<tr><td colspan="3" class="small muted">Sin entidades: al generar se escribe la entidad o se deja en blanco.</td></tr>';
+    $$('[data-en]').forEach(i => i.oninput = () => ENT[+i.dataset.en].nombre = i.value);
+    $$('[data-ec]').forEach(i => i.oninput = () => ENT[+i.dataset.ec].cedula = i.value);
+    $$('[data-ed]').forEach(b => b.onclick = () => { ENT.splice(+b.dataset.ed, 1); pintarEnt(); }); };
+  pintarEnt();
+  $('#ent_add').onclick = () => { ENT.push({ nombre: '', cedula: '' }); pintarEnt(); $(`[data-en="${ENT.length - 1}"]`).focus(); };
   $('#gcc').onclick = e => ocupado(e.currentTarget, async () => {
-    const cfg = {}; $$('[data-cc]').forEach(i => cfg[i.dataset.cc] = i.value.trim());
-    try { await api('rh_contrato_config_guardar', { p_cfg: cfg }); toast('Datos de los contratos guardados.', 'ok'); } catch (err) { toast(err.message, 'err'); } });
+    const cfg = { entidades: ENT.filter(x => x.nombre.trim()) }; $$('[data-cc]').forEach(i => cfg[i.dataset.cc] = i.value.trim());
+    try { await api('rh_contrato_config_guardar', { p_cfg: cfg }); toast('Datos de los contratos guardados.', 'ok'); vistaContratos(); } catch (err) { toast(err.message, 'err'); } });
   $$('[data-dlp]').forEach(b => b.onclick = () => ocupado(b, async () => {
     try { const P = await api('rh_contrato_plantilla', { p_modulo: b.dataset.dlp }); const bin = atob(P.contenido), arr = new Uint8Array(bin.length); for (let k = 0; k < bin.length; k++) arr[k] = bin.charCodeAt(k);
       const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([arr], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' })); a.download = P.nombre; a.click(); }
