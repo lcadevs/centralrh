@@ -2061,8 +2061,8 @@ async function vistaDetalle(id) {
           <div><button class="btn pri sm" id="subircf">${I.check} Cargar contrato firmado</button> <span class="xs muted">Es lo único que se puede agregar a una solicitud aprobada. Se avisa al solicitante.</span></div>` : ''}
       </div></div>` : '';
   const B = D.beneficio, R$ = n => n == null ? '—' : (B?.moneda === 'USD' ? 'US$' : (B?.moneda || '') + ' ') + Number(n).toLocaleString('es-CR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  const benef = B ? `<div class="card" style="margin-top:16px"><div class="card-h"><h2>Beneficio y reembolsos</h2><span class="badge ${B.estado === 'activo' ? 's-aprobada' : 's-cancelada'}">${B.estado === 'activo' ? 'Activo' : B.estado === 'vencido' ? 'Vencido' : 'Finalizado'}</span></div><div class="card-b stack">
-      <dl class="kv"><dt>Vigencia</dt><dd>${fmtD(B.inicio)} → ${fmtD(B.vence)}<div class="xs muted">Extensión para reembolsos hasta ${fmtD(B.extension_hasta)} (+${B.extension_meses} meses)</div></dd><dt>Tipo</dt><dd>${esc(B.tipo || '—')}</dd>
+  const benef = B ? `<div class="card" style="margin-top:16px"><div class="card-h"><h2>Beneficio y reembolsos</h2><span class="badge ${B.estado === 'activo' ? 's-aprobada' : B.estado === 'extension' ? 's-info' : 's-cancelada'}">${({ activo: 'Activo', extension: 'En extensión', vencido: 'Vencido' })[B.estado] || 'Finalizado'}</span></div><div class="card-b stack">
+      <dl class="kv"><dt>Vigencia</dt><dd>${fmtD(B.inicio)} → ${fmtD(B.vence)}${P.beneficio ? ` <button class="btn sm ghost" id="ben_vig">${I.edit} Ajustar</button>` : ''}<div class="xs muted">Extensión para reembolsos hasta ${fmtD(B.extension_hasta)}${B.vigencia_ajustada ? ` · <b>ajustada por RH</b> (política: ${fmtD(B.vence_politica)} / ${fmtD(B.extension_politica)})` : ` (+${B.extension_meses} meses)`}</div></dd><dt>Tipo</dt><dd>${esc(B.tipo || '—')}</dd>
         <dt>Tope anual</dt><dd>${R$(B.monto_aprobado)}${B.tope_ajustado != null ? `<div class="xs muted">Ajustado por RH (aprobado: ${R$(B.tope_original)})</div>` : ''}${P.beneficio ? ` <button class="btn sm ghost" id="ben_tope">${I.edit} Ajustar</button>` : ''}</dd><dt>Reembolsado</dt><dd>${R$(B.ejecutado)}</dd>
         <dt>Saldo</dt><dd style="${B.saldo < 0 ? 'color:var(--danger)' : ''}">${R$(B.saldo)}</dd>
         ${B.fin ? `<dt>Finalizado</dt><dd>${fmtISO(B.fin)} · ${esc(B.fin_motivo || '')}<div class="xs muted">${esc(B.fin_por || '')}</div></dd>` : ''}</dl>
@@ -2231,6 +2231,7 @@ async function vistaDetalle(id) {
       try { await api('rh_contrato_firmado_eliminar', { p_adjunto: +b.dataset.delcf }); vistaDetalle(s.id); } catch (err) { toast(err.message, 'err'); } });
   }
   if ($('#ben_tope')) $('#ben_tope').onclick = () => modalTope(s.id, B, () => vistaDetalle(s.id));
+  if ($('#ben_vig')) $('#ben_vig').onclick = () => modalVigencia(s.id, B, () => vistaDetalle(s.id));
   if (P.reenviar) $('#reenv').onclick = () => modal({ title: 'Reenviar aviso de aprobación', body: `
       <p style="margin-top:0">Se envía un correo (sin adjunto) avisando que la solicitud fue aprobada, con un botón para entrar a verla.</p>
       <label class="chk" style="margin-bottom:8px"><input type="radio" name="dest" value="todos" checked><span><b>Solicitante y RH</b><br><span class="small muted">${esc(s.solicitante_email)} + correos de RH configurados</span></span></label>
@@ -2350,6 +2351,19 @@ async function generarContrato(id, empresa, persona) {
   a.download = `${(P.nombre || 'Contrato').replace(/\.docx$/i, '')} - ${D.folio}.docx`; document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 60000);
   toast(faltan.size ? `Contrato generado. Complete en Word lo resaltado en amarillo: ${[...faltan].join(', ')}.` : 'Contrato generado.', faltan.size ? '' : 'ok');
+}
+// v1.16: vigencia del beneficio caso por caso. Vacío = la que da la política
+function modalVigencia(id, B, alGuardar) {
+  const iso = t => t ? new Date(t).toLocaleDateString('en-CA', { timeZone: 'America/Costa_Rica' }) : '';
+  modal({ title: 'Ajustar vigencia del beneficio', body: `<p style="margin-top:0">Inicio: <b>${fmtD(B.inicio)}</b>. Según la política vence el <b>${fmtD(B.vence_politica)}</b> y la extensión para reembolsos llega al <b>${fmtD(B.extension_politica)}</b>.</p>
+      <div class="grid2"><div class="field"><label>Vigente hasta</label><input class="inp" type="date" id="vg_v" value="${B.vigencia_ajustada ? iso(B.vence) : ''}" min="${iso(B.inicio)}"><span class="help">Vacío = la de la política</span></div>
+      <div class="field"><label>Extensión para reembolsos hasta</label><input class="inp" type="date" id="vg_e" value="${B.vigencia_ajustada ? iso(B.extension_hasta) : ''}"><span class="help">Vacío = vigencia + ${B.extension_meses} meses</span></div>
+      <div class="field span2"><label>Motivo</label><input class="inp" id="vg_m" placeholder="Ej. el programa se extendió un cuatrimestre"></div></div>
+      ${B.vigencia_ajustada ? '<p class="xs muted" style="margin-bottom:0">Para volver a la política, deje las dos fechas vacías y guarde.</p>' : ''}`,
+    actions: [{ label: 'Cancelar' }, { label: 'Guardar', cls: 'pri', onClick: ({ close, el, btn }) => ocupado(btn, async () => {
+      try { await api('rh_beneficio_vigencia', { p_id: id, p_vence: $('#vg_v', el).value || null, p_ext_hasta: $('#vg_e', el).value || null, p_motivo: $('#vg_m', el).value });
+        close(); toast('Vigencia actualizada.', 'ok'); alGuardar(); } catch (err) { toast(err.message, 'err'); }
+    }) }] });
 }
 function modalTope(id, B, alGuardar) {
   const mon = B?.moneda === 'USD' ? 'US$' : (B?.moneda || '');
@@ -3145,7 +3159,8 @@ async function vistaBeneficios(codigo) {
         <td style="min-width:170px"><b>${esc(f.solicitante)}</b>${f.activo_usuario ? '' : ' <span class="tag">Inactivo</span>'}${f.es_prueba ? ' <span class="tag prb">Prueba</span>' : ''}<div class="xs"><a href="#/solicitud/${f.id}">${esc(f.folio)}</a> · ${esc(f.departamento || '')}</div>
           <button class="btn sm pri btn-reemb" data-abrir="${f.id}">${I.plus} Reembolsos (${f.reembolsos.length})</button></td>
         <td class="small" style="max-width:220px">${esc(f.tipo || '—')}<div class="xs muted">${esc(f.programa || '')}</div></td>
-        <td class="small" style="white-space:nowrap">${fmtD(b.inicio)} →<br>${fmtD(b.vence)}<div class="xs muted">ext. ${fmtD(b.extension_hasta)}</div></td>
+        <td class="small" style="white-space:nowrap">${fmtD(b.inicio)} →<br>${fmtD(b.vence)}<div class="xs muted">ext. ${fmtD(b.extension_hasta)}</div>${b.vigencia_ajustada ? '<span class="tag" style="margin-top:3px" title="Vigencia ajustada por RH">ajustada</span>' : ''}
+          <div><button class="btn sm ghost" style="padding:3px 8px;margin-top:4px" data-vig="${f.id}" title="Ajustar vigencia de este caso">${I.edit} Ajustar</button></div></td>
         <td><div class="row between" style="gap:8px"><b>${mon(b.monto_aprobado)}</b>${b.tope_ajustado != null ? '<span class="xs muted">ajustado</span>' : ''}</div>
           <div class="uso-tope"><i style="width:${b.monto_aprobado ? Math.min(100, (+b.ejecutado || 0) / b.monto_aprobado * 100) : 0}%;${b.saldo < 0 ? 'background:var(--danger)' : ''}"></i></div>
           <div class="xs muted">Reembolsado ${mon(b.ejecutado)} · <span style="${b.saldo < 0 ? 'color:var(--danger)' : ''}">saldo ${mon(b.saldo)}</span></div></td>
@@ -3159,6 +3174,7 @@ async function vistaBeneficios(codigo) {
   $('#bq').oninput = filtrar; filtrar();
   // v1.16: toda la fila abre los reembolsos (además del botón de la primera columna, que siempre se ve)
   $$('#bt tr[data-row]').forEach(tr => tr.onclick = e => { if (!e.target.closest('a,button')) $('[data-abrir]', tr).click(); });
+  $$('[data-vig]').forEach(btn => btn.onclick = () => { const f = B.filas.find(x => x.id === +btn.dataset.vig); modalVigencia(f.id, f.beneficio || {}, () => vistaBeneficios(m.codigo)); });
   $$('[data-abrir]').forEach(btn => btn.onclick = () => {
     const tr = btn.closest('tr'), f = B.filas.find(x => x.id === +btn.dataset.abrir), b = f.beneficio || {};
     if (tr.nextElementSibling?.classList.contains('det-ben')) { tr.classList.remove('sel'); return tr.nextElementSibling.remove(); }
@@ -3174,13 +3190,14 @@ async function vistaBeneficios(codigo) {
         <div class="field" style="width:130px"><label>Monto</label><input class="inp" type="number" min="0" step="0.01" data-r="monto"></div>
         <div class="field grow" style="min-width:160px"><label>Detalle (materia, factura)</label><input class="inp" data-r="desc"></div>
         <button class="btn pri" data-addr>${I.plus} Registrar</button></div>`}
-      <div class="row wrap" style="gap:8px"><button class="btn sm" data-tope>${I.edit} Ajustar tope</button><a class="btn sm ghost" href="#/solicitud/${f.id}">Abrir solicitud →</a></div></div></td>`;
+      <div class="row wrap" style="gap:8px"><button class="btn sm" data-tope>${I.edit} Ajustar tope</button><button class="btn sm" data-vigd>${I.edit} Ajustar vigencia</button><a class="btn sm ghost" href="#/solicitud/${f.id}">Abrir solicitud →</a></div></div></td>`;
     tr.after(det);
     // el detalle queda a la vista aunque la tabla se desplace a lo ancho
     const wrap = det.closest('.tbl-wrap'), ajustar = () => { const d = $('.det-in', det); if (d && wrap) d.style.width = (wrap.clientWidth - 32) + 'px'; };
     ajustar(); window.addEventListener('resize', ajustar);
     const recargar = () => vistaBeneficios(m.codigo);
     $('[data-tope]', det).onclick = () => modalTope(f.id, { ...b, moneda: B.moneda }, recargar);
+    $('[data-vigd]', det).onclick = () => modalVigencia(f.id, b, recargar);
     const add = $('[data-addr]', det); if (add) add.onclick = () => ocupado(add, async () => {
       try { await api('rh_reembolso_guardar', { p_solicitud: f.id, p_fecha: $('[data-r=fecha]', det).value || null, p_monto: +$('[data-r=monto]', det).value || 0,
           p_descripcion: $('[data-r=desc]', det).value, p_informe: $('[data-r=informe]', det).value }); toast('Reembolso registrado.', 'ok'); recargar(); } catch (err) { toast(err.message, 'err'); } });
